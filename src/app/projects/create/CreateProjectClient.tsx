@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Sparkles,
   ChevronRight,
@@ -26,6 +24,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const categories = [
   { slug: "music", name: "音楽", icon: "🎵" },
@@ -58,6 +57,8 @@ type RewardInput = {
 };
 
 export default function CreateProjectClient() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -146,13 +147,88 @@ export default function CreateProjectClient() {
   };
 
   const handleSubmit = async () => {
-    toast.success("プロジェクトを申請しました！審査は最短30分で完了します 🚀");
+    if (!user) return;
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          tagline: formData.tagline || formData.title,
+          description: formData.description,
+          story: formData.story,
+          categoryId: formData.category,
+          tags: [],
+          goalAmount: formData.goalAmount,
+          endDate: formData.endDate,
+          rewards: formData.rewards,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "プロジェクト作成に失敗しました");
+      }
+      toast.success("プロジェクトを申請しました！審査は最短30分で完了します");
+      router.push("/dashboard");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "エラーが発生しました");
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-caramel-200 border-t-candy-pink animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 font-semibold">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4" style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-md"
+        >
+          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-4xl shadow-candy"
+            style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}>
+            🔒
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            ログインが必要です
+          </h1>
+          <p className="text-gray-500 mb-8 leading-relaxed">
+            プロジェクトを作成するには、アカウント登録またはログインが必要です。
+            <br />
+            <span className="text-sm">無料でかんたんに登録できます。</span>
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => router.push("/auth/login?redirect=/projects/create")}
+              className="px-8 py-3 rounded-full text-white font-bold btn-pop"
+              style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)", boxShadow: "0 4px 20px rgba(255, 107, 157, 0.4)" }}
+            >
+              ログイン / 新規登録
+            </button>
+            <button
+              onClick={() => router.push("/projects")}
+              className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
+            >
+              プロジェクトを見る
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-20 pb-20" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        {/* ヘッダー */}
         <div className="text-center py-10">
           <motion.div
             initial={{ scale: 0 }}

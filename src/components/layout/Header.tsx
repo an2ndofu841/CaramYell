@@ -1,19 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Menu, X, Heart, Plus, LogIn, User, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Header() {
+  const router = useRouter();
+  const { user, profile, loading, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setShowUserMenu(false);
+    router.push("/");
+  };
+
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "";
 
   return (
     <header
@@ -26,7 +50,6 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* ロゴ */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-9 h-9 rounded-2xl bg-candy-gradient flex items-center justify-center shadow-candy group-hover:scale-110 transition-transform duration-300">
               <span className="text-white font-bold text-lg" style={{ fontFamily: "Fredoka One, sans-serif" }}>C</span>
@@ -39,7 +62,6 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* ナビゲーション (デスクトップ) */}
           <nav className="hidden md:flex items-center gap-1">
             <NavLink href="/projects">プロジェクトを見る</NavLink>
             <NavLink href="/projects/create">
@@ -51,15 +73,70 @@ export default function Header() {
             <NavLink href="/about">CaramYellとは</NavLink>
           </nav>
 
-          {/* アクションボタン */}
           <div className="hidden md:flex items-center gap-2">
-            <Link
-              href="/auth/login"
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors duration-200"
-            >
-              <LogIn size={16} />
-              ログイン
-            </Link>
+            {loading ? (
+              <div className="w-8 h-8 rounded-full bg-caramel-100 animate-pulse" />
+            ) : user ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-caramel-50 transition-colors"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                    style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+                  >
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
+                    {displayName}
+                  </span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-soft-lg border border-caramel-100 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-caramel-50">
+                      <p className="text-sm font-bold text-gray-800 truncate">{displayName}</p>
+                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-caramel-50 transition-colors"
+                    >
+                      <LayoutDashboard size={16} />
+                      ダッシュボード
+                    </Link>
+                    <Link
+                      href="/dashboard/settings"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-caramel-50 transition-colors"
+                    >
+                      <User size={16} />
+                      プロフィール設定
+                    </Link>
+                    <div className="border-t border-caramel-50 mt-1 pt-1">
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        ログアウト
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors duration-200"
+              >
+                <LogIn size={16} />
+                ログイン
+              </Link>
+            )}
+
             <Link
               href="/projects/create"
               className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
@@ -73,7 +150,6 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* モバイルメニューボタン */}
           <button
             className="md:hidden p-2 rounded-xl hover:bg-caramel-50 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -88,42 +164,68 @@ export default function Header() {
         </div>
       </div>
 
-      {/* モバイルメニュー */}
       <div
         className={cn(
           "md:hidden transition-all duration-300 overflow-hidden",
-          isMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          isMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="glass border-t border-white/50 mx-4 mt-2 rounded-3xl p-4 shadow-soft-lg">
           <nav className="flex flex-col gap-1">
             <MobileNavLink href="/projects" onClick={() => setIsMenuOpen(false)}>
-              🔍 プロジェクトを見る
+              プロジェクトを見る
             </MobileNavLink>
             <MobileNavLink href="/projects/create" onClick={() => setIsMenuOpen(false)}>
-              ✨ 掲載する（AI支援あり）
+              掲載する（AI支援あり）
             </MobileNavLink>
             <MobileNavLink href="/about" onClick={() => setIsMenuOpen(false)}>
-              💬 CaramYellとは
+              CaramYellとは
             </MobileNavLink>
+            {user && (
+              <MobileNavLink href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                ダッシュボード
+              </MobileNavLink>
+            )}
             <div className="border-t border-caramel-100 mt-2 pt-2 flex gap-2">
-              <Link
-                href="/auth/login"
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <LogIn size={16} />
-                ログイン
-              </Link>
-              <Link
-                href="/projects/create"
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Plus size={16} />
-                プロジェクト作成
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <LayoutDashboard size={16} />
+                    管理画面
+                  </Link>
+                  <button
+                    onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    ログアウト
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <LogIn size={16} />
+                    ログイン
+                  </Link>
+                  <Link
+                    href="/projects/create"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white"
+                    style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Plus size={16} />
+                    プロジェクト作成
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
@@ -132,13 +234,7 @@ export default function Header() {
   );
 }
 
-function NavLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
@@ -149,15 +245,7 @@ function NavLink({
   );
 }
 
-function MobileNavLink({
-  href,
-  children,
-  onClick,
-}: {
-  href: string;
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
+function MobileNavLink({ href, children, onClick }: { href: string; children: React.ReactNode; onClick: () => void }) {
   return (
     <Link
       href={href}

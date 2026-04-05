@@ -2,14 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Github } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
+
+  const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
+
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,10 +25,42 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.email || !form.password) return;
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setIsLoading(false);
-    toast.success(isLogin ? "ログインしました！" : "アカウントを作成しました！");
+
+    try {
+      if (isLogin) {
+        const { error } = await signInWithEmail(form.email, form.password);
+        if (error) {
+          toast.error(
+            error.message === "Invalid login credentials"
+              ? "メールアドレスまたはパスワードが正しくありません"
+              : error.message
+          );
+          return;
+        }
+        toast.success("ログインしました！");
+        router.push(redirectTo);
+      } else {
+        if (form.password.length < 8) {
+          toast.error("パスワードは8文字以上にしてください");
+          return;
+        }
+        const { error } = await signUpWithEmail(form.email, form.password);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("確認メールを送信しました。メールを確認してください。");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuth = async (provider: "google" | "github") => {
+    const { error } = await signInWithOAuth(provider);
+    if (error) toast.error(error.message);
   };
 
   return (
@@ -28,7 +68,6 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4"
       style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}
     >
-      {/* 背景装飾 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-20 right-20 w-64 h-64 rounded-full opacity-20"
@@ -45,7 +84,6 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* ロゴ */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,7 +109,6 @@ export default function LoginPage() {
           transition={{ delay: 0.1 }}
         >
           <Card>
-            {/* タブ切り替え */}
             <div className="flex p-1 bg-caramel-50 rounded-2xl mb-6">
               {["ログイン", "新規登録"].map((tab, i) => (
                 <button
@@ -148,7 +185,10 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-3">
-              <button className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl border-2 border-caramel-100 hover:bg-caramel-50 transition-colors font-semibold text-sm text-gray-600">
+              <button
+                onClick={() => handleOAuth("google")}
+                className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl border-2 border-caramel-100 hover:bg-caramel-50 transition-colors font-semibold text-sm text-gray-600"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24">
                   <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -158,7 +198,10 @@ export default function LoginPage() {
                 Googleで続ける
               </button>
 
-              <button className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl border-2 border-caramel-100 hover:bg-caramel-50 transition-colors font-semibold text-sm text-gray-600">
+              <button
+                onClick={() => handleOAuth("github")}
+                className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl border-2 border-caramel-100 hover:bg-caramel-50 transition-colors font-semibold text-sm text-gray-600"
+              >
                 <Github size={18} />
                 GitHubで続ける
               </button>
