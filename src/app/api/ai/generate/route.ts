@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+  return new OpenAI({ apiKey });
+}
 
 const systemPrompts: Record<string, string> = {
   tagline: `あなたはクラウドファンディングのプロのコピーライターです。
@@ -52,6 +56,7 @@ export async function POST(req: NextRequest) {
         ? `以下の日本語を${targetLanguage || "英語"}に翻訳してください:\n\n${input}`
         : `プロジェクト名: ${input}\nカテゴリー: ${context || "その他"}\n\n上記のプロジェクトに最適な内容を生成してください。`;
 
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
