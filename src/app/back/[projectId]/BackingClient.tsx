@@ -30,52 +30,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import { calcFee, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-// ダミーのプロジェクト・リターンデータ
-const dummyProject = {
-  id: "1",
-  title: "世界で初めての「香りで楽しむ音楽アルバム」を作りたい！",
-  slug: "scent-music-album",
-  main_image_url: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=80",
-  goal_amount: 1500000,
-  current_amount: 1823000,
-  backer_count: 342,
-  end_date: "2025-08-31",
-  rewards: [
-    {
-      id: "r1",
-      title: "感謝のメッセージ＋名前をライナーノーツに掲載",
-      description: "デジタルメッセージ＋名前掲載",
-      amount: 1000,
-      reward_type: "digital",
-      needs_address: false,
-    },
-    {
-      id: "r2",
-      title: "限定お礼ボイス＋デジタルアルバム先行配信",
-      description: "音声メッセージ＋先行配信",
-      amount: 3000,
-      reward_type: "digital",
-      needs_address: false,
-    },
-    {
-      id: "r3",
-      title: "アロマデバイス＋CD＋限定香水セット",
-      description: "フルパッケージ",
-      amount: 15000,
-      reward_type: "physical",
-      needs_address: true,
-    },
-    {
-      id: "r4",
-      title: "【VIP】レコーディング見学＋サイン入りフルセット",
-      description: "VIP体験パッケージ",
-      amount: 50000,
-      reward_type: "experience",
-      needs_address: true,
-    },
-  ],
-};
+import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 
 const steps = [
   { id: 1, title: "リターン選択", icon: "🎁" },
@@ -98,9 +53,13 @@ export default function BackingClient({
   projectSlug: string;
   selectedRewardId?: string;
 }) {
+  const project =
+    getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
+  const rewards = project.rewards || [];
+
   const [step, setStep] = useState(1);
   const [selectedReward, setSelectedReward] = useState(
-    dummyProject.rewards.find((r) => r.id === selectedRewardId) || null
+    rewards.find((r) => r.id === selectedRewardId) || null
   );
   const [customAmount, setCustomAmount] = useState(1000);
   const [useCustomAmount, setUseCustomAmount] = useState(!selectedRewardId);
@@ -125,8 +84,10 @@ export default function BackingClient({
   const { fee, total } = calcFee(amount);
 
   const stats = {
-    progress: Math.min(Math.round((dummyProject.current_amount / dummyProject.goal_amount) * 100), 100),
-    daysLeft: Math.max(0, Math.ceil((new Date(dummyProject.end_date).getTime() - Date.now()) / 86400000)),
+    progress: Math.min(Math.round((project.current_amount / project.goal_amount) * 100), 100),
+    daysLeft: project.end_date
+      ? Math.max(0, Math.ceil((new Date(project.end_date).getTime() - Date.now()) / 86400000))
+      : 0,
   };
 
   const canProceed = () => {
@@ -153,7 +114,7 @@ export default function BackingClient({
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* 戻るリンク */}
         <Link
-          href={`/projects/${dummyProject.slug}`}
+          href={`/projects/${project.slug}`}
           className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-caramel-600 transition-colors font-medium py-4"
         >
           <ChevronLeft size={16} />
@@ -165,13 +126,13 @@ export default function BackingClient({
           <div className="flex gap-4 items-start">
             <div className="w-20 h-16 rounded-2xl overflow-hidden bg-caramel-100 flex-shrink-0">
               <img
-                src={dummyProject.main_image_url}
-                alt={dummyProject.title}
+                src={project.main_image_url}
+                alt={project.title}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">{dummyProject.title}</p>
+              <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">{project.title}</p>
               <ProgressBar percentage={stats.progress} />
               <p className="text-xs text-gray-400 mt-1">
                 {stats.progress}% 達成 · 残り{stats.daysLeft}日
@@ -253,7 +214,7 @@ export default function BackingClient({
 
                   {/* リターン一覧 */}
                   <div className="space-y-3">
-                    {dummyProject.rewards.map((reward) => (
+                    {rewards.map((reward) => (
                       <div
                         key={reward.id}
                         className={cn(
@@ -451,7 +412,7 @@ export default function BackingClient({
                     <div className="flex justify-between">
                       <span className="text-gray-500">プロジェクト</span>
                       <span className="font-semibold text-right max-w-[60%] line-clamp-1">
-                        {dummyProject.title}
+                        {project.title}
                       </span>
                     </div>
                     <div className="flex justify-between">
