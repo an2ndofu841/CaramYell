@@ -51,23 +51,23 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-2xl bg-candy-gradient flex items-center justify-center shadow-candy group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-bold text-lg" style={{ fontFamily: "Fredoka One, sans-serif" }}>C</span>
+            <div className="w-9 h-9 rounded-2xl bg-yell-gradient flex items-center justify-center shadow-caramel group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white font-bold text-lg" style={{ fontFamily: "var(--font-display)" }}>C</span>
             </div>
             <span
-              className="text-xl font-bold text-gradient-candy hidden sm:block"
-              style={{ fontFamily: "Fredoka One, sans-serif" }}
+              className="text-xl font-black text-gradient-candy hidden sm:block"
+              style={{ fontFamily: "var(--font-display)" }}
             >
               CaramYell
             </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            <NavLink href="/projects">プロジェクトを見る</NavLink>
+            <NavLink href="/projects">プロジェクトを探す</NavLink>
             <NavLink href="/projects/create">
               <span className="flex items-center gap-1">
                 <Sparkles size={14} />
-                掲載する
+                はじめる
               </span>
             </NavLink>
             <NavLink href="/about">CaramYellとは</NavLink>
@@ -84,7 +84,7 @@ export default function Header() {
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+                    style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
                   >
                     {displayName.charAt(0).toUpperCase()}
                   </div>
@@ -141,8 +141,8 @@ export default function Header() {
               href="/projects/create"
               className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
               style={{
-                background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
-                boxShadow: "0 4px 15px rgba(255, 107, 157, 0.4)",
+                background: "linear-gradient(135deg, #F2807B, #E8842C)",
+                boxShadow: "0 4px 15px rgba(232, 132, 44, 0.4)",
               }}
             >
               <Plus size={16} />
@@ -218,7 +218,7 @@ export default function Header() {
                   <Link
                     href="/projects/create"
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white"
-                    style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+                    style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Plus size={16} />

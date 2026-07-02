@@ -1,83 +1,59 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import AnimatedSection from "@/components/animations/AnimatedSection";
+import CountUp from "@/components/animations/CountUp";
+import CaramelDrip from "@/components/animations/CaramelDrip";
 
 const stats = [
-  { value: 1280, suffix: "+", label: "掲載プロジェクト", icon: "🚀" },
-  { value: 92, suffix: "%", label: "目標達成率", icon: "🎯" },
-  { value: 4800, suffix: "万円+", label: "累計支援総額", icon: "💰" },
-  { value: 30, suffix: "分~", label: "最短掲載時間", icon: "⚡" },
+  { icon: "💰", label: "支援総額", value: 48000000, prefix: "¥", suffix: "" },
+  { icon: "🏆", label: "プロジェクト数", value: 2345, prefix: "", suffix: " 件" },
+  { icon: "🙌", label: "サポーター数", value: 98765, prefix: "", suffix: " 人" },
 ];
-
-function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started) {
-          setStarted(true);
-        }
-      },
-      { threshold: 0.5 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [started]);
-
-  useEffect(() => {
-    if (!started) return;
-    const duration = 2000;
-    const steps = 60;
-    const increment = value / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current = Math.min(current + increment, value);
-      setCount(Math.floor(current));
-      if (current >= value) clearInterval(timer);
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [started, value]);
-
-  return (
-    <span ref={ref}>
-      {count.toLocaleString("ja-JP")}
-      {suffix}
-    </span>
-  );
-}
 
 export default function StatsSection() {
   return (
-    <section className="relative py-12 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
-            <AnimatedSection key={i} animation="scale" delay={i * 100}>
-              <div className="text-center p-6 rounded-3xl hover:shadow-soft transition-shadow duration-300">
-                <div className="text-4xl mb-2">{stat.icon}</div>
-                <div
-                  className="text-3xl sm:text-4xl font-bold mb-1"
-                  style={{ fontFamily: "Fredoka One, sans-serif" }}
-                >
-                  <span
-                    style={{
-                      background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    <AnimatedNumber value={stat.value} suffix={stat.suffix} />
-                  </span>
+    <section className="relative">
+      {/* カラメルドリップで濃色帯へトランジション */}
+      <CaramelDrip color="#C96A1B" className="bg-white" />
+
+      <div style={{ background: "linear-gradient(135deg, #C96A1B 0%, #E8842C 100%)" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            {/* ロゴ */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span
+                className="text-2xl font-black text-white"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                CaramYell
+                <span className="text-honey">✦</span>
+              </span>
+            </div>
+
+            {/* 統計（カウントアップ演出） */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-12 flex-1 justify-around">
+              {stats.map((stat, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-3xl">{stat.icon}</span>
+                  <div>
+                    <p className="text-xs text-white/60 font-semibold mb-0.5">
+                      {stat.label}
+                    </p>
+                    <p
+                      className="text-2xl sm:text-3xl font-black text-white leading-none"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      <CountUp
+                        value={stat.value}
+                        prefix={stat.prefix}
+                        suffix={stat.suffix}
+                        duration={2200}
+                      />
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500 font-semibold">{stat.label}</p>
-              </div>
-            </AnimatedSection>
-          ))}
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

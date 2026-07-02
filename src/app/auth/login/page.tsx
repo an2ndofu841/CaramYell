@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -12,6 +12,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
@@ -71,13 +79,13 @@ export default function LoginPage() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-20 right-20 w-64 h-64 rounded-full opacity-20"
-          style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+          style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
           animate={{ scale: [1, 1.1, 1], rotate: [0, 90, 0] }}
           transition={{ duration: 10, repeat: Infinity }}
         />
         <motion.div
           className="absolute bottom-20 left-20 w-48 h-48 rounded-full opacity-15"
-          style={{ background: "linear-gradient(135deg, #4ECDC4, #74C0FC)" }}
+          style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)" }}
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 8, repeat: Infinity, delay: 2 }}
         />
@@ -91,7 +99,7 @@ export default function LoginPage() {
         >
           <div
             className="w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white shadow-candy"
-            style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)", fontFamily: "Fredoka One, sans-serif" }}
+            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", fontFamily: "var(--font-display)" }}
           >
             C
           </div>
@@ -121,7 +129,7 @@ export default function LoginPage() {
                   }`}
                   style={
                     isLogin === (i === 0)
-                      ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                      ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                       : {}
                   }
                 >

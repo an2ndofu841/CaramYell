@@ -14,12 +14,12 @@ export default function Footer() {
         >
           <path
             d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,30 1440,40 L1440,80 L0,80 Z"
-            fill="#2D1B4E"
+            fill="#4A2C17"
           />
         </svg>
       </div>
 
-      <div style={{ backgroundColor: "#2D1B4E" }} className="text-white">
+      <div style={{ backgroundColor: "#4A2C17" }} className="text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* ブランド */}
@@ -28,21 +28,21 @@ export default function Footer() {
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center"
                   style={{
-                    background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
+                    background: "linear-gradient(135deg, #F2807B, #E8842C)",
                   }}
                 >
                   <span
                     className="text-white font-bold text-xl"
-                    style={{ fontFamily: "Fredoka One, sans-serif" }}
+                    style={{ fontFamily: "var(--font-display)" }}
                   >
                     C
                   </span>
                 </div>
                 <span
-                  className="text-2xl font-bold"
+                  className="text-2xl font-black"
                   style={{
-                    fontFamily: "Fredoka One, sans-serif",
-                    background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
+                    fontFamily: "var(--font-display)",
+                    background: "linear-gradient(135deg, #F2807B, #F5A34B)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",

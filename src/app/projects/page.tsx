@@ -54,7 +54,7 @@ const allProjects: Project[] = [
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-06-01T00:00:00Z",
     profiles: { id: "u1", display_name: "Aoi Tanaka", total_backed: 0, total_created: 3, created_at: "", updated_at: "" },
-    categories: { id: "cat-music", slug: "music", name_ja: "音楽", name_en: "Music", icon: "🎵", color: "#FF6B9D", sort_order: 1 },
+    categories: { id: "cat-music", slug: "music", name_ja: "音楽", name_en: "Music", icon: "🎵", color: "#F2807B", sort_order: 1 },
   },
   {
     id: "2",
@@ -80,7 +80,7 @@ const allProjects: Project[] = [
     created_at: "2025-05-01T00:00:00Z",
     updated_at: "2025-07-01T00:00:00Z",
     profiles: { id: "u2", display_name: "Haruki Sato", total_backed: 0, total_created: 1, created_at: "", updated_at: "" },
-    categories: { id: "cat-tech", slug: "tech", name_ja: "テクノロジー", name_en: "Technology", icon: "💻", color: "#74C0FC", sort_order: 4 },
+    categories: { id: "cat-tech", slug: "tech", name_ja: "テクノロジー", name_en: "Technology", icon: "💻", color: "#A8D8CB", sort_order: 4 },
   },
   {
     id: "3",
@@ -106,7 +106,7 @@ const allProjects: Project[] = [
     created_at: "2025-06-01T00:00:00Z",
     updated_at: "2025-07-01T00:00:00Z",
     profiles: { id: "u3", display_name: "Yuki Yamamoto", total_backed: 0, total_created: 2, created_at: "", updated_at: "" },
-    categories: { id: "cat-art", slug: "art", name_ja: "アート", name_en: "Art", icon: "🎨", color: "#C3B1E1", sort_order: 2 },
+    categories: { id: "cat-art", slug: "art", name_ja: "アート", name_en: "Art", icon: "🎨", color: "#C9A87C", sort_order: 2 },
   },
   {
     id: "4",
@@ -158,7 +158,7 @@ const allProjects: Project[] = [
     created_at: "2025-04-01T00:00:00Z",
     updated_at: "2025-07-01T00:00:00Z",
     profiles: { id: "u5", display_name: "Kenji Watanabe", total_backed: 0, total_created: 4, created_at: "", updated_at: "" },
-    categories: { id: "cat-art", slug: "art", name_ja: "アート", name_en: "Art", icon: "🎨", color: "#C3B1E1", sort_order: 2 },
+    categories: { id: "cat-art", slug: "art", name_ja: "アート", name_en: "Art", icon: "🎨", color: "#C9A87C", sort_order: 2 },
   },
   {
     id: "6",
@@ -184,7 +184,7 @@ const allProjects: Project[] = [
     created_at: "2025-03-01T00:00:00Z",
     updated_at: "2025-07-01T00:00:00Z",
     profiles: { id: "u6", display_name: "Sakura Films", total_backed: 0, total_created: 2, created_at: "", updated_at: "" },
-    categories: { id: "cat-video", slug: "video", name_ja: "動画・映像", name_en: "Video & Film", icon: "🎬", color: "#FFB347", sort_order: 5 },
+    categories: { id: "cat-video", slug: "video", name_ja: "動画・映像", name_en: "Video & Film", icon: "🎬", color: "#F5A34B", sort_order: 5 },
   },
 ];
 
@@ -213,7 +213,7 @@ export default function ProjectsPage() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3">
               プロジェクトを
               <span style={{
-                background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
+                background: "linear-gradient(135deg, #F2807B, #F5A34B)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -261,7 +261,7 @@ export default function ProjectsPage() {
                   )}
                   style={
                     selectedCategory === cat.slug
-                      ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                      ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                       : {}
                   }
                 >

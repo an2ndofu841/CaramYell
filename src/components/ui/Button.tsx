@@ -1,6 +1,8 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-import { ButtonHTMLAttributes, forwardRef, ReactNode } from "react";
-import { Loader2 } from "lucide-react";
+import { ButtonHTMLAttributes, forwardRef, ReactNode, useState } from "react";
+import { Loader2, Heart } from "lucide-react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -9,6 +11,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   iconPosition?: "left" | "right";
   fullWidth?: boolean;
+  /** ホバー時にハートが現れる演出（デザインカンプ「ホバーボタンの変化」） */
+  heartOnHover?: boolean;
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -21,19 +25,22 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       icon,
       iconPosition = "left",
       fullWidth = false,
+      heartOnHover = false,
       className,
       disabled,
       ...props
     },
     ref
   ) => {
+    const [hovered, setHovered] = useState(false);
+
     const variants = {
       primary:
-        "text-white font-bold shadow-candy btn-pop disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
+        "text-white font-bold shadow-caramel btn-pop disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
       secondary:
         "text-caramel-700 font-bold bg-caramel-50 hover:bg-caramel-100 transition-colors duration-200",
       outline:
-        "text-caramel-600 font-bold border-2 border-caramel-300 bg-transparent hover:bg-caramel-50 transition-colors duration-200",
+        "text-caramel-600 font-bold border-2 border-caramel-300 bg-white hover:bg-caramel-50 transition-colors duration-200",
       ghost:
         "text-gray-600 font-semibold hover:bg-gray-100 transition-colors duration-200",
       danger:
@@ -50,15 +57,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const primaryStyle =
       variant === "primary"
         ? {
-            background: "linear-gradient(135deg, #FF6B9D 0%, #FFB347 100%)",
-            boxShadow: "0 4px 20px rgba(255, 107, 157, 0.4)",
+            background: "linear-gradient(135deg, #F2807B 0%, #E8842C 60%, #F5A34B 100%)",
+            boxShadow: "0 4px 20px rgba(232, 132, 44, 0.4)",
           }
         : {};
+
+    const showHeart = heartOnHover && hovered && !loading;
 
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         className={cn(
           "inline-flex items-center justify-center gap-2 transition-all duration-200 select-none",
           variants[variant],
@@ -71,6 +82,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <Loader2 size={16} className="animate-spin" />
+        ) : showHeart ? (
+          <Heart size={16} className="fill-current animate-fade-in" />
         ) : (
           icon && iconPosition === "left" && icon
         )}

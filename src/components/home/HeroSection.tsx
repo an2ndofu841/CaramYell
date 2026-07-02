@@ -2,191 +2,182 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Heart, Zap } from "lucide-react";
+import { ArrowRight, Heart, Megaphone, Star } from "lucide-react";
 import Button from "@/components/ui/Button";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export default function HeroSection() {
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
-      style={{ background: "linear-gradient(160deg, #FFFBF5 0%, #FFF5E6 40%, #FFE8C8 100%)" }}
+      className="relative overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20"
+      style={{ background: "linear-gradient(160deg, #FFFBF5 0%, #FFF6E9 45%, #FFEAD0 100%)" }}
     >
-      {/* 背景の装飾バブル */}
+      {/* 背景装飾 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-30"
-          style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
-          animate={{
-            scale: [1, 1.1, 1],
-            x: [0, 20, 0],
-            y: [0, -20, 0],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-10 right-0 w-80 h-80 rounded-full opacity-20 bubble"
+          style={{ background: "linear-gradient(135deg, #F5A34B, #FFC98A)" }}
+          animate={{ scale: [1, 1.08, 1], rotate: [0, 12, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 left-10 w-56 h-56 rounded-full opacity-20"
-          style={{ background: "linear-gradient(135deg, #4ECDC4, #74C0FC)" }}
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, -15, 0],
-            y: [0, 15, 0],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 bubble-2"
+          style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
         />
-        <motion.div
-          className="absolute top-1/2 left-1/4 w-40 h-40 rounded-full opacity-15"
-          style={{ background: "#C3B1E1" }}
-          animate={{
-            scale: [1, 1.3, 1],
-            rotate: [0, 90, 0],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-        />
-
-        {/* 浮遊するキャンディ要素 */}
-        {["🍬", "⭐", "🎀", "✨", "🍭", "💫", "🌸", "🎵"].map((emoji, i) => (
+        {/* きらきら */}
+        {["⭐", "✨", "💛", "🧡"].map((emoji, i) => (
           <motion.span
             key={i}
-            className="absolute text-2xl select-none"
-            style={{
-              left: `${10 + i * 12}%`,
-              top: `${15 + Math.sin(i) * 20}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              rotate: [-10, 10, -10],
-              opacity: [0.6, 1, 0.6],
-            }}
-            transition={{
-              duration: 3 + i * 0.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.4,
-            }}
+            className="absolute text-xl select-none opacity-60"
+            style={{ left: `${8 + i * 24}%`, top: `${12 + (i % 2) * 55}%` }}
+            animate={{ y: [0, -14, 0], rotate: [-8, 8, -8] }}
+            transition={{ duration: 3.5 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
           >
             {emoji}
           </motion.span>
         ))}
       </div>
 
-      {/* メインコンテンツ */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
-        {/* タグ */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-          style={{
-            background: "rgba(255, 107, 157, 0.1)",
-            border: "2px solid rgba(255, 107, 157, 0.3)",
-          }}
-        >
-          <Sparkles size={16} className="text-candy-pink" />
-          <span className="text-sm font-bold text-candy-pink">
-            掲載者の手数料 完全0円 🎉
-          </span>
-        </motion.div>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          {/* 左：コピー */}
+          <div className="text-center lg:text-left">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6 text-cocoa-700"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              あなたの想いに、
+              <br />
+              <span className="text-gradient-candy">甘く熱いエールを。</span>
+            </motion.h1>
 
-        {/* メインタイトル */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="mb-4"
-          style={{ fontFamily: "Fredoka One, sans-serif" }}
-        >
-          <span
-            className="block text-5xl sm:text-6xl md:text-8xl font-bold"
-            style={{
-              background: "linear-gradient(135deg, #FF6B9D 0%, #FFB347 50%, #4ECDC4 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="text-base sm:text-lg text-cocoa-500/70 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed"
+            >
+              CaramYellは、クリエイターの夢や挑戦を応援する
+              クラウドファンディングサービスです。
+            </motion.p>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-6"
+            >
+              <Link href="/projects">
+                <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right">
+                  プロジェクトを見る
+                </Button>
+              </Link>
+              <Link href="/projects/create">
+                <Button size="lg" variant="outline" heartOnHover>
+                  はじめる
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* キャンペーンバッジ */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                background: "rgba(243, 169, 60, 0.12)",
+                border: "1.5px solid rgba(243, 169, 60, 0.4)",
+              }}
+            >
+              <Star size={14} className="text-honey fill-honey" />
+              <span className="text-sm font-bold text-caramel-600">
+                掲載者の手数料 <span className="text-coral text-base font-black">0%</span> キャンペーン中！
+              </span>
+            </motion.div>
+          </div>
+
+          {/* 右：ビジュアル（メガホン＋プロジェクトカードのモック） */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative hidden sm:block"
           >
-            CaramYell
-          </span>
-        </motion.h1>
+            <div className="relative mx-auto max-w-md">
+              {/* カードモック */}
+              <motion.div
+                className="relative z-10 bg-white rounded-3xl shadow-soft-lg p-4 rotate-2"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="aspect-[16/9] rounded-2xl bg-gradient-to-br from-caramel-100 to-apricot/60 flex items-center justify-center text-6xl mb-3">
+                  👜
+                </div>
+                <p className="font-bold text-sm text-cocoa-700 mb-2">
+                  上質な革小物を届けたい
+                </p>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-base font-black text-caramel-500">82%</span>
+                </div>
+                <ProgressBar percentage={82} className="mb-2" />
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <span className="font-bold text-cocoa-700">¥1,230,000</span>
+                  <span>残り16日</span>
+                </div>
+              </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-700 mb-4"
-        >
-          みんなで夢を叶える、
-          <br className="sm:hidden" />
-          <span className="text-caramel-500">世界一やさしい</span>クラウドファンディング
-        </motion.p>
+              {/* メガホン */}
+              <motion.div
+                className="absolute -left-10 top-1/3 z-20 w-24 h-24 rounded-3xl flex items-center justify-center text-white shadow-caramel -rotate-12"
+                style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
+                animate={{ rotate: [-12, -6, -12], scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Megaphone size={44} />
+              </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-base sm:text-lg text-gray-500 mb-10 max-w-2xl mx-auto"
-        >
-          アカウント登録なしで出資OK・最短30分で掲載スタート・
-          <br className="hidden sm:block" />
-          AIがプロジェクト作りをサポート。手数料は一切いただきません。
-        </motion.p>
+              {/* ハート */}
+              {[
+                { left: "-8%", top: "8%", size: 20, delay: 0 },
+                { left: "88%", top: "0%", size: 26, delay: 0.6 },
+                { left: "96%", top: "58%", size: 18, delay: 1.2 },
+              ].map((h, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute z-20 text-coral"
+                  style={{ left: h.left, top: h.top }}
+                  animate={{ y: [0, -12, 0], scale: [1, 1.15, 1] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: h.delay }}
+                >
+                  <Heart size={h.size} className="fill-current" />
+                </motion.div>
+              ))}
 
-        {/* CTAボタン */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <Link href="/projects/create">
-            <Button size="xl" icon={<Sparkles size={20} />}>
-              プロジェクトを作る（無料）
-            </Button>
-          </Link>
-          <Link href="/projects">
-            <button className="flex items-center gap-2 px-8 py-4 rounded-full text-lg font-bold text-gray-700 bg-white shadow-soft hover:shadow-soft-lg transition-all duration-300 btn-pop">
-              プロジェクトを見る
-              <ArrowRight size={20} />
-            </button>
-          </Link>
-        </motion.div>
+              {/* リボン */}
+              <motion.div
+                className="absolute -bottom-4 -right-2 z-20 px-4 py-2 rounded-full text-white text-xs font-bold rotate-6 shadow-candy"
+                style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+                animate={{ rotate: [6, 2, 6] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                Cheer for your passion!
+              </motion.div>
 
-        {/* 信頼バッジ */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.7 }}
-          className="flex flex-wrap items-center justify-center gap-6 mt-12"
-        >
-          {[
-            { icon: "🔒", text: "安全な決済" },
-            { icon: "⚡", text: "最短30分掲載" },
-            { icon: "💳", text: "手数料0%" },
-            { icon: "🌍", text: "海外決済対応" },
-            { icon: "🤖", text: "AI支援" },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm text-gray-500 font-semibold">
-              <span>{item.icon}</span>
-              <span>{item.text}</span>
+              {/* 背景のカラメル溜まり */}
+              <div
+                className="absolute inset-x-8 bottom-0 h-8 rounded-[50%] opacity-30 blur-md"
+                style={{ background: "#E8842C" }}
+              />
             </div>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* 下部の波形 */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 80" className="w-full" preserveAspectRatio="none" style={{ display: "block" }}>
-          <path
-            d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z"
-            fill="white"
-            opacity="0.5"
-          />
-          <path
-            d="M0,60 C360,20 720,80 1080,40 C1260,20 1380,60 1440,60 L1440,80 L0,80 Z"
-            fill="white"
-            opacity="0.3"
-          />
-        </svg>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

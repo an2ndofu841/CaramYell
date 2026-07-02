@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import MobileTabBar from "@/components/layout/MobileTabBar";
 import FloatingParticles from "@/components/animations/FloatingParticles";
 
 export const metadata: Metadata = {
@@ -49,24 +50,25 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Fredoka+One&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className="min-h-screen flex flex-col">
         <FloatingParticles />
         <Header />
-        <main className="flex-1 page-enter">{children}</main>
+        <main className="flex-1 page-enter pb-14 md:pb-0">{children}</main>
         <Footer />
+        <MobileTabBar />
         <Toaster
           position="top-center"
           toastOptions={{
             style: {
               background: "white",
-              color: "#2D1B4E",
-              border: "2px solid #FFD9A8",
+              color: "#4A2C17",
+              border: "2px solid #FFDFAE",
               borderRadius: "16px",
-              fontFamily: "Nunito, sans-serif",
+              fontFamily: "Noto Sans JP, sans-serif",
               fontWeight: "600",
             },
           }}

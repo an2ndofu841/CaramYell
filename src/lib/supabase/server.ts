@@ -4,9 +4,13 @@ import { cookies } from "next/headers";
 export async function createClient() {
   const cookieStore = await cookies();
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isValidUrl = !!url && /^https?:\/\//.test(url);
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    isValidUrl ? url : "https://placeholder.supabase.co",
+    key && key !== "your_supabase_anon_key_here" ? key : "placeholder-anon-key",
     {
       cookies: {
         getAll() {

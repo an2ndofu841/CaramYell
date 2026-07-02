@@ -20,7 +20,7 @@ export default function FloatingParticles() {
     const container = containerRef.current;
     if (!container) return;
 
-    const colors = ["#FF6B9D", "#FFB347", "#4ECDC4", "#FFE66D", "#C3B1E1", "#74C0FC"];
+    const colors = ["#F2807B", "#F5A34B", "#FFC98A", "#F3A93C", "#8FD4C4", "#FFE0A8"];
     const particles: Particle[] = Array.from({ length: 20 }, () => ({
       x: Math.random() * 100,
       y: Math.random() * 100,

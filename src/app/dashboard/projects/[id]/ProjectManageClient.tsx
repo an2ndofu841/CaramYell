@@ -127,7 +127,7 @@ export default function ProjectManageClient() {
       {/* Header */}
       <div
         className="py-6"
-        style={{ background: "linear-gradient(135deg, #2D1B4E 0%, #1a0f2e 100%)" }}
+        style={{ background: "linear-gradient(135deg, #4A2C17 0%, #31200E 100%)" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
@@ -265,10 +265,10 @@ function OverviewTab({
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "支援金額", value: formatCurrency(stats.totalRaised), icon: <DollarSign size={18} />, color: "#FF6B9D" },
-            { label: "支援者数", value: `${stats.totalBackers}人`, icon: <Users size={18} />, color: "#FFB347" },
-            { label: "達成率", value: `${stats.progressPercentage}%`, icon: <TrendingUp size={18} />, color: "#4ECDC4" },
-            { label: "平均支援額", value: formatCurrency(stats.avgBacking), icon: <BarChart3 size={18} />, color: "#C3B1E1" },
+            { label: "支援金額", value: formatCurrency(stats.totalRaised), icon: <DollarSign size={18} />, color: "#F2807B" },
+            { label: "支援者数", value: `${stats.totalBackers}人`, icon: <Users size={18} />, color: "#F5A34B" },
+            { label: "達成率", value: `${stats.progressPercentage}%`, icon: <TrendingUp size={18} />, color: "#8FD4C4" },
+            { label: "平均支援額", value: formatCurrency(stats.avgBacking), icon: <BarChart3 size={18} />, color: "#C9A87C" },
           ].map((item, i) => (
             <AnimatedSection key={i} animation="scale" delay={i * 60}>
               <Card>
@@ -503,7 +503,7 @@ function BackersTab({ backers }: { backers: Backer[] }) {
               )}
               style={
                 filter === f
-                  ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                  ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                   : {}
               }
             >
@@ -532,7 +532,7 @@ function BackersTab({ backers }: { backers: Backer[] }) {
                 <div className="flex items-start gap-4">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, #C3B1E1, #74C0FC)" }}
+                    style={{ background: "linear-gradient(135deg, #C9A87C, #A8D8CB)" }}
                   >
                     {backer.is_anonymous
                       ? "🎭"
@@ -716,7 +716,7 @@ function RewardsTab({
                     )}
                     style={
                       newReward.rewardType === t.value
-                        ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                        ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                         : {}
                     }
                   >
@@ -813,7 +813,7 @@ function RewardsTab({
                   <div className="flex items-start gap-3">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-white flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, #FFB347, #FF6B9D)" }}
+                      style={{ background: "linear-gradient(135deg, #F5A34B, #F2807B)" }}
                     >
                       {rewardTypeIcon(reward.reward_type)}
                     </div>

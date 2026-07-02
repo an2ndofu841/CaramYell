@@ -195,7 +195,7 @@ export default function CreateProjectClient() {
           className="text-center max-w-md"
         >
           <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-4xl shadow-candy"
-            style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}>
+            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}>
             🔒
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-3">
@@ -210,7 +210,7 @@ export default function CreateProjectClient() {
             <button
               onClick={() => router.push("/auth/login?redirect=/projects/create")}
               className="px-8 py-3 rounded-full text-white font-bold btn-pop"
-              style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)", boxShadow: "0 4px 20px rgba(255, 107, 157, 0.4)" }}
+              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)" }}
             >
               ログイン / 新規登録
             </button>
@@ -235,7 +235,7 @@ export default function CreateProjectClient() {
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
             className="w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center text-3xl shadow-candy"
-            style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
           >
             🚀
           </motion.div>
@@ -264,7 +264,7 @@ export default function CreateProjectClient() {
                   )}
                   style={
                     step.id <= currentStep
-                      ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                      ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                       : {}
                   }
                   animate={{ scale: step.id === currentStep ? 1.1 : 1 }}
@@ -331,7 +331,7 @@ export default function CreateProjectClient() {
                         onClick={() => generateWithAI("tagline")}
                         disabled={!formData.title || isGenerating === "tagline"}
                         className="mt-2 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed btn-pop"
-                        style={{ background: "linear-gradient(135deg, #C3B1E1, #74C0FC)" }}
+                        style={{ background: "linear-gradient(135deg, #C9A87C, #A8D8CB)" }}
                       >
                         {isGenerating === "tagline" ? (
                           <>⏳ 生成中...</>
@@ -362,7 +362,7 @@ export default function CreateProjectClient() {
                           )}
                           style={
                             formData.category === cat.slug
-                              ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                              ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                               : {}
                           }
                         >
@@ -386,7 +386,7 @@ export default function CreateProjectClient() {
                 <div className="space-y-6">
                   {/* AI生成バナー */}
                   <div className="p-4 rounded-2xl flex items-start gap-3"
-                    style={{ background: "linear-gradient(135deg, rgba(195, 177, 225, 0.1), rgba(116, 192, 252, 0.1))", border: "1px solid rgba(195, 177, 225, 0.3)" }}>
+                    style={{ background: "linear-gradient(135deg, rgba(201, 168, 124, 0.1), rgba(143, 212, 196, 0.1))", border: "1px solid rgba(201, 168, 124, 0.3)" }}>
                     <Sparkles size={20} className="text-purple-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-bold text-gray-700 mb-1">
@@ -406,7 +406,7 @@ export default function CreateProjectClient() {
                         onClick={() => generateWithAI("description")}
                         disabled={isGenerating === "description"}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white disabled:opacity-50 btn-pop"
-                        style={{ background: "linear-gradient(135deg, #C3B1E1, #74C0FC)" }}
+                        style={{ background: "linear-gradient(135deg, #C9A87C, #A8D8CB)" }}
                       >
                         <Wand2 size={12} />
                         {isGenerating === "description" ? "生成中..." : "AIで生成"}
@@ -432,7 +432,7 @@ export default function CreateProjectClient() {
                         onClick={() => generateWithAI("story")}
                         disabled={isGenerating === "story"}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white disabled:opacity-50 btn-pop"
-                        style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}
+                        style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
                       >
                         <Wand2 size={12} />
                         {isGenerating === "story" ? "生成中..." : "AIで生成"}
@@ -482,7 +482,7 @@ export default function CreateProjectClient() {
                               ? "text-white"
                               : "bg-caramel-50 text-caramel-600 hover:bg-caramel-100"
                           )}
-                          style={formData.goalAmount === amount ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" } : {}}
+                          style={formData.goalAmount === amount ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" } : {}}
                         >
                           ¥{amount.toLocaleString()}
                         </button>
@@ -700,7 +700,7 @@ function RewardForm({
                     ? "text-white border-transparent"
                     : "border-caramel-100 text-gray-500 hover:border-caramel-200"
                 )}
-                style={reward.rewardType === t.value ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" } : {}}
+                style={reward.rewardType === t.value ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" } : {}}
               >
                 {t.label}
               </button>

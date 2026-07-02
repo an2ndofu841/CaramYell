@@ -61,7 +61,7 @@ const getProject = (slug: string): Project | null => {
         name_ja: "音楽",
         name_en: "Music",
         icon: "🎵",
-        color: "#FF6B9D",
+        color: "#F2807B",
         sort_order: 1,
       },
       rewards: [

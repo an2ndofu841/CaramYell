@@ -190,7 +190,7 @@ export default function BackingClient({
                   "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all",
                   s.id < step ? "text-white" : s.id === step ? "text-white shadow-candy" : "bg-white text-gray-400 border-2 border-caramel-100"
                 )}
-                  style={s.id <= step ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" } : {}}
+                  style={s.id <= step ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" } : {}}
                 >
                   {s.id < step ? <Check size={16} /> : s.icon}
                 </div>
@@ -421,7 +421,7 @@ export default function BackingClient({
                           "w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left",
                           paymentMethod === method.id ? "border-candy-pink" : "border-caramel-100 hover:border-caramel-200 bg-white"
                         )}
-                        style={paymentMethod === method.id ? { background: "rgba(255, 107, 157, 0.03)" } : {}}
+                        style={paymentMethod === method.id ? { background: "rgba(242, 128, 123, 0.03)" } : {}}
                       >
                         <div className={cn(
                           "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",

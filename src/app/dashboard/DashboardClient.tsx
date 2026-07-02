@@ -27,7 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Project, Category, Reward } from "@/types";
 
 interface DashboardProject extends Project {
-  categories: Category | null;
+  categories?: Category;
   rewards: Reward[];
   live_backer_count: number;
   live_current_amount: number;
@@ -109,7 +109,7 @@ export default function DashboardClient() {
     <div className="min-h-screen pt-20" style={{ background: "#FFFBF5" }}>
       <div
         className="py-8"
-        style={{ background: "linear-gradient(135deg, #2D1B4E 0%, #1a0f2e 100%)" }}
+        style={{ background: "linear-gradient(135deg, #4A2C17 0%, #31200E 100%)" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -136,25 +136,25 @@ export default function DashboardClient() {
               label: "累計支援金額",
               value: formatCurrency(totalRaised),
               icon: <DollarSign size={20} />,
-              color: "#FF6B9D",
+              color: "#F2807B",
             },
             {
               label: "合計支援者数",
               value: `${formatNumber(totalBackers)}人`,
               icon: <Users size={20} />,
-              color: "#FFB347",
+              color: "#F5A34B",
             },
             {
               label: "掲載中プロジェクト",
               value: `${activeProjects.length}件`,
               icon: <TrendingUp size={20} />,
-              color: "#4ECDC4",
+              color: "#8FD4C4",
             },
             {
               label: "全プロジェクト",
               value: `${projects.length}件`,
               icon: <BarChart3 size={20} />,
-              color: "#C3B1E1",
+              color: "#C9A87C",
             },
           ].map((item, i) => (
             <AnimatedSection key={i} animation="scale" delay={i * 80}>
@@ -281,7 +281,7 @@ export default function DashboardClient() {
                           className="flex-1"
                         >
                           <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white transition-colors"
-                            style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}>
+                            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}>
                             管理する
                             <ChevronRight size={14} />
                           </button>

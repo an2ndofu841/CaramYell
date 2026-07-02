@@ -30,9 +30,9 @@ export default function ProgressBar({
   }, [percentage, animated]);
 
   const gradients = {
-    candy: "linear-gradient(90deg, #FF6B9D, #FFB347)",
+    candy: "linear-gradient(90deg, #F2807B, #F5A34B)",
     caramel: "linear-gradient(90deg, #F47B0A, #FF9A2E)",
-    mint: "linear-gradient(90deg, #4ECDC4, #74C0FC)",
+    mint: "linear-gradient(90deg, #8FD4C4, #A8D8CB)",
   };
 
   return (

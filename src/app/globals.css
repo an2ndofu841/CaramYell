@@ -2,19 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Fredoka+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap');
 
 :root {
-  --font-sans: 'Nunito', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-  --font-display: 'Fredoka One', 'Hiragino Kaku Gothic ProN', sans-serif;
+  --font-sans: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  --font-display: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif;
 
+  /* Caramel palette */
   --caramel-50: #FFF8F0;
   --caramel-100: #FFEFD6;
-  --caramel-400: #FF9A2E;
-  --caramel-500: #F47B0A;
-  --candy-pink: #FF6B9D;
-  --candy-mint: #4ECDC4;
-  --candy-lemon: #FFE66D;
+  --caramel-400: #F5A34B;
+  --caramel-500: #E8842C;
+  --honey: #F3A93C;
+  --apricot: #FFC98A;
+  --coral: #F2807B;
+  --mint: #8FD4C4;
+  --latte: #C9A87C;
+  --cocoa: #4A2C17;
   --cream-50: #FFFBF5;
 }
 
@@ -31,7 +35,7 @@ html {
 body {
   background-color: var(--cream-50);
   font-family: var(--font-sans);
-  color: #2D1B4E;
+  color: #4A2C17;
   overflow-x: hidden;
 }
 
@@ -40,46 +44,46 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #FFF5E6;
+  background: #FFF6E9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #FFB347;
+  background: #F5A34B;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #F47B0A;
+  background: #E8842C;
 }
 
 /* テキスト選択色 */
 ::selection {
-  background-color: rgba(255, 107, 157, 0.3);
-  color: #2D1B4E;
+  background-color: rgba(245, 163, 75, 0.35);
+  color: #4A2C17;
 }
 
 /* アニメーション用クラス */
 @layer utilities {
   .text-gradient-candy {
-    background: linear-gradient(135deg, #FF6B9D, #FFB347, #4ECDC4);
+    background: linear-gradient(135deg, #F2807B, #E8842C);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-caramel {
-    background: linear-gradient(135deg, #F47B0A, #FF9A2E);
+    background: linear-gradient(135deg, #E8842C, #F5A34B);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .glass {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 251, 245, 0.75);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
 
   .glass-dark {
-    background: rgba(45, 27, 78, 0.7);
+    background: rgba(74, 44, 23, 0.75);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -89,8 +93,8 @@ body {
   }
 
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(255, 107, 157, 0.2);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(232, 132, 44, 0.22);
   }
 
   .btn-pop {
@@ -134,14 +138,14 @@ body {
 .progress-bar {
   position: relative;
   height: 12px;
-  background: #FFE8C8;
+  background: #FFEAD0;
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #FF6B9D, #FFB347);
+  background: linear-gradient(90deg, #F2807B, #E8842C, #F5A34B);
   border-radius: 999px;
   transition: width 1s ease;
   position: relative;
@@ -187,7 +191,7 @@ body {
 
 /* フォーカスリング */
 :focus-visible {
-  outline: 3px solid #FF6B9D;
+  outline: 3px solid #F5A34B;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -195,4 +199,22 @@ body {
 /* 画像のロード前プレースホルダー */
 img {
   color: transparent;
+}
+
+/* ============ カラメルドリップ装飾 ============ */
+.caramel-drip {
+  position: relative;
+}
+
+.caramel-drip-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* モバイルタブバー用のセーフエリア余白 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .tabbar-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

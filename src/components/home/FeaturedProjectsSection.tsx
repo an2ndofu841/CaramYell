@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { useRef } from "react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import ProjectCard from "@/components/project/ProjectCard";
 import { Project } from "@/types";
@@ -9,26 +12,26 @@ const dummyProjects: Project[] = [
   {
     id: "1",
     creator_id: "u1",
-    title: "世界で初めての「香りで楽しむ音楽アルバム」を作りたい！",
-    slug: "scent-music-album",
-    tagline: "音楽と香りを融合させた全く新しいリスニング体験を届けます",
-    description: "音楽を耳だけで楽しむ時代は終わった。香りと音楽を同時に楽しむ、革命的なアルバムプロジェクト。",
+    title: "上質な革小物を届けたい - ハンドメイドブランドの挑戦",
+    slug: "handmade-leather-goods",
+    tagline: "一つひとつ手作業で仕上げる、長く愛せる革小物",
+    description: "職人歴20年の技術で、毎日使いたくなる革小物を作ります。",
     story: "",
-    category_id: "cat-music",
-    tags: ["音楽", "アロマ", "アート"],
+    category_id: "cat-fashion",
+    tags: ["ハンドメイド", "革小物", "ファッション"],
     goal_amount: 1500000,
-    current_amount: 1823000,
-    backer_count: 342,
+    current_amount: 1230000,
+    backer_count: 1234,
     currency: "JPY",
-    status: "funded",
+    status: "active",
     featured: true,
-    main_image_url: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80",
+    main_image_url: "https://images.unsplash.com/photo-1473188588951-666fce8e7c68?w=800&q=80",
     images: [],
-    start_date: "2025-01-01",
-    end_date: "2025-08-31",
+    start_date: "2026-05-01",
+    end_date: "2026-07-18",
     share_count: 156,
-    created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-06-01T00:00:00Z",
+    created_at: "2026-05-01T00:00:00Z",
+    updated_at: "2026-06-01T00:00:00Z",
     profiles: {
       id: "u1",
       display_name: "Aoi Tanaka",
@@ -39,38 +42,38 @@ const dummyProjects: Project[] = [
       updated_at: "2025-01-01T00:00:00Z",
     },
     categories: {
-      id: "cat-music",
-      slug: "music",
-      name_ja: "音楽",
-      name_en: "Music",
-      icon: "🎵",
-      color: "#FF6B9D",
-      sort_order: 1,
+      id: "cat-fashion",
+      slug: "fashion",
+      name_ja: "ファッション",
+      name_en: "Fashion",
+      icon: "👜",
+      color: "#F2807B",
+      sort_order: 7,
     },
   },
   {
     id: "2",
     creator_id: "u2",
-    title: "障がいのある子どもたちと作る、インタラクティブ絵本アプリ",
-    slug: "interactive-picture-book",
-    tagline: "すべての子どもが主人公になれる物語を届けたい",
-    description: "AI生成イラストとARを組み合わせた、インクルーシブな絵本アプリを開発中。",
+    title: "小さな焼き菓子屋さんをオープンしたい",
+    slug: "small-bakery-open",
+    tagline: "地元の素材で作る、心あたたまる焼き菓子のお店",
+    description: "地元食材にこだわった焼き菓子専門店を開業します。",
     story: "",
-    category_id: "cat-tech",
-    tags: ["教育", "インクルーシブ", "テクノロジー"],
-    goal_amount: 800000,
-    current_amount: 534000,
-    backer_count: 218,
+    category_id: "cat-food",
+    tags: ["フード", "開業", "焼き菓子"],
+    goal_amount: 1500000,
+    current_amount: 975000,
+    backer_count: 856,
     currency: "JPY",
     status: "active",
-    featured: true,
-    main_image_url: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80",
+    featured: false,
+    main_image_url: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800&q=80",
     images: [],
-    start_date: "2025-05-01",
-    end_date: "2025-09-30",
+    start_date: "2026-06-20",
+    end_date: "2026-07-04",
     share_count: 89,
-    created_at: "2025-05-01T00:00:00Z",
-    updated_at: "2025-07-01T00:00:00Z",
+    created_at: "2026-06-20T00:00:00Z",
+    updated_at: "2026-07-01T00:00:00Z",
     profiles: {
       id: "u2",
       display_name: "Haruki Sato",
@@ -81,38 +84,38 @@ const dummyProjects: Project[] = [
       updated_at: "2025-01-01T00:00:00Z",
     },
     categories: {
-      id: "cat-tech",
-      slug: "tech",
-      name_ja: "テクノロジー",
-      name_en: "Technology",
-      icon: "💻",
-      color: "#74C0FC",
-      sort_order: 4,
+      id: "cat-food",
+      slug: "food",
+      name_ja: "フード",
+      name_en: "Food",
+      icon: "🍪",
+      color: "#F5A34B",
+      sort_order: 6,
     },
   },
   {
     id: "3",
     creator_id: "u3",
-    title: "京都の職人技×デジタルアートで作る、動く着物コレクション",
-    slug: "digital-kimono-collection",
-    tagline: "300年の伝統をNFTアートとして世界へ",
-    description: "京都の老舗和装店と現代デジタルアーティストがコラボ。動くデジタル着物を世界に届けます。",
+    title: "オリジナル文具ブランドを育てて世界に届けたい",
+    slug: "original-stationery-brand",
+    tagline: "書くことが楽しくなる、こだわりの文具シリーズ",
+    description: "デザインと使い心地にこだわった文具ブランドを立ち上げます。",
     story: "",
     category_id: "cat-art",
-    tags: ["和服", "NFT", "アート", "伝統"],
-    goal_amount: 2000000,
-    current_amount: 880000,
-    backer_count: 95,
+    tags: ["文具", "デザイン", "ものづくり"],
+    goal_amount: 1500000,
+    current_amount: 705600,
+    backer_count: 612,
     currency: "JPY",
     status: "active",
     featured: false,
-    main_image_url: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80",
+    main_image_url: "https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?w=800&q=80",
     images: [],
-    start_date: "2025-06-01",
-    end_date: "2025-10-31",
+    start_date: "2026-06-01",
+    end_date: "2026-08-04",
     share_count: 43,
-    created_at: "2025-06-01T00:00:00Z",
-    updated_at: "2025-07-01T00:00:00Z",
+    created_at: "2026-06-01T00:00:00Z",
+    updated_at: "2026-07-01T00:00:00Z",
     profiles: {
       id: "u3",
       display_name: "Yuki Yamamoto",
@@ -127,60 +130,120 @@ const dummyProjects: Project[] = [
       slug: "art",
       name_ja: "アート",
       name_en: "Art",
-      icon: "🎨",
-      color: "#C3B1E1",
+      icon: "✒️",
+      color: "#C9A87C",
       sort_order: 2,
+    },
+  },
+  {
+    id: "4",
+    creator_id: "u4",
+    title: "こだわりのカメラバッグを開発・製品化したい",
+    slug: "camera-bag-development",
+    tagline: "撮影者目線で設計した、機能美あふれるカメラバッグ",
+    description: "プロカメラマンと共同開発する理想のカメラバッグ。",
+    story: "",
+    category_id: "cat-tech",
+    tags: ["カメラ", "プロダクト", "ものづくり"],
+    goal_amount: 1500000,
+    current_amount: 567000,
+    backer_count: 463,
+    currency: "JPY",
+    status: "active",
+    featured: false,
+    main_image_url: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80",
+    images: [],
+    start_date: "2026-05-15",
+    end_date: "2026-08-12",
+    share_count: 31,
+    created_at: "2026-05-15T00:00:00Z",
+    updated_at: "2026-07-01T00:00:00Z",
+    profiles: {
+      id: "u4",
+      display_name: "Ren Kimura",
+      avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
+      total_backed: 0,
+      total_created: 1,
+      created_at: "2024-08-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+    },
+    categories: {
+      id: "cat-tech",
+      slug: "tech",
+      name_ja: "テクノロジー",
+      name_en: "Technology",
+      icon: "📷",
+      color: "#8FD4C4",
+      sort_order: 4,
     },
   },
 ];
 
 export default function FeaturedProjectsSection() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.8;
+    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+  };
+
   return (
-    <section className="py-20" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
+    <section className="py-16 sm:py-20" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnimatedSection animation="fade-up" className="flex items-end justify-between mb-12">
+        <AnimatedSection animation="fade-up" className="flex items-end justify-between mb-8">
           <div>
-            <span className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-              style={{ background: "rgba(255, 107, 157, 0.1)", color: "#FF6B9D" }}>
-              🌟 注目のプロジェクト
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
-              今すぐ応援できる
-              <br />
-              <span style={{
-                background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}>熱いプロジェクト</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-cocoa-700 flex items-center gap-2"
+              style={{ fontFamily: "var(--font-display)" }}>
+              <span className="text-2xl">🔥</span>
+              注目のプロジェクト
             </h2>
           </div>
-          <Link
-            href="/projects"
-            className="hidden sm:flex items-center gap-2 text-sm font-bold text-caramel-600 hover:text-caramel-700 transition-colors whitespace-nowrap"
-          >
-            すべて見る
-            <ArrowRight size={16} />
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* カルーセル操作 */}
+            <div className="hidden sm:flex gap-2">
+              <button
+                onClick={() => scroll("left")}
+                aria-label="前へ"
+                className="w-9 h-9 rounded-full bg-white border-2 border-caramel-100 flex items-center justify-center text-caramel-500 hover:bg-caramel-50 transition-colors"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => scroll("right")}
+                aria-label="次へ"
+                className="w-9 h-9 rounded-full bg-white border-2 border-caramel-100 flex items-center justify-center text-caramel-500 hover:bg-caramel-50 transition-colors"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+            <Link
+              href="/projects"
+              className="flex items-center gap-1 text-sm font-bold text-caramel-500 hover:text-caramel-600 transition-colors whitespace-nowrap"
+            >
+              すべて見る
+              <ArrowRight size={14} />
+            </Link>
+          </div>
         </AnimatedSection>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* カルーセル */}
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {dummyProjects.map((project, i) => (
-            <AnimatedSection key={project.id} animation="fade-up" delay={i * 100}>
-              <ProjectCard project={project} />
-            </AnimatedSection>
+            <div
+              key={project.id}
+              className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start"
+            >
+              <AnimatedSection animation="fade-up" delay={i * 80}>
+                <ProjectCard project={project} />
+              </AnimatedSection>
+            </div>
           ))}
         </div>
-
-        <AnimatedSection animation="fade-up" delay={300} className="text-center mt-10 sm:hidden">
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
-          >
-            すべてのプロジェクトを見る
-            <ArrowRight size={16} />
-          </Link>
-        </AnimatedSection>
       </div>
     </section>
   );

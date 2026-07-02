@@ -121,7 +121,7 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                 {stats.is_funded && (
                   <div className="absolute top-4 right-4">
                     <span className="px-4 py-2 rounded-full text-sm font-bold text-white"
-                      style={{ background: "linear-gradient(135deg, #4ECDC4, #74C0FC)" }}>
+                      style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)" }}>
                       🎉 目標達成！
                     </span>
                   </div>
@@ -210,7 +210,7 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                     )}
                     style={
                       activeTab === tab.id
-                        ? { background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }
+                        ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
                         : {}
                     }
                   >
@@ -417,7 +417,7 @@ function RewardCard({
             ? "border-caramel-100 hover:border-caramel-300 hover:shadow-soft bg-white"
             : "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed"
         )}
-        style={selected ? { background: "rgba(255, 107, 157, 0.03)" } : {}}
+        style={selected ? { background: "rgba(242, 128, 123, 0.03)" } : {}}
       >
         <div className="flex items-start gap-3">
           {/* チェック */}

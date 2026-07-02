@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 
 interface BadgeProps {
   children: ReactNode;
-  color?: "pink" | "caramel" | "mint" | "lavender" | "lemon" | "sky" | "gray";
+  color?: "pink" | "caramel" | "mint" | "lavender" | "lemon" | "sky" | "gray" | "hot" | "new";
   size?: "sm" | "md";
   className?: string;
 }
@@ -22,6 +22,8 @@ export default function Badge({
     lemon: "bg-yellow-100 text-yellow-700",
     sky: "bg-blue-100 text-blue-700",
     gray: "bg-gray-100 text-gray-600",
+    hot: "text-white bg-gradient-to-r from-[#F2807B] to-[#E8842C]",
+    new: "text-white bg-gradient-to-r from-[#F5A34B] to-[#F3A93C]",
   };
 
   const sizes = {

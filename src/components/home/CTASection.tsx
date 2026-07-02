@@ -12,7 +12,7 @@ export default function CTASection() {
       <div
         className="absolute inset-0"
         style={{
-          background: "linear-gradient(135deg, #2D1B4E 0%, #1a0f2e 100%)",
+          background: "linear-gradient(135deg, #4A2C17 0%, #31200E 100%)",
         }}
       />
 
@@ -47,8 +47,8 @@ export default function CTASection() {
           <div
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
             style={{
-              background: "rgba(255, 107, 157, 0.2)",
-              border: "1px solid rgba(255, 107, 157, 0.4)",
+              background: "rgba(242, 128, 123, 0.2)",
+              border: "1px solid rgba(242, 128, 123, 0.4)",
             }}
           >
             <Sparkles size={16} className="text-candy-pink" />
@@ -59,13 +59,13 @@ export default function CTASection() {
 
           <h2
             className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6"
-            style={{ fontFamily: "Fredoka One, sans-serif" }}
+            style={{ fontFamily: "var(--font-display)" }}
           >
             あなたの夢を、
             <br />
             <span
               style={{
-                background: "linear-gradient(135deg, #FF6B9D, #FFB347, #FFE66D)",
+                background: "linear-gradient(135deg, #F2807B, #F5A34B, #FFE0A8)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",

@@ -23,32 +23,32 @@ const values = [
     title: "夢を100%届ける",
     description:
       "掲載者への手数料は完全0%。集まった資金はすべてクリエイターの手に届きます。出資者が手数料を負担するやさしい仕組みです。",
-    color: "#FF6B9D",
-    bg: "rgba(255, 107, 157, 0.08)",
+    color: "#F2807B",
+    bg: "rgba(242, 128, 123, 0.08)",
   },
   {
     icon: <Zap size={28} />,
     title: "すべてをシンプルに",
     description:
       "AIが面倒な文章作成をサポート。最短30分で掲載スタート。出資者はアカウント登録すら不要。誰にとっても使いやすいプラットフォームを目指しています。",
-    color: "#FFB347",
-    bg: "rgba(255, 179, 71, 0.08)",
+    color: "#F5A34B",
+    bg: "rgba(245, 163, 75, 0.08)",
   },
   {
     icon: <Shield size={28} />,
     title: "安心・安全な決済",
     description:
       "決済はStripeを通じて行われ、クレジットカード情報はCaramYellのサーバーに保存されません。3Dセキュア認証にも対応しています。",
-    color: "#4ECDC4",
-    bg: "rgba(78, 205, 196, 0.08)",
+    color: "#8FD4C4",
+    bg: "rgba(143, 212, 196, 0.08)",
   },
   {
     icon: <Globe size={28} />,
     title: "国境を越える応援",
     description:
       "AI自動翻訳とApple Pay・Google Payなど多彩な決済手段で、海外からの応援もスムーズに受け付けられます。",
-    color: "#74C0FC",
-    bg: "rgba(116, 192, 252, 0.08)",
+    color: "#A8D8CB",
+    bg: "rgba(143, 212, 196, 0.08)",
   },
 ];
 
@@ -57,37 +57,37 @@ const features = [
     icon: <CreditCard size={22} />,
     title: "掲載者の手数料 0%",
     description: "出資者が10%の手数料を負担する仕組みで、クリエイターの取り分は100%",
-    color: "#FF6B9D",
+    color: "#F2807B",
   },
   {
     icon: <Bot size={22} />,
     title: "AIプロジェクト作成支援",
     description: "タイトルを入力するだけでAIが説明文・リターン内容を自動提案",
-    color: "#C3B1E1",
+    color: "#C9A87C",
   },
   {
     icon: <Users size={22} />,
     title: "アカウント不要で出資",
     description: "ニックネームとメールアドレスだけでサクッと応援可能",
-    color: "#FFB347",
+    color: "#F5A34B",
   },
   {
     icon: <Zap size={22} />,
     title: "最短30分で掲載開始",
     description: "シンプルな審査フローで、アイデアがあればすぐに始められる",
-    color: "#4ECDC4",
+    color: "#8FD4C4",
   },
   {
     icon: <Gift size={22} />,
     title: "デジタルリターン対応",
     description: "限定ボイス・チェキ・動画URLなど、デジタルコンテンツもリターンに設定可能",
-    color: "#74C0FC",
+    color: "#A8D8CB",
   },
   {
     icon: <Globe size={22} />,
     title: "海外決済 & AI翻訳",
     description: "Apple Pay・Google Payに対応。プロジェクトページを多言語で自動表示",
-    color: "#FFE66D",
+    color: "#FFE0A8",
   },
 ];
 
@@ -123,13 +123,13 @@ export default function AboutClient() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(135deg, rgba(255, 107, 157, 0.06) 0%, rgba(255, 179, 71, 0.06) 50%, rgba(78, 205, 196, 0.06) 100%)",
+              "linear-gradient(135deg, rgba(242, 128, 123, 0.06) 0%, rgba(245, 163, 75, 0.06) 50%, rgba(143, 212, 196, 0.06) 100%)",
           }}
         />
         <div className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-10 bubble"
-          style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }} />
+          style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }} />
         <div className="absolute bottom-10 left-10 w-56 h-56 rounded-full opacity-10 bubble-2"
-          style={{ background: "linear-gradient(135deg, #4ECDC4, #74C0FC)" }} />
+          style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)" }} />
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <AnimatedSection animation="fade-up">
@@ -144,7 +144,7 @@ export default function AboutClient() {
               <br />
               <span
                 style={{
-                  background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
+                  background: "linear-gradient(135deg, #F2807B, #F5A34B)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -164,13 +164,13 @@ export default function AboutClient() {
       {/* Mission */}
       <section className="py-20 bg-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-5"
-          style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)", transform: "translate(30%, -30%)" }} />
+          style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", transform: "translate(30%, -30%)" }} />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection animation="fade-up" className="text-center mb-16">
             <span
               className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-              style={{ background: "rgba(255, 107, 157, 0.1)", color: "#FF6B9D" }}
+              style={{ background: "rgba(242, 128, 123, 0.1)", color: "#F2807B" }}
             >
               💭 ミッション
             </span>
@@ -193,7 +193,7 @@ export default function AboutClient() {
                 出資者にはアカウント登録不要で、
                 メールアドレスだけで気軽に応援できる仕組みを提供しています。
               </p>
-              <p className="font-semibold" style={{ color: "#FF6B9D" }}>
+              <p className="font-semibold" style={{ color: "#F2807B" }}>
                 誰もが「やってみたい」に挑戦でき、
                 誰もが「応援したい」を届けられる世界を目指しています。
               </p>
@@ -208,7 +208,7 @@ export default function AboutClient() {
           <AnimatedSection animation="fade-up" className="text-center mb-16">
             <span
               className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-              style={{ background: "rgba(78, 205, 196, 0.1)", color: "#4ECDC4" }}
+              style={{ background: "rgba(143, 212, 196, 0.1)", color: "#8FD4C4" }}
             >
               🌟 大切にしていること
             </span>
@@ -243,7 +243,7 @@ export default function AboutClient() {
       {/* Features Grid */}
       <section className="py-20 bg-white relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-5"
-          style={{ background: "linear-gradient(135deg, #4ECDC4, #74C0FC)", transform: "translate(-30%, 30%)" }} />
+          style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)", transform: "translate(-30%, 30%)" }} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection animation="fade-up" className="text-center mb-16">
@@ -292,7 +292,7 @@ export default function AboutClient() {
           <AnimatedSection animation="fade-up" className="text-center mb-12">
             <span
               className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-              style={{ background: "rgba(255, 107, 157, 0.1)", color: "#FF6B9D" }}
+              style={{ background: "rgba(242, 128, 123, 0.1)", color: "#F2807B" }}
             >
               💸 手数料の仕組み
             </span>
@@ -300,7 +300,7 @@ export default function AboutClient() {
               掲載者の手数料は
               <span
                 style={{
-                  background: "linear-gradient(135deg, #FF6B9D, #FFB347)",
+                  background: "linear-gradient(135deg, #F2807B, #F5A34B)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -315,8 +315,8 @@ export default function AboutClient() {
             <div
               className="rounded-4xl p-8 sm:p-10"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 107, 157, 0.05) 0%, rgba(255, 179, 71, 0.05) 100%)",
-                border: "2px solid rgba(255, 107, 157, 0.1)",
+                background: "linear-gradient(135deg, rgba(242, 128, 123, 0.05) 0%, rgba(245, 163, 75, 0.05) 100%)",
+                border: "2px solid rgba(242, 128, 123, 0.1)",
               }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -337,7 +337,7 @@ export default function AboutClient() {
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-white"
-                        style={{ background: "linear-gradient(135deg, #FF6B9D, #FFB347)" }}>
+                        style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}>
                         ◎
                       </div>
                       <div>
@@ -365,11 +365,11 @@ export default function AboutClient() {
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                       <span className="text-sm font-semibold text-gray-600">お支払い総額</span>
-                      <span className="text-lg font-bold" style={{ color: "#FF6B9D" }}>¥5,500</span>
+                      <span className="text-lg font-bold" style={{ color: "#F2807B" }}>¥5,500</span>
                     </div>
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-gray-600">クリエイターの受取額</span>
-                      <span className="text-lg font-bold" style={{ color: "#4ECDC4" }}>¥5,000</span>
+                      <span className="text-lg font-bold" style={{ color: "#8FD4C4" }}>¥5,000</span>
                     </div>
                   </div>
                 </div>
@@ -385,7 +385,7 @@ export default function AboutClient() {
           <AnimatedSection animation="fade-up" className="text-center mb-12">
             <span
               className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-              style={{ background: "rgba(195, 177, 225, 0.15)", color: "#8B6DB5" }}
+              style={{ background: "rgba(201, 168, 124, 0.15)", color: "#8B6DB5" }}
             >
               ❓ よくある質問
             </span>
@@ -408,7 +408,7 @@ export default function AboutClient() {
       <section className="py-20 relative overflow-hidden">
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(135deg, #2D1B4E 0%, #1a0f2e 100%)" }}
+          style={{ background: "linear-gradient(135deg, #4A2C17 0%, #31200E 100%)" }}
         />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {["🍬", "⭐", "🎀", "✨", "🍭"].map((emoji, i) => (
@@ -434,8 +434,8 @@ export default function AboutClient() {
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
               style={{
-                background: "rgba(255, 107, 157, 0.2)",
-                border: "1px solid rgba(255, 107, 157, 0.4)",
+                background: "rgba(242, 128, 123, 0.2)",
+                border: "1px solid rgba(242, 128, 123, 0.4)",
               }}
             >
               <Sparkles size={16} className="text-candy-pink" />
@@ -444,12 +444,12 @@ export default function AboutClient() {
 
             <h2
               className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6"
-              style={{ fontFamily: "Fredoka One, sans-serif" }}
+              style={{ fontFamily: "var(--font-display)" }}
             >
               あなたの
               <span
                 style={{
-                  background: "linear-gradient(135deg, #FF6B9D, #FFB347, #FFE66D)",
+                  background: "linear-gradient(135deg, #F2807B, #F5A34B, #FFE0A8)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -493,15 +493,15 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
       className="group rounded-2xl overflow-hidden"
       style={{
         background: "rgba(255, 248, 240, 0.5)",
-        border: "2px solid rgba(255, 179, 71, 0.1)",
+        border: "2px solid rgba(245, 163, 75, 0.1)",
       }}
-      whileHover={{ boxShadow: "0 4px 20px rgba(255, 179, 71, 0.1)" }}
+      whileHover={{ boxShadow: "0 4px 20px rgba(245, 163, 75, 0.1)" }}
     >
       <summary className="flex items-center justify-between cursor-pointer px-6 py-5 text-left list-none [&::-webkit-details-marker]:hidden">
         <span className="font-bold text-gray-800 pr-4">{question}</span>
         <span
           className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-transform duration-300 group-open:rotate-45"
-          style={{ background: "rgba(255, 179, 71, 0.15)", color: "#FFB347" }}
+          style={{ background: "rgba(245, 163, 75, 0.15)", color: "#F5A34B" }}
         >
           +
         </span>
