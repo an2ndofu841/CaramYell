@@ -100,8 +100,11 @@ export function useAuth() {
     return { error };
   };
 
+  const isAdmin = state.profile?.role === "admin";
+
   return {
     ...state,
+    isAdmin,
     signInWithEmail,
     signUpWithEmail,
     signInWithOAuth,

@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import AdminOnly from "@/components/auth/AdminOnly";
 
 export default function Header() {
   const router = useRouter();
@@ -64,12 +65,14 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center gap-1">
             <NavLink href="/projects">プロジェクトを探す</NavLink>
-            <NavLink href="/projects/create">
-              <span className="flex items-center gap-1">
-                <Sparkles size={14} />
-                はじめる
-              </span>
-            </NavLink>
+            <AdminOnly>
+              <NavLink href="/projects/create">
+                <span className="flex items-center gap-1">
+                  <Sparkles size={14} />
+                  はじめる
+                </span>
+              </NavLink>
+            </AdminOnly>
             <NavLink href="/about">CaramYellとは</NavLink>
           </nav>
 
@@ -137,17 +140,19 @@ export default function Header() {
               </Link>
             )}
 
-            <Link
-              href="/projects/create"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
-              style={{
-                background: "linear-gradient(135deg, #F2807B, #E8842C)",
-                boxShadow: "0 4px 15px rgba(232, 132, 44, 0.4)",
-              }}
-            >
-              <Plus size={16} />
-              プロジェクトを作る
-            </Link>
+            <AdminOnly>
+              <Link
+                href="/projects/create"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
+                style={{
+                  background: "linear-gradient(135deg, #F2807B, #E8842C)",
+                  boxShadow: "0 4px 15px rgba(232, 132, 44, 0.4)",
+                }}
+              >
+                <Plus size={16} />
+                プロジェクトを作る
+              </Link>
+            </AdminOnly>
           </div>
 
           <button
@@ -175,9 +180,11 @@ export default function Header() {
             <MobileNavLink href="/projects" onClick={() => setIsMenuOpen(false)}>
               プロジェクトを見る
             </MobileNavLink>
-            <MobileNavLink href="/projects/create" onClick={() => setIsMenuOpen(false)}>
-              掲載する（AI支援あり）
-            </MobileNavLink>
+            <AdminOnly>
+              <MobileNavLink href="/projects/create" onClick={() => setIsMenuOpen(false)}>
+                掲載する（AI支援あり）
+              </MobileNavLink>
+            </AdminOnly>
             <MobileNavLink href="/about" onClick={() => setIsMenuOpen(false)}>
               CaramYellとは
             </MobileNavLink>
@@ -206,25 +213,15 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <LogIn size={16} />
-                    ログイン
-                  </Link>
-                  <Link
-                    href="/projects/create"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white"
-                    style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Plus size={16} />
-                    プロジェクト作成
-                  </Link>
-                </>
+                <Link
+                  href="/auth/login"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-white"
+                  style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <LogIn size={16} />
+                  ログイン / 新規登録
+                </Link>
               )}
             </div>
           </nav>

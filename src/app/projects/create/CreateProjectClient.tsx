@@ -58,7 +58,7 @@ type RewardInput = {
 
 export default function CreateProjectClient() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -202,9 +202,7 @@ export default function CreateProjectClient() {
             ログインが必要です
           </h1>
           <p className="text-gray-500 mb-8 leading-relaxed">
-            プロジェクトを作成するには、アカウント登録またはログインが必要です。
-            <br />
-            <span className="text-sm">無料でかんたんに登録できます。</span>
+            プロジェクトを作成するには、ログインが必要です。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
@@ -219,6 +217,47 @@ export default function CreateProjectClient() {
               className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
             >
               プロジェクトを見る
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // プロジェクト作成は当面、弊社（管理者）アカウントのみ。一般開放は今後。
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4" style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-md"
+        >
+          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-4xl shadow-candy"
+            style={{ background: "linear-gradient(135deg, #F5A34B, #8FD4C4)" }}>
+            🚧
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            プロジェクト作成は準備中です
+          </h1>
+          <p className="text-gray-500 mb-8 leading-relaxed">
+            現在プロジェクトの掲載は運営（弊社）が手がけるものに限定しています。
+            <br />
+            一般の方の作成は今後の開放を予定しています。もうしばらくお待ちください。
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => router.push("/projects")}
+              className="px-8 py-3 rounded-full text-white font-bold btn-pop"
+              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)" }}
+            >
+              プロジェクトを見る
+            </button>
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
+            >
+              マイページへ
             </button>
           </div>
         </motion.div>

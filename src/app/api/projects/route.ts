@@ -69,6 +69,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
+  // プロジェクト作成は当面、弊社（管理者）アカウントのみに限定
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin") {
+    return NextResponse.json(
+      { error: "プロジェクトの作成は現在準備中です。一般公開までお待ちください。" },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json();
   const {
     title,

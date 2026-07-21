@@ -24,6 +24,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import { formatCurrency, formatNumber, getStatusLabel } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import AdminOnly from "@/components/auth/AdminOnly";
 import type { Project, Category, Reward } from "@/types";
 
 interface DashboardProject extends Project {
@@ -35,7 +36,7 @@ interface DashboardProject extends Project {
 
 export default function DashboardClient() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [projects, setProjects] = useState<DashboardProject[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -119,11 +120,13 @@ export default function DashboardClient() {
                 プロジェクトの状況を管理しましょう
               </p>
             </div>
-            <Link href="/projects/create">
-              <Button icon={<Plus size={18} />} size="md">
-                新しいプロジェクト
-              </Button>
-            </Link>
+            <AdminOnly>
+              <Link href="/projects/create">
+                <Button icon={<Plus size={18} />} size="md">
+                  新しいプロジェクト
+                </Button>
+              </Link>
+            </AdminOnly>
           </div>
         </div>
       </div>
@@ -180,20 +183,37 @@ export default function DashboardClient() {
         {projects.length === 0 ? (
           <AnimatedSection animation="fade-up">
             <Card>
-              <div className="text-center py-12">
-                <div className="text-5xl mb-4">🚀</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                  最初のプロジェクトを作りましょう
-                </h2>
-                <p className="text-gray-500 mb-6">
-                  AIのサポートで、最短10分でページが完成します
-                </p>
-                <Link href="/projects/create">
-                  <Button icon={<Plus size={18} />} size="lg">
-                    プロジェクトを作る
-                  </Button>
-                </Link>
-              </div>
+              {isAdmin ? (
+                <div className="text-center py-12">
+                  <div className="text-5xl mb-4">🚀</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    最初のプロジェクトを作りましょう
+                  </h2>
+                  <p className="text-gray-500 mb-6">
+                    AIのサポートで、最短10分でページが完成します
+                  </p>
+                  <Link href="/projects/create">
+                    <Button icon={<Plus size={18} />} size="lg">
+                      プロジェクトを作る
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-5xl mb-4">🍬</div>
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    気になるプロジェクトを応援しよう
+                  </h2>
+                  <p className="text-gray-500 mb-6">
+                    プロジェクトの作成は現在準備中です。まずは応援から始めましょう。
+                  </p>
+                  <Link href="/projects">
+                    <Button size="lg">
+                      プロジェクトを見る
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </Card>
           </AnimatedSection>
         ) : (

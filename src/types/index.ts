@@ -18,6 +18,8 @@ export type PaymentMethod =
   | "paypal"
   | "link";
 
+export type UserRole = "user" | "admin";
+
 export interface Profile {
   id: string;
   username?: string;
@@ -26,6 +28,7 @@ export interface Profile {
   bio?: string;
   website_url?: string;
   twitter_handle?: string;
+  role: UserRole;
   total_backed: number;
   total_created: number;
   created_at: string;

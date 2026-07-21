@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Heart, Twitter, Instagram, Youtube } from "lucide-react";
+import AdminOnly from "@/components/auth/AdminOnly";
 
 export default function Footer() {
   return (
@@ -68,7 +69,9 @@ export default function Footer() {
               <h3 className="font-bold text-sm mb-3 text-white/80">サービス</h3>
               <ul className="space-y-2">
                 <FooterLink href="/projects">プロジェクト一覧</FooterLink>
-                <FooterLink href="/projects/create">プロジェクトを作る</FooterLink>
+                <AdminOnly>
+                  <FooterLink href="/projects/create">プロジェクトを作る</FooterLink>
+                </AdminOnly>
                 <FooterLink href="/about">CaramYellとは</FooterLink>
                 <FooterLink href="/pricing">手数料について</FooterLink>
               </ul>

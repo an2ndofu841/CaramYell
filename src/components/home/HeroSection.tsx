@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Heart, Megaphone, Star } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
+import AdminOnly from "@/components/auth/AdminOnly";
 
 export default function HeroSection() {
   return (
@@ -78,11 +79,13 @@ export default function HeroSection() {
                   プロジェクトを見る
                 </Button>
               </Link>
-              <Link href="/projects/create">
-                <Button size="lg" variant="outline" heartOnHover>
-                  はじめる
-                </Button>
-              </Link>
+              <AdminOnly>
+                <Link href="/projects/create">
+                  <Button size="lg" variant="outline" heartOnHover>
+                    はじめる
+                  </Button>
+                </Link>
+              </AdminOnly>
             </motion.div>
 
             {/* キャンペーンバッジ */}
