@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileTabBar from "@/components/layout/MobileTabBar";
@@ -55,24 +56,26 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col">
-        <FloatingParticles />
-        <Header />
-        <main className="flex-1 page-enter pb-14 md:pb-0">{children}</main>
-        <Footer />
-        <MobileTabBar />
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "white",
-              color: "#4A2C17",
-              border: "2px solid #FFDFAE",
-              borderRadius: "16px",
-              fontFamily: "Noto Sans JP, sans-serif",
-              fontWeight: "600",
-            },
-          }}
-        />
+        <AuthProvider>
+          <FloatingParticles />
+          <Header />
+          <main className="flex-1 page-enter pb-14 md:pb-0">{children}</main>
+          <Footer />
+          <MobileTabBar />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: "white",
+                color: "#4A2C17",
+                border: "2px solid #FFDFAE",
+                borderRadius: "16px",
+                fontFamily: "Noto Sans JP, sans-serif",
+                fontWeight: "600",
+              },
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   );
