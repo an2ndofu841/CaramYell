@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User } from "lucide-react";
+import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import AdminOnly from "@/components/auth/AdminOnly";
 
 export default function Header() {
   const router = useRouter();
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, isAdmin, loading, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -118,6 +118,16 @@ export default function Header() {
                       <User size={16} />
                       プロフィール設定
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/dashboard/admin"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors"
+                      >
+                        <ShieldCheck size={16} />
+                        プロジェクト審査
+                      </Link>
+                    )}
                     <div className="border-t border-caramel-50 mt-1 pt-1">
                       <button
                         onClick={handleSignOut}
