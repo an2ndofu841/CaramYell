@@ -64,6 +64,7 @@ export interface Project {
   currency: string;
   status: ProjectStatus;
   featured: boolean;
+  allow_free_amount?: boolean;
   main_image_url?: string;
   images: string[];
   video_url?: string;
@@ -79,6 +80,17 @@ export interface Project {
   profiles?: Profile;
   categories?: Category;
   rewards?: Reward[];
+  project_milestones?: ProjectMilestone[];
+}
+
+export interface ProjectMilestone {
+  id: string;
+  project_id: string;
+  amount: number;
+  title: string;
+  description?: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface Reward {
@@ -172,6 +184,12 @@ export interface BackingFormData {
   paymentMethod: PaymentMethod;
 }
 
+export interface MilestoneInput {
+  amount: number;
+  title: string;
+  description?: string;
+}
+
 export interface CreateProjectFormData {
   title: string;
   tagline: string;
@@ -181,6 +199,7 @@ export interface CreateProjectFormData {
   tags: string[];
   goalAmount: number;
   endDate: string;
+  milestones: MilestoneInput[];
   rewards: Omit<Reward, "id" | "project_id" | "quantity_claimed" | "created_at">[];
 }
 

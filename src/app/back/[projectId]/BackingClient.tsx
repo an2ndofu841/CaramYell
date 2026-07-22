@@ -31,6 +31,7 @@ import { calcFee, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
+import type { Reward } from "@/types";
 
 const steps = [
   { id: 1, title: "リターン選択", icon: "🎁" },
@@ -49,20 +50,22 @@ const paymentMethods = [
 export default function BackingClient({
   projectSlug,
   selectedRewardId,
+  allowFreeAmount = true,
 }: {
   projectSlug: string;
   selectedRewardId?: string;
+  allowFreeAmount?: boolean;
 }) {
   const project =
     getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
   const rewards = project.rewards || [];
 
   const [step, setStep] = useState(1);
-  const [selectedReward, setSelectedReward] = useState(
-    rewards.find((r) => r.id === selectedRewardId) || null
+  // リターンごとの選択個数（カート方式）
+  const [quantities, setQuantities] = useState<Record<string, number>>(
+    selectedRewardId ? { [selectedRewardId]: 1 } : {}
   );
-  const [customAmount, setCustomAmount] = useState(1000);
-  const [useCustomAmount, setUseCustomAmount] = useState(!selectedRewardId);
+  const [freeAmount, setFreeAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("apple_pay");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -79,8 +82,33 @@ export default function BackingClient({
     },
   });
 
-  const needsAddress = selectedReward?.needs_address ?? true;
-  const amount = useCustomAmount ? customAmount : (selectedReward?.amount || 1000);
+  // 在庫上限（設定があれば残数まで）
+  const remainingStock = (r: Reward) =>
+    r.quantity_total != null
+      ? Math.max(0, r.quantity_total - (r.quantity_claimed || 0))
+      : undefined;
+
+  const setQty = (reward: Reward, qty: number) => {
+    const max = remainingStock(reward);
+    const capped = Math.max(0, max != null ? Math.min(qty, max) : qty);
+    setQuantities((prev) => {
+      const next = { ...prev };
+      if (capped <= 0) delete next[reward.id];
+      else next[reward.id] = capped;
+      return next;
+    });
+  };
+
+  const selectedItems = rewards
+    .filter((r) => (quantities[r.id] || 0) > 0)
+    .map((r) => ({ reward: r, qty: quantities[r.id] }));
+  const rewardsTotal = selectedItems.reduce(
+    (s, it) => s + it.reward.amount * it.qty,
+    0
+  );
+  const effectiveFree = allowFreeAmount ? Math.max(0, freeAmount) : 0;
+  const amount = rewardsTotal + effectiveFree;
+  const needsAddress = selectedItems.some((it) => it.reward.needs_address);
   const { fee, total } = calcFee(amount);
 
   const stats = {
@@ -94,7 +122,7 @@ export default function BackingClient({
     if (step === 1) return amount >= 100;
     if (step === 2) {
       if (!guestInfo.email) return false;
-      if (needsAddress && !useCustomAmount && selectedReward?.needs_address) {
+      if (needsAddress) {
         return !!(guestInfo.address.postal_code && guestInfo.address.prefecture && guestInfo.address.city && guestInfo.address.address_line1);
       }
       return true;
@@ -175,63 +203,31 @@ export default function BackingClient({
             {step === 1 && (
               <div className="space-y-4">
                 <Card>
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">🎁 応援の方法を選ぶ</h2>
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">🎁 応援の方法を選ぶ</h2>
+                  <p className="text-sm text-gray-500 mb-4">
+                    ほしいリターンを個数分えらべます。複数種類の組み合わせもOK ✨
+                  </p>
 
-                  {/* カスタム金額 */}
-                  <div className={cn(
-                    "p-4 rounded-2xl border-2 cursor-pointer transition-all mb-4",
-                    useCustomAmount ? "border-candy-pink" : "border-caramel-100 hover:border-caramel-200"
-                  )}
-                    onClick={() => { setUseCustomAmount(true); setSelectedReward(null); }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                        useCustomAmount ? "border-candy-pink bg-candy-pink" : "border-gray-300"
-                      )}>
-                        {useCustomAmount && <Check size={14} className="text-white" />}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-gray-800">金額を自由に指定する</p>
-                        <p className="text-xs text-gray-400">リターンなしで純粋に応援したい方に</p>
-                      </div>
-                      <Heart size={20} className="text-candy-pink" />
-                    </div>
-                    {useCustomAmount && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="font-bold text-gray-500">¥</span>
-                        <input
-                          type="number"
-                          value={customAmount}
-                          onChange={(e) => setCustomAmount(parseInt(e.target.value) || 0)}
-                          className="flex-1 py-2 px-3 rounded-xl border-2 border-caramel-200 font-bold text-lg outline-none focus:border-candy-pink"
-                          min={100}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* リターン一覧 */}
+                  {/* リターン一覧（数量選択） */}
                   <div className="space-y-3">
-                    {rewards.map((reward) => (
-                      <div
-                        key={reward.id}
-                        className={cn(
-                          "p-4 rounded-2xl border-2 cursor-pointer transition-all",
-                          selectedReward?.id === reward.id && !useCustomAmount ? "border-candy-pink" : "border-caramel-100 hover:border-caramel-200 bg-white"
-                        )}
-                        onClick={() => { setSelectedReward(reward); setUseCustomAmount(false); }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all",
-                            selectedReward?.id === reward.id && !useCustomAmount ? "border-candy-pink bg-candy-pink" : "border-gray-300"
-                          )}>
-                            {selectedReward?.id === reward.id && !useCustomAmount && <Check size={14} className="text-white" />}
-                          </div>
+                    {rewards.map((reward) => {
+                      const qty = quantities[reward.id] || 0;
+                      const stock = remainingStock(reward);
+                      const soldOut = stock != null && stock <= 0;
+                      const atMax = stock != null && qty >= stock;
+                      return (
+                        <div
+                          key={reward.id}
+                          className={cn(
+                            "p-4 rounded-2xl border-2 transition-all",
+                            qty > 0
+                              ? "border-candy-pink bg-candy-pink/5"
+                              : "border-caramel-100 bg-white",
+                            soldOut && "opacity-50"
+                          )}
+                        >
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="text-lg font-bold text-caramel-600">
                                 {formatCurrency(reward.amount)}
                               </span>
@@ -243,21 +239,95 @@ export default function BackingClient({
                                   住所不要
                                 </span>
                               )}
+                              {stock != null && (
+                                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                                  {soldOut ? "完売" : `残り${stock}`}
+                                </span>
+                              )}
                             </div>
                             <p className="text-sm font-bold text-gray-800">{reward.title}</p>
                           </div>
+
+                          {/* 数量ステッパー */}
+                          <div className="flex items-center justify-end gap-3 mt-3">
+                            <span className="text-xs text-gray-400">個数</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setQty(reward, qty - 1)}
+                                disabled={qty <= 0}
+                                className="w-8 h-8 rounded-full border-2 border-caramel-200 text-caramel-600 font-bold flex items-center justify-center disabled:opacity-30 hover:bg-caramel-50 transition-colors"
+                                aria-label="減らす"
+                              >
+                                −
+                              </button>
+                              <span className="w-8 text-center font-bold text-gray-800">{qty}</span>
+                              <button
+                                type="button"
+                                onClick={() => setQty(reward, qty + 1)}
+                                disabled={soldOut || atMax}
+                                className="w-8 h-8 rounded-full text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
+                                style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+                                aria-label="増やす"
+                              >
+                                ＋
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 自由金額（掲載者が許可した場合のみ・上乗せ可） */}
+                  {allowFreeAmount && (
+                    <div className="mt-4 p-4 rounded-2xl border-2 border-caramel-100">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Heart size={20} className="text-candy-pink flex-shrink-0" />
+                        <div>
+                          <p className="font-bold text-gray-800">自由な金額で応援（リターンなし）</p>
+                          <p className="text-xs text-gray-400">
+                            リターンに上乗せ、または単独での応援もできます
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-500">¥</span>
+                        <input
+                          type="number"
+                          value={freeAmount || ""}
+                          onChange={(e) => setFreeAmount(parseInt(e.target.value) || 0)}
+                          placeholder="0"
+                          className="flex-1 py-2 px-3 rounded-xl border-2 border-caramel-200 font-bold text-lg outline-none focus:border-candy-pink"
+                          min={0}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </Card>
 
                 {/* 金額サマリー */}
                 {amount > 0 && (
                   <Card variant="outlined">
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">応援金額</span>
+                      {selectedItems.map((it) => (
+                        <div key={it.reward.id} className="flex justify-between text-sm">
+                          <span className="text-gray-500 truncate max-w-[70%]">
+                            {it.reward.title} <span className="text-gray-400">× {it.qty}</span>
+                          </span>
+                          <span className="font-semibold">
+                            {formatCurrency(it.reward.amount * it.qty)}
+                          </span>
+                        </div>
+                      ))}
+                      {effectiveFree > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">自由応援</span>
+                          <span className="font-semibold">{formatCurrency(effectiveFree)}</span>
+                        </div>
+                      )}
+                      <div className="border-t border-caramel-100 pt-2 flex justify-between text-sm">
+                        <span className="text-gray-500">応援金額 小計</span>
                         <span className="font-semibold">{formatCurrency(amount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
@@ -325,8 +395,8 @@ export default function BackingClient({
                     </span>
                   </label>
 
-                  {/* 住所入力（物品リターンの場合） */}
-                  {!useCustomAmount && selectedReward?.needs_address && (
+                  {/* 住所入力（物品リターンを含む場合） */}
+                  {needsAddress && (
                     <div className="space-y-3 pt-2 border-t border-caramel-100">
                       <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
                         <MapPin size={16} className="text-caramel-500" />
@@ -415,10 +485,23 @@ export default function BackingClient({
                         {project.title}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">リターン</span>
-                      <span className="font-semibold">
-                        {useCustomAmount ? "応援のみ（リターンなし）" : selectedReward?.title || "-"}
+                    <div className="flex justify-between gap-2">
+                      <span className="text-gray-500 flex-shrink-0">リターン</span>
+                      <span className="font-semibold text-right">
+                        {selectedItems.length === 0 ? (
+                          effectiveFree > 0 ? "応援のみ（リターンなし）" : "-"
+                        ) : (
+                          <>
+                            {selectedItems.map((it) => (
+                              <span key={it.reward.id} className="block">
+                                {it.reward.title} × {it.qty}
+                              </span>
+                            ))}
+                            {effectiveFree > 0 && (
+                              <span className="block text-gray-500">＋自由応援 {formatCurrency(effectiveFree)}</span>
+                            )}
+                          </>
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">

@@ -9,19 +9,27 @@ async function getProject(slugOrId: string): Promise<Project | null> {
   // 1. Supabase の実データ（ダッシュボードで作成したプロジェクト）を優先
   try {
     const supabase = await createClient();
-    const { data } = await supabase
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        slugOrId
+      );
+    const query = supabase
       .from("projects")
       .select(
         `
         *,
-        profiles(*),
+        profiles!projects_creator_id_fkey(*),
         categories(*),
-        rewards(*)
+        rewards(*),
+        project_milestones(*)
       `
       )
-      .or(`slug.eq.${slugOrId},id.eq.${slugOrId}`)
-      .in("status", ["active", "funded", "completed"])
-      .maybeSingle();
+      .in("status", ["active", "funded", "completed"]);
+
+    const { data } = await (isUuid
+      ? query.eq("id", slugOrId)
+      : query.eq("slug", slugOrId)
+    ).maybeSingle();
 
     if (data) {
       return data as unknown as Project;

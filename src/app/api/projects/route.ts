@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     .from("projects")
     .select(`
       *,
-      profiles(id, display_name, avatar_url),
+      profiles!projects_creator_id_fkey(id, display_name, avatar_url),
       categories(id, slug, name_ja, name_en, icon, color)
     `)
     .in("status", ["active", "funded", "completed"]);
@@ -93,8 +93,26 @@ export async function POST(req: NextRequest) {
     tags,
     goalAmount,
     endDate,
+    milestones,
     rewards,
+    allowFreeAmount,
   } = body;
+
+  // 段階ゴールを金額昇順に整列。基本目標(goal_amount)は最小段階の金額。
+  const sortedMilestones: { amount: number; title: string; description?: string }[] =
+    Array.isArray(milestones)
+      ? [...milestones]
+          .filter((m) => m && Number(m.amount) > 0 && String(m.title || "").trim())
+          .map((m) => ({
+            amount: Number(m.amount),
+            title: String(m.title).trim(),
+            description: m.description ? String(m.description) : undefined,
+          }))
+          .sort((a, b) => a.amount - b.amount)
+      : [];
+
+  const baseGoalAmount =
+    sortedMilestones.length > 0 ? sortedMilestones[0].amount : goalAmount;
 
   const slug =
     title
@@ -117,8 +135,9 @@ export async function POST(req: NextRequest) {
       story,
       category_id: categoryId,
       tags: tags || [],
-      goal_amount: goalAmount,
+      goal_amount: baseGoalAmount,
       end_date: endDate,
+      allow_free_amount: allowFreeAmount !== false,
       status: "reviewing",
       submitted_at: new Date().toISOString(),
     })
@@ -145,6 +164,24 @@ export async function POST(req: NextRequest) {
 
     if (rewardsError) {
       console.error("Error creating rewards:", rewardsError);
+    }
+  }
+
+  if (sortedMilestones.length > 0) {
+    const { error: milestonesError } = await supabase
+      .from("project_milestones")
+      .insert(
+        sortedMilestones.map((m, i) => ({
+          project_id: project.id,
+          amount: m.amount,
+          title: m.title,
+          description: m.description || null,
+          sort_order: i,
+        }))
+      );
+
+    if (milestonesError) {
+      console.error("Error creating milestones:", milestonesError);
     }
   }
 

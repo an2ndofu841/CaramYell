@@ -28,6 +28,7 @@ import {
   timeAgo,
 } from "@/lib/utils";
 import ProgressBar from "@/components/ui/ProgressBar";
+import MilestonesProgress from "@/components/project/MilestonesProgress";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
@@ -51,6 +52,21 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [liked, setLiked] = useState(false);
   const stats = calcProjectStats(project);
+  const milestones = project.project_milestones ?? [];
+  const hasMilestones = milestones.length > 0;
+  // 段階ゴールがある場合は「最終目標」を基準に進捗を見せる（第1目標達成で満タンに見せない）
+  const sortedMilestones = [...milestones].sort((a, b) => a.amount - b.amount);
+  const finalGoal = hasMilestones
+    ? sortedMilestones[sortedMilestones.length - 1].amount
+    : project.goal_amount;
+  const nextMilestone = hasMilestones
+    ? sortedMilestones.find((m) => project.current_amount < m.amount)
+    : undefined;
+  const headlinePct = Math.min(
+    Math.round((project.current_amount / finalGoal) * 100),
+    100
+  );
+  const allMilestonesAchieved = hasMilestones && !nextMilestone;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -118,11 +134,11 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                 )}
 
                 {/* ステータスバッジ */}
-                {stats.is_funded && (
+                {(hasMilestones ? allMilestonesAchieved : stats.is_funded) && (
                   <div className="absolute top-4 right-4">
                     <span className="px-4 py-2 rounded-full text-sm font-bold text-white"
                       style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)" }}>
-                      🎉 目標達成！
+                      🎉 {hasMilestones ? "全目標達成！" : "目標達成！"}
                     </span>
                   </div>
                 )}
@@ -293,12 +309,33 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                       </span>
                     </div>
                     <p className="text-sm text-gray-400">
-                      目標金額 {formatCurrency(project.goal_amount)} の
-                      <span className="font-bold text-caramel-500"> {stats.progress_percentage}%</span>
+                      {hasMilestones ? "最終目標" : "目標金額"} {formatCurrency(finalGoal)} の
+                      <span className="font-bold text-caramel-500"> {hasMilestones ? headlinePct : stats.progress_percentage}%</span>
                     </p>
                   </div>
 
-                  <ProgressBar percentage={stats.progress_percentage} className="mb-4" />
+                  <ProgressBar
+                    percentage={hasMilestones ? headlinePct : stats.progress_percentage}
+                    className={hasMilestones ? "mb-2" : "mb-4"}
+                  />
+
+                  {hasMilestones && (
+                    nextMilestone ? (
+                      <div className="mb-4 p-3 rounded-2xl text-center bg-caramel-50 border-2 border-caramel-100">
+                        <p className="text-sm font-bold text-caramel-700">
+                          あと {formatCurrency(nextMilestone.amount - project.current_amount)} で
+                          <br />
+                          「{nextMilestone.title}」を達成！
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mb-4 p-3 rounded-2xl text-center bg-green-50 border-2 border-green-100">
+                        <p className="text-sm font-bold text-green-700">
+                          🎉 全ての目標を達成しました！
+                        </p>
+                      </div>
+                    )
+                  )}
 
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="text-center p-3 rounded-2xl bg-caramel-50">
@@ -340,6 +377,16 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                   </div>
                 </Card>
               </AnimatedSection>
+
+              {/* 段階ゴール */}
+              {hasMilestones && (
+                <AnimatedSection animation="slide-right">
+                  <MilestonesProgress
+                    milestones={milestones}
+                    currentAmount={project.current_amount}
+                  />
+                </AnimatedSection>
+              )}
 
               {/* 選択中のリターン */}
               {selectedReward && (

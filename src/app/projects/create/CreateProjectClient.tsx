@@ -25,6 +25,7 @@ import Card from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import type { MilestoneInput } from "@/types";
 
 const categories = [
   { slug: "music", name: "音楽", icon: "🎵" },
@@ -42,7 +43,7 @@ const categories = [
 const steps = [
   { id: 1, title: "基本情報", icon: "📝" },
   { id: 2, title: "プロジェクト詳細", icon: "📖" },
-  { id: 3, title: "目標・期間", icon: "🎯" },
+  { id: 3, title: "段階ゴール・期間", icon: "🎯" },
   { id: 4, title: "リターン設定", icon: "🎁" },
   { id: 5, title: "確認・送信", icon: "🚀" },
 ];
@@ -67,8 +68,11 @@ export default function CreateProjectClient() {
     category: "",
     description: "",
     story: "",
-    goalAmount: 500000,
     endDate: "",
+    milestones: [
+      { amount: 50000, title: "", description: "" },
+    ] as MilestoneInput[],
+    allowFreeAmount: true,
     rewards: [] as RewardInput[],
   });
 
@@ -136,11 +140,50 @@ export default function CreateProjectClient() {
     }));
   };
 
+  const addMilestone = () => {
+    setFormData((prev) => {
+      const last = prev.milestones[prev.milestones.length - 1];
+      const nextAmount = last ? last.amount + 50000 : 50000;
+      return {
+        ...prev,
+        milestones: [
+          ...prev.milestones,
+          { amount: nextAmount, title: "", description: "" },
+        ],
+      };
+    });
+  };
+
+  const updateMilestone = (index: number, field: string, value: unknown) => {
+    setFormData((prev) => ({
+      ...prev,
+      milestones: prev.milestones.map((m, i) =>
+        i === index ? { ...m, [field]: value } : m
+      ),
+    }));
+  };
+
+  const removeMilestone = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      milestones: prev.milestones.filter((_, i) => i !== index),
+    }));
+  };
+
+  // 有効な段階（金額>0かつタイトルあり）を金額昇順で
+  const validMilestones = () =>
+    formData.milestones
+      .filter((m) => Number(m.amount) > 0 && m.title.trim())
+      .sort((a, b) => a.amount - b.amount);
+
   const canGoNext = () => {
     switch (currentStep) {
       case 1: return formData.title.length >= 5 && formData.category;
       case 2: return formData.description.length >= 50;
-      case 3: return formData.goalAmount >= 10000 && formData.endDate;
+      case 3: {
+        const valid = validMilestones();
+        return valid.length >= 1 && valid[0].amount >= 10000 && !!formData.endDate;
+      }
       case 4: return true;
       default: return true;
     }
@@ -159,8 +202,10 @@ export default function CreateProjectClient() {
           story: formData.story,
           categoryId: formData.category,
           tags: [],
-          goalAmount: formData.goalAmount,
+          goalAmount: validMilestones()[0]?.amount ?? 0,
+          milestones: validMilestones(),
           endDate: formData.endDate,
+          allowFreeAmount: formData.allowFreeAmount,
           rewards: formData.rewards,
         }),
       });
@@ -492,41 +537,88 @@ export default function CreateProjectClient() {
             {/* STEP 3: 目標・期間 */}
             {currentStep === 3 && (
               <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-6">
-                  🎯 目標金額と掲載期間
+                <h2 className="text-xl font-bold text-gray-800 mb-2">
+                  🎯 段階ゴールと掲載期間
                 </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                  金額の少ない段階から順に設定します。達成した段階まで実施され、最小額が「第1目標」になります。
+                </p>
 
                 <div className="space-y-6">
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
-                      目標金額（円）
-                    </p>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">¥</span>
-                      <input
-                        type="number"
-                        value={formData.goalAmount}
-                        onChange={(e) => updateField("goalAmount", parseInt(e.target.value) || 0)}
-                        className="w-full pl-8 pr-4 py-3 rounded-2xl border-2 border-caramel-100 text-gray-800 text-lg font-bold outline-none focus:border-candy-pink transition-colors"
-                      />
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold text-gray-700">
+                        段階ゴール
+                      </p>
+                      <span className="text-xs text-gray-400">
+                        例：¥50,000 フラスタ → ¥100,000 新衣装 → ¥150,000 新曲
+                      </span>
                     </div>
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {[100000, 300000, 500000, 1000000, 3000000].map((amount) => (
-                        <button
-                          key={amount}
-                          onClick={() => updateField("goalAmount", amount)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-full text-xs font-semibold transition-all",
-                            formData.goalAmount === amount
-                              ? "text-white"
-                              : "bg-caramel-50 text-caramel-600 hover:bg-caramel-100"
-                          )}
-                          style={formData.goalAmount === amount ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" } : {}}
+
+                    <div className="space-y-3">
+                      {formData.milestones.map((m, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-2xl border-2 border-caramel-100 bg-white"
                         >
-                          ¥{amount.toLocaleString()}
-                        </button>
+                          <div className="flex items-center justify-between mb-2">
+                            <span
+                              className="text-xs font-bold text-white px-2.5 py-1 rounded-full"
+                              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+                            >
+                              {i === 0 ? "第1目標" : `第${i + 1}段階`}
+                            </span>
+                            {formData.milestones.length > 1 && (
+                              <button
+                                onClick={() => removeMilestone(i)}
+                                className="p-1 rounded-full text-red-400 hover:bg-red-50 transition-colors"
+                                aria-label="この段階を削除"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <div className="relative w-36 flex-shrink-0">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-sm">¥</span>
+                              <input
+                                type="number"
+                                value={m.amount || ""}
+                                onChange={(e) => updateMilestone(i, "amount", parseInt(e.target.value) || 0)}
+                                placeholder="50000"
+                                className="w-full pl-7 pr-2 py-2.5 rounded-xl border-2 border-caramel-100 text-gray-800 font-bold outline-none focus:border-candy-pink transition-colors"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={m.title}
+                              onChange={(e) => updateMilestone(i, "title", e.target.value)}
+                              placeholder="達成内容（例：フラスタ）"
+                              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border-2 border-caramel-100 text-gray-800 outline-none focus:border-candy-pink transition-colors"
+                            />
+                          </div>
+                          <input
+                            type="text"
+                            value={m.description || ""}
+                            onChange={(e) => updateMilestone(i, "description", e.target.value)}
+                            placeholder="補足説明（任意）"
+                            className="w-full mt-2 px-3 py-2 rounded-xl border-2 border-caramel-100 text-sm text-gray-600 outline-none focus:border-candy-pink transition-colors"
+                          />
+                        </div>
                       ))}
                     </div>
+
+                    <button
+                      onClick={addMilestone}
+                      className="w-full mt-3 py-3 rounded-2xl border-2 border-dashed border-caramel-200 text-caramel-500 font-bold hover:border-caramel-300 hover:bg-caramel-50 transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <Plus size={18} />
+                      段階を追加する
+                    </button>
+                    <p className="text-xs text-gray-400 mt-2">
+                      第1目標は¥10,000以上で設定してください。
+                    </p>
                   </div>
 
                   <Input
@@ -583,6 +675,40 @@ export default function CreateProjectClient() {
                       </div>
                     ))}
                   </div>
+
+                  {/* 金額自由の応援（リターンなし）を受け付けるか */}
+                  <button
+                    type="button"
+                    onClick={() => updateField("allowFreeAmount", !formData.allowFreeAmount)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all",
+                      formData.allowFreeAmount
+                        ? "border-candy-pink bg-candy-pink/5"
+                        : "border-caramel-100 hover:border-caramel-200"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "relative w-11 h-6 rounded-full flex-shrink-0 transition-colors",
+                        formData.allowFreeAmount ? "bg-candy-pink" : "bg-caramel-200"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
+                          formData.allowFreeAmount && "translate-x-5"
+                        )}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-800 text-sm">
+                        金額自由の応援（リターンなし）を受け付ける
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        オンにすると、支援者が好きな金額でリターンなしの純粋な応援ができます。
+                      </p>
+                    </div>
+                  </button>
                 </Card>
 
                 {formData.rewards.map((reward, i) => (
@@ -622,7 +748,33 @@ export default function CreateProjectClient() {
                   <ReviewItem label="タイトル" value={formData.title || "（未入力）"} />
                   <ReviewItem label="カテゴリー" value={categories.find(c => c.slug === formData.category)?.name || "（未選択）"} />
                   <ReviewItem label="タグライン" value={formData.tagline || "（未入力）"} />
-                  <ReviewItem label="目標金額" value={`¥${formData.goalAmount.toLocaleString()}`} />
+                  <ReviewItem
+                    label="第1目標"
+                    value={
+                      validMilestones()[0]
+                        ? `¥${validMilestones()[0].amount.toLocaleString()}`
+                        : "（未設定）"
+                    }
+                  />
+                  <div className="py-3 border-b border-caramel-100">
+                    <span className="text-sm text-gray-500 font-medium block mb-2">段階ゴール</span>
+                    {validMilestones().length > 0 ? (
+                      <ol className="space-y-1">
+                        {validMilestones().map((m, i) => (
+                          <li key={i} className="flex justify-between text-sm">
+                            <span className="text-gray-700 font-semibold">
+                              {i + 1}. {m.title}
+                            </span>
+                            <span className="font-bold text-caramel-600">
+                              ¥{m.amount.toLocaleString()}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <span className="text-sm font-bold text-gray-800">（未設定）</span>
+                    )}
+                  </div>
                   <ReviewItem label="掲載終了日" value={formData.endDate || "（未設定）"} />
                   <ReviewItem label="リターン数" value={`${formData.rewards.length}種類`} />
 
