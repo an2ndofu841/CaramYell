@@ -121,3 +121,62 @@ export async function PUT(
 
   return NextResponse.json({ project: data });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
+  // 本人のプロジェクトか確認
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id, creator_id")
+    .eq("id", id)
+    .eq("creator_id", user.id)
+    .maybeSingle();
+
+  if (!project) {
+    return NextResponse.json(
+      { error: "プロジェクトが見つかりません" },
+      { status: 404 }
+    );
+  }
+
+  // 決済済みの支援者がいる場合は削除を防ぐ（決済記録の保全）
+  const { count } = await supabase
+    .from("backers")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", id)
+    .eq("status", "paid");
+
+  if ((count ?? 0) > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "支援者がいるプロジェクトは削除できません。掲載を取り下げる場合はキャンセルをご利用ください。",
+      },
+      { status: 400 }
+    );
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", id)
+    .eq("creator_id", user.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
