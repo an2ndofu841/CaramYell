@@ -45,7 +45,16 @@ export default function MilestonesProgress({
         達成した段階まで実施します
       </p>
 
-      <ProgressBar percentage={overallPct} className="mb-1" />
+      <ProgressBar
+        percentage={overallPct}
+        markers={sorted
+          .filter((m) => m.amount < topAmount)
+          .map((m) => ({
+            position: (m.amount / topAmount) * 100,
+            reached: currentAmount >= m.amount,
+          }))}
+        className="mb-1"
+      />
       <div className="flex justify-between text-xs text-gray-400 mb-4">
         <span>
           <span className="font-bold text-caramel-600">

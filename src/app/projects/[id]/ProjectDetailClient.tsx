@@ -69,6 +69,16 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
     100
   );
   const allMilestonesAchieved = hasMilestones && !nextMilestone;
+  // 進捗バー上の各段階目標マーカー（最終目標＝バー端は除く）
+  const milestoneMarkers = hasMilestones
+    ? sortedMilestones
+        .filter((m) => m.amount < finalGoal)
+        .map((m) => ({
+          position: (m.amount / finalGoal) * 100,
+          label: m.title,
+          reached: project.current_amount >= m.amount,
+        }))
+    : undefined;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -318,6 +328,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
 
                   <ProgressBar
                     percentage={hasMilestones ? headlinePct : stats.progress_percentage}
+                    markers={milestoneMarkers}
                     className={hasMilestones ? "mb-2" : "mb-4"}
                   />
 
