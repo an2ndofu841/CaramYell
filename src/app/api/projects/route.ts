@@ -97,7 +97,13 @@ export async function POST(req: NextRequest) {
     rewards,
     allowFreeAmount,
     allowComments,
+    mode,
+    projectId,
   } = body;
+
+  // mode: 'draft'（途中保存）or 'submit'（申請）。既定は申請。
+  const isDraft = mode === "draft";
+  const status = isDraft ? "draft" : "reviewing";
 
   // 段階ゴールを金額昇順に整列。基本目標(goal_amount)は最小段階の金額。
   const sortedMilestones: { amount: number; title: string; description?: string }[] =
@@ -113,50 +119,87 @@ export async function POST(req: NextRequest) {
       : [];
 
   const baseGoalAmount =
-    sortedMilestones.length > 0 ? sortedMilestones[0].amount : goalAmount;
+    sortedMilestones.length > 0 ? sortedMilestones[0].amount : goalAmount || 0;
 
-  const slug =
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim() +
-    "-" +
-    Math.random().toString(36).substr(2, 6);
+  // categoryId はスラッグ（例: "music"）で届くので UUID に解決する
+  let categoryUuid: string | null = null;
+  if (categoryId) {
+    const { data: cat } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", categoryId)
+      .maybeSingle();
+    categoryUuid = cat?.id ?? null;
+  }
 
-  const { data: project, error: projectError } = await supabase
-    .from("projects")
-    .insert({
-      creator_id: user.id,
-      title,
-      slug,
-      tagline,
-      description,
-      story,
-      category_id: categoryId,
-      tags: tags || [],
-      goal_amount: baseGoalAmount,
-      end_date: endDate,
-      allow_free_amount: allowFreeAmount !== false,
-      allow_comments: allowComments !== false,
-      status: "reviewing",
-      submitted_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
+  const fields = {
+    title: title || "",
+    tagline: tagline || title || "",
+    description: description || "",
+    story: story || null,
+    category_id: categoryUuid,
+    tags: tags || [],
+    goal_amount: baseGoalAmount,
+    end_date: endDate || null,
+    allow_free_amount: allowFreeAmount !== false,
+    allow_comments: allowComments !== false,
+    status,
+    submitted_at: isDraft ? null : new Date().toISOString(),
+  };
 
-  if (projectError) {
-    return NextResponse.json({ error: projectError.message }, { status: 500 });
+  let project;
+
+  if (projectId) {
+    // 既存の下書きを更新（本人のもののみ）
+    const { data: existing } = await supabase
+      .from("projects")
+      .select("id, creator_id")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (!existing || existing.creator_id !== user.id) {
+      return NextResponse.json({ error: "対象のプロジェクトが見つかりません" }, { status: 404 });
+    }
+    const { data, error } = await supabase
+      .from("projects")
+      .update(fields)
+      .eq("id", projectId)
+      .select()
+      .single();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    project = data;
+    // 子レコードは作り直し
+    await supabase.from("rewards").delete().eq("project_id", projectId);
+    await supabase.from("project_milestones").delete().eq("project_id", projectId);
+  } else {
+    const slug =
+      ((title || "project")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .trim() || "project") +
+      "-" +
+      Math.random().toString(36).substr(2, 6);
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({ creator_id: user.id, slug, ...fields })
+      .select()
+      .single();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    project = data;
   }
 
   if (rewards && rewards.length > 0) {
     const { error: rewardsError } = await supabase.from("rewards").insert(
       rewards.map((r: Record<string, unknown>, i: number) => ({
         project_id: project.id,
-        title: r.title,
-        description: r.description,
-        amount: r.amount,
+        title: r.title || "",
+        description: r.description || "",
+        amount: r.amount || 0,
         reward_type: r.rewardType,
         needs_address: r.needsAddress,
         quantity_total: r.quantityTotal || null,
@@ -187,5 +230,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ project }, { status: 201 });
+  return NextResponse.json({ project }, { status: projectId ? 200 : 201 });
 }

@@ -18,6 +18,10 @@ import {
   Package,
   Smartphone,
   Star,
+  Save,
+  ExternalLink,
+  Link2,
+  Copy,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -62,6 +66,10 @@ export default function CreateProjectClient() {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
+  const [previewToken, setPreviewToken] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     tagline: "",
@@ -190,26 +198,94 @@ export default function CreateProjectClient() {
     }
   };
 
+  const buildPayload = (mode: "draft" | "submit") => ({
+    mode,
+    projectId: savedProjectId ?? undefined,
+    title: formData.title,
+    tagline: formData.tagline || formData.title,
+    description: formData.description,
+    story: formData.story,
+    categoryId: formData.category,
+    tags: [],
+    goalAmount: validMilestones()[0]?.amount ?? 0,
+    milestones: validMilestones(),
+    endDate: formData.endDate,
+    allowFreeAmount: formData.allowFreeAmount,
+    allowComments: formData.allowComments,
+    rewards: formData.rewards,
+  });
+
+  // 下書き保存（作成/更新）。保存したプロジェクトIDとプレビュートークンを返す。
+  const saveDraft = async (
+    opts: { silent?: boolean } = {}
+  ): Promise<{ id: string; token: string } | null> => {
+    if (!user) return null;
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPayload("draft")),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "保存に失敗しました");
+      const id = data.project.id as string;
+      const token = data.project.preview_token as string;
+      setSavedProjectId(id);
+      setPreviewToken(token);
+      if (!opts.silent) toast.success("下書きを保存しました 📝");
+      return { id, token };
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "エラーが発生しました");
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 実際の掲載画面を別窓でプレビュー（保存してからトークンURLを開く）
+  const handlePreview = async () => {
+    setIsPreviewing(true);
+    try {
+      const saved = previewToken
+        ? { id: savedProjectId!, token: previewToken }
+        : await saveDraft({ silent: true });
+      if (saved) {
+        // 最新内容を反映するため毎回保存
+        const fresh = await saveDraft({ silent: true });
+        const token = fresh?.token ?? saved.token;
+        window.open(`/projects/preview/${token}`, "_blank", "noopener");
+      }
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const previewUrl =
+    previewToken && typeof window !== "undefined"
+      ? `${window.location.origin}/projects/preview/${previewToken}`
+      : "";
+
+  const copyPreviewLink = async () => {
+    if (!previewUrl) {
+      const saved = await saveDraft({ silent: true });
+      if (!saved) return;
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/projects/preview/${saved.token}`
+      );
+    } else {
+      await navigator.clipboard.writeText(previewUrl);
+    }
+    toast.success("関係者プレビューリンクをコピーしました 🔗");
+  };
+
   const handleSubmit = async () => {
     if (!user) return;
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: formData.title,
-          tagline: formData.tagline || formData.title,
-          description: formData.description,
-          story: formData.story,
-          categoryId: formData.category,
-          tags: [],
-          goalAmount: validMilestones()[0]?.amount ?? 0,
-          milestones: validMilestones(),
-          endDate: formData.endDate,
-          allowFreeAmount: formData.allowFreeAmount,
-          allowComments: formData.allowComments,
-          rewards: formData.rewards,
-        }),
+        body: JSON.stringify(buildPayload("submit")),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -828,6 +904,59 @@ export default function CreateProjectClient() {
                     </div>
                   </div>
 
+                  {/* プレビュー・関係者リンク */}
+                  <div className="p-4 rounded-2xl bg-caramel-50 border-2 border-caramel-100 mt-6 space-y-3">
+                    <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                      👀 公開前に見え方を確認
+                    </p>
+                    <button
+                      onClick={handlePreview}
+                      disabled={isPreviewing || isSaving}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white btn-pop disabled:opacity-60"
+                      style={{ background: "linear-gradient(135deg, #C9A87C, #8FD4C4)" }}
+                    >
+                      <ExternalLink size={16} />
+                      {isPreviewing ? "準備中..." : "実際の掲載画面を別窓でプレビュー"}
+                    </button>
+
+                    <div className="pt-1">
+                      <p className="text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                        <Link2 size={14} />
+                        関係者プレビューリンク
+                      </p>
+                      {previewToken ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            readOnly
+                            value={previewUrl}
+                            onFocus={(e) => e.currentTarget.select()}
+                            className="flex-1 min-w-0 px-3 py-2 rounded-xl border-2 border-caramel-200 text-xs text-gray-600 bg-white outline-none"
+                          />
+                          <button
+                            onClick={copyPreviewLink}
+                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-white"
+                            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+                          >
+                            <Copy size={14} />
+                            コピー
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={copyPreviewLink}
+                          disabled={isSaving}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-caramel-600 border-2 border-caramel-200 hover:bg-white transition-colors disabled:opacity-60"
+                        >
+                          <Link2 size={14} />
+                          リンクを発行してコピー
+                        </button>
+                      )}
+                      <p className="text-[11px] text-gray-400 mt-1.5">
+                        ログイン不要で閲覧できます。未公開の内容なので共有先にご注意ください。
+                      </p>
+                    </div>
+                  </div>
+
                   <Button
                     fullWidth
                     size="xl"
@@ -848,7 +977,7 @@ export default function CreateProjectClient() {
         </AnimatePresence>
 
         {/* ナビゲーションボタン */}
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center justify-between gap-2 mt-6">
           <Button
             variant="ghost"
             icon={<ChevronLeft size={18} />}
@@ -858,16 +987,27 @@ export default function CreateProjectClient() {
             戻る
           </Button>
 
-          {currentStep < steps.length ? (
-            <Button
-              icon={<ChevronRight size={18} />}
-              iconPosition="right"
-              onClick={() => setCurrentStep((s) => s + 1)}
-              disabled={!canGoNext()}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => saveDraft()}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-caramel-600 border-2 border-caramel-200 hover:bg-caramel-50 transition-colors disabled:opacity-60"
             >
-              次へ
-            </Button>
-          ) : null}
+              <Save size={16} />
+              {isSaving ? "保存中..." : "下書き保存"}
+            </button>
+
+            {currentStep < steps.length ? (
+              <Button
+                icon={<ChevronRight size={18} />}
+                iconPosition="right"
+                onClick={() => setCurrentStep((s) => s + 1)}
+                disabled={!canGoNext()}
+              >
+                次へ
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

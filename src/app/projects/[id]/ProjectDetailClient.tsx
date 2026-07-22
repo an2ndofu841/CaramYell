@@ -38,9 +38,10 @@ import { toast } from "sonner";
 
 interface ProjectDetailClientProps {
   project: Project;
+  isPreview?: boolean;
 }
 
-export default function ProjectDetailClient({ project }: ProjectDetailClientProps) {
+export default function ProjectDetailClient({ project, isPreview = false }: ProjectDetailClientProps) {
   const allowComments = project.allow_comments !== false;
   const tabs = [
     { id: "story", label: "プロジェクト詳細" },
@@ -355,11 +356,17 @@ export default function ProjectDetailClient({ project }: ProjectDetailClientProp
                     </div>
                   </div>
 
-                  <Link href={`/back/${project.slug}`}>
-                    <Button fullWidth size="lg" className="mb-3">
-                      💝 このプロジェクトを応援する
+                  {isPreview ? (
+                    <Button fullWidth size="lg" className="mb-3" disabled>
+                      プレビュー中は応援できません
                     </Button>
-                  </Link>
+                  ) : (
+                    <Link href={`/back/${project.slug}`}>
+                      <Button fullWidth size="lg" className="mb-3">
+                        💝 このプロジェクトを応援する
+                      </Button>
+                    </Link>
+                  )}
 
                   <p className="text-xs text-center text-gray-400">
                     アカウント登録なしで応援できます ✨

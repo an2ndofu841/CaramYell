@@ -74,6 +74,7 @@ export interface Project {
   submitted_at?: string;
   reviewed_at?: string;
   rejection_reason?: string;
+  preview_token?: string;
   share_count: number;
   created_at: string;
   updated_at: string;
