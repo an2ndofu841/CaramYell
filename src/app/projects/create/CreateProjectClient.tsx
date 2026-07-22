@@ -73,6 +73,7 @@ export default function CreateProjectClient() {
       { amount: 50000, title: "", description: "" },
     ] as MilestoneInput[],
     allowFreeAmount: true,
+    allowComments: true,
     rewards: [] as RewardInput[],
   });
 
@@ -206,6 +207,7 @@ export default function CreateProjectClient() {
           milestones: validMilestones(),
           endDate: formData.endDate,
           allowFreeAmount: formData.allowFreeAmount,
+          allowComments: formData.allowComments,
           rewards: formData.rewards,
         }),
       });
@@ -706,6 +708,40 @@ export default function CreateProjectClient() {
                       </p>
                       <p className="text-xs text-gray-400">
                         オンにすると、支援者が好きな金額でリターンなしの純粋な応援ができます。
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* コメント欄の有無 */}
+                  <button
+                    type="button"
+                    onClick={() => updateField("allowComments", !formData.allowComments)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all mt-3",
+                      formData.allowComments
+                        ? "border-candy-pink bg-candy-pink/5"
+                        : "border-caramel-100 hover:border-caramel-200"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "relative w-11 h-6 rounded-full flex-shrink-0 transition-colors",
+                        formData.allowComments ? "bg-candy-pink" : "bg-caramel-200"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
+                          formData.allowComments && "translate-x-5"
+                        )}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-800 text-sm">
+                        コメント欄を設置する
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        オンにすると、支援者がプロジェクトページにコメントを投稿できます。
                       </p>
                     </div>
                   </button>

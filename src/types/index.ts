@@ -65,6 +65,7 @@ export interface Project {
   status: ProjectStatus;
   featured: boolean;
   allow_free_amount?: boolean;
+  allow_comments?: boolean;
   main_image_url?: string;
   images: string[];
   video_url?: string;

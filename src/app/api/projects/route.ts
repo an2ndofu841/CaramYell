@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
     milestones,
     rewards,
     allowFreeAmount,
+    allowComments,
   } = body;
 
   // 段階ゴールを金額昇順に整列。基本目標(goal_amount)は最小段階の金額。
@@ -138,6 +139,7 @@ export async function POST(req: NextRequest) {
       goal_amount: baseGoalAmount,
       end_date: endDate,
       allow_free_amount: allowFreeAmount !== false,
+      allow_comments: allowComments !== false,
       status: "reviewing",
       submitted_at: new Date().toISOString(),
     })

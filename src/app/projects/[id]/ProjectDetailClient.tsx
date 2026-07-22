@@ -40,14 +40,15 @@ interface ProjectDetailClientProps {
   project: Project;
 }
 
-const tabs = [
-  { id: "story", label: "プロジェクト詳細" },
-  { id: "rewards", label: "リターン" },
-  { id: "updates", label: "活動報告" },
-  { id: "comments", label: "コメント" },
-];
-
 export default function ProjectDetailClient({ project }: ProjectDetailClientProps) {
+  const allowComments = project.allow_comments !== false;
+  const tabs = [
+    { id: "story", label: "プロジェクト詳細" },
+    { id: "rewards", label: "リターン" },
+    { id: "updates", label: "活動報告" },
+    ...(allowComments ? [{ id: "comments", label: "コメント" }] : []),
+  ];
+
   const [activeTab, setActiveTab] = useState("story");
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [liked, setLiked] = useState(false);
