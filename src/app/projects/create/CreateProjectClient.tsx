@@ -245,17 +245,23 @@ export default function CreateProjectClient() {
 
   // 実際の掲載画面を別窓でプレビュー（保存してからトークンURLを開く）
   const handlePreview = async () => {
+    // ポップアップブロック回避のため、クリック直後に同期で空タブを開く
+    const win = window.open("", "_blank");
     setIsPreviewing(true);
     try {
-      const saved = previewToken
-        ? { id: savedProjectId!, token: previewToken }
-        : await saveDraft({ silent: true });
-      if (saved) {
-        // 最新内容を反映するため毎回保存
-        const fresh = await saveDraft({ silent: true });
-        const token = fresh?.token ?? saved.token;
-        window.open(`/projects/preview/${token}`, "_blank", "noopener");
+      // 最新内容を下書き保存（保存済みなら更新）
+      const saved = await saveDraft({ silent: true });
+      if (saved?.token) {
+        const url = `/projects/preview/${saved.token}`;
+        if (win) win.location.href = url;
+        else window.open(url, "_blank", "noopener");
+      } else {
+        if (win) win.close();
+        toast.error("プレビューの準備に失敗しました。もう一度お試しください。");
       }
+    } catch {
+      if (win) win.close();
+      toast.error("プレビューの準備に失敗しました。もう一度お試しください。");
     } finally {
       setIsPreviewing(false);
     }
