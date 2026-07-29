@@ -23,7 +23,10 @@ export interface AddressField {
 
 export interface CountryAddressFormat {
   code: string;
+  /** 現地表記（その国の言葉での国名）。支援者が自国を見つけられるよう主表示に使う */
   name: string;
+  nameJa: string;
+  nameEn: string;
   flag: string;
   /** 上から表示する順序 */
   fields: AddressField[];
@@ -33,6 +36,8 @@ export const COUNTRIES: CountryAddressFormat[] = [
   {
     code: "JP",
     name: "日本",
+    nameJa: "日本",
+    nameEn: "Japan",
     flag: "🇯🇵",
     fields: [
       { key: "postal_code", label: "郵便番号", placeholder: "123-4567", required: true, lookup: true },
@@ -43,7 +48,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "US",
-    name: "アメリカ合衆国",
+    name: "United States",
+    nameJa: "アメリカ合衆国",
+    nameEn: "United States",
     flag: "🇺🇸",
     fields: [
       { key: "address_line1", label: "Street address", placeholder: "1600 Amphitheatre Pkwy", required: true },
@@ -55,7 +62,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "CA",
-    name: "カナダ",
+    name: "Canada",
+    nameJa: "カナダ",
+    nameEn: "Canada",
     flag: "🇨🇦",
     fields: [
       { key: "address_line1", label: "Street address", placeholder: "123 Main St", required: true },
@@ -67,7 +76,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "GB",
-    name: "イギリス",
+    name: "United Kingdom",
+    nameJa: "イギリス",
+    nameEn: "United Kingdom",
     flag: "🇬🇧",
     fields: [
       { key: "address_line1", label: "Address line 1", placeholder: "10 Downing St", required: true },
@@ -79,7 +90,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "AU",
-    name: "オーストラリア",
+    name: "Australia",
+    nameJa: "オーストラリア",
+    nameEn: "Australia",
     flag: "🇦🇺",
     fields: [
       { key: "address_line1", label: "Street address", placeholder: "123 George St", required: true },
@@ -91,7 +104,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "FR",
-    name: "フランス",
+    name: "France",
+    nameJa: "フランス",
+    nameEn: "France",
     flag: "🇫🇷",
     fields: [
       { key: "address_line1", label: "Adresse", placeholder: "12 Rue de Rivoli", required: true },
@@ -102,7 +117,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "DE",
-    name: "ドイツ",
+    name: "Deutschland",
+    nameJa: "ドイツ",
+    nameEn: "Germany",
     flag: "🇩🇪",
     fields: [
       { key: "address_line1", label: "Straße und Hausnummer", placeholder: "Musterstraße 1", required: true },
@@ -113,7 +130,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "KR",
-    name: "韓国",
+    name: "대한민국",
+    nameJa: "韓国",
+    nameEn: "South Korea",
     flag: "🇰🇷",
     fields: [
       { key: "postal_code", label: "우편번호 / 郵便番号", placeholder: "06236", required: true },
@@ -124,7 +143,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "TW",
-    name: "台湾",
+    name: "台灣",
+    nameJa: "台湾",
+    nameEn: "Taiwan",
     flag: "🇹🇼",
     fields: [
       { key: "postal_code", label: "郵遞區號", placeholder: "100", required: true },
@@ -136,6 +157,8 @@ export const COUNTRIES: CountryAddressFormat[] = [
   {
     code: "HK",
     name: "香港",
+    nameJa: "香港",
+    nameEn: "Hong Kong",
     flag: "🇭🇰",
     fields: [
       { key: "address_line1", label: "Address", placeholder: "1 Connaught Rd Central", required: true },
@@ -146,7 +169,9 @@ export const COUNTRIES: CountryAddressFormat[] = [
   },
   {
     code: "SG",
-    name: "シンガポール",
+    name: "Singapore",
+    nameJa: "シンガポール",
+    nameEn: "Singapore",
     flag: "🇸🇬",
     fields: [
       { key: "address_line1", label: "Street address", placeholder: "1 Raffles Place", required: true },
@@ -157,6 +182,8 @@ export const COUNTRIES: CountryAddressFormat[] = [
   {
     code: "OTHER",
     name: "その他の国・地域",
+    nameJa: "その他の国・地域",
+    nameEn: "Other country / region",
     flag: "🌍",
     fields: [
       { key: "address_line1", label: "Address line 1", required: true },
@@ -187,4 +214,23 @@ export function missingAddressFields(
   return fmt.fields
     .filter((f) => f.required && !String(address[f.key] || "").trim())
     .map((f) => f.label);
+}
+
+/**
+ * セレクトに出す国名ラベル。
+ * 主表示は現地表記（自国の言葉）にし、閲覧中の言語での呼び方が異なる場合のみ併記する。
+ * 例) 日本語表示: "United States（アメリカ合衆国）" / 英語表示: "日本 (Japan)"
+ */
+export function countryLabel(
+  country: CountryAddressFormat,
+  locale: "ja" | "en"
+): string {
+  if (country.code === "OTHER") {
+    return locale === "en" ? country.nameEn : country.nameJa;
+  }
+  const localized = locale === "en" ? country.nameEn : country.nameJa;
+  if (localized === country.name) return country.name;
+  return locale === "en"
+    ? `${country.name} (${localized})`
+    : `${country.name}（${localized}）`;
 }

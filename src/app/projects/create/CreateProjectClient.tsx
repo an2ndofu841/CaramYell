@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -84,6 +84,11 @@ export default function CreateProjectClient() {
     allowComments: true,
     rewards: [] as RewardInput[],
   });
+
+  // ステップが変わったらページ先頭へ戻す
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentStep]);
 
   const updateField = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

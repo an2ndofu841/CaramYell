@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -32,10 +32,11 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Reward, Project } from "@/types";
-import { useT } from "@/components/i18n/LocaleProvider";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   COUNTRIES,
   DEFAULT_COUNTRY,
+  countryLabel,
   getCountryFormat,
   missingAddressFields,
 } from "@/lib/data/countries";
@@ -66,7 +67,7 @@ export default function BackingClient({
   realProject?: Project | null;
 }) {
   // 実プロジェクトがあれば実データ＋実決済、なければモック＋デモ決済
-  const t = useT();
+  const { t, locale } = useLocale();
   const isReal = !!realProject;
   const project =
     realProject || getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
@@ -99,6 +100,11 @@ export default function BackingClient({
   });
 
   const countryFormat = getCountryFormat(guestInfo.address.country);
+
+  // ステップが変わったらページ先頭へ戻す（下部の「次へ」を押した位置のままだと入力しづらいため）
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   // 在庫上限（設定があれば残数まで）
   const remainingStock = (r: Reward) =>
@@ -519,7 +525,7 @@ export default function BackingClient({
                         >
                           {COUNTRIES.map((c) => (
                             <option key={c.code} value={c.code}>
-                              {c.flag} {c.name}
+                              {c.flag} {countryLabel(c, locale)}
                             </option>
                           ))}
                         </select>
