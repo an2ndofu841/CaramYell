@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ProjectCard from "@/components/project/ProjectCard";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import { Input } from "@/components/ui/Input";
 import { getAllMockProjects } from "@/lib/data/mockProjects";
 import { cn } from "@/lib/utils";
+import type { Project } from "@/types";
 
 const categories = [
   { slug: "all", name: "すべて", icon: "🌟" },
@@ -28,12 +29,28 @@ const sortOptions = [
   { value: "most_backers", label: "👥 応援数順" },
 ];
 
-const allProjects = getAllMockProjects();
-
 export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState("trending");
   const [searchQuery, setSearchQuery] = useState("");
+  // 実データ（掲載中）を優先し、無ければデモ用モックを表示
+  const [allProjects, setAllProjects] = useState<Project[]>(() =>
+    getAllMockProjects()
+  );
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/projects?limit=100");
+        const data = await res.json();
+        if (Array.isArray(data.projects) && data.projects.length > 0) {
+          setAllProjects(data.projects);
+        }
+      } catch {
+        // 取得失敗時はモックのまま
+      }
+    })();
+  }, []);
 
   const filteredProjects = allProjects
     .filter((p) => {

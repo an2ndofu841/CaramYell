@@ -1,16 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import ProjectCard from "@/components/project/ProjectCard";
 import { getAllMockProjects } from "@/lib/data/mockProjects";
-
-const featuredProjects = getAllMockProjects().slice(0, 6);
+import type { Project } from "@/types";
 
 export default function FeaturedProjectsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  // 実データ（掲載中）を優先し、無ければデモ用モックを表示
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>(() =>
+    getAllMockProjects().slice(0, 6)
+  );
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/projects?sort=newest&limit=6");
+        const data = await res.json();
+        if (Array.isArray(data.projects) && data.projects.length > 0) {
+          setFeaturedProjects(data.projects);
+        }
+      } catch {
+        // 取得失敗時はモックのまま
+      }
+    })();
+  }, []);
 
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;

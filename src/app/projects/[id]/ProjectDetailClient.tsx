@@ -386,10 +386,6 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                   <div className="border-t border-caramel-100 mt-4 pt-4">
                     <p className="text-xs text-gray-400 text-center mb-2">手数料について</p>
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>掲載者への手数料</span>
-                      <span className="font-bold text-green-600">0円</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
                       <span>出資者の手数料</span>
                       <span className="font-semibold">+10%（決済時）</span>
                     </div>
