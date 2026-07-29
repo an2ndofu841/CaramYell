@@ -20,11 +20,25 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
   const stats = calcProjectStats(project);
   const [hovered, setHovered] = useState(false);
 
+  // 段階ゴールがある場合は最終目標を基準にする。
+  // 第1目標（goal_amount）基準のままだと、まだ上の段階が残っているのに
+  // カードだけ「100% 達成！」に見えてしまうため。
+  const milestones = project.project_milestones ?? [];
+  const hasMilestones = milestones.length > 0;
+  const finalGoal = hasMilestones
+    ? Math.max(...milestones.map((m) => m.amount))
+    : project.goal_amount;
+  const progressPct = Math.min(
+    Math.round((project.current_amount / (finalGoal || 1)) * 100),
+    100
+  );
+  const isFunded = project.current_amount >= finalGoal;
+
   // NEW: 作成から14日以内
   const isNew =
     Date.now() - new Date(project.created_at).getTime() < 14 * 86400000;
   // HOT: featured フラグ or 達成率70%以上
-  const isHot = project.featured || stats.progress_percentage >= 70;
+  const isHot = project.featured || progressPct >= 70;
 
   return (
     <Link href={`/projects/${project.slug}`} className="block group">
@@ -40,7 +54,7 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
         transition={{ type: "spring", stiffness: 300, damping: 22 }}
       >
         {/* 達成プロジェクトはホバーでコンフェッティ */}
-        {stats.is_funded && <Confetti fire={hovered} pieceCount={24} />}
+        {isFunded && <Confetti fire={hovered} pieceCount={24} />}
 
         {/* 画像 */}
         <div className="relative overflow-hidden bg-gradient-to-br from-caramel-100 to-apricot/40">
@@ -71,7 +85,7 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
                 ✨ NEW
               </Badge>
             )}
-            {stats.is_funded && (
+            {isFunded && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold text-white bg-mint">
                 🎉 達成！
               </span>
@@ -130,17 +144,17 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
           {/* 達成率 + プログレスバー */}
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-lg font-black text-caramel-500 leading-none">
-              {stats.progress_percentage}%
+              {progressPct}%
             </span>
           </div>
-          <ProgressBar percentage={stats.progress_percentage} className="mb-3" />
+          <ProgressBar percentage={progressPct} className="mb-3" />
 
           {/* 金額・支援者・残り */}
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-cocoa-700">
               {formatCurrency(project.current_amount)}
               <span className="text-gray-400 font-medium">
-                {" "}/ {formatCurrency(project.goal_amount)}
+                {" "}/ {formatCurrency(finalGoal)}
               </span>
             </span>
           </div>

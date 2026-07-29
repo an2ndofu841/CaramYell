@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
     .select(`
       *,
       profiles!projects_creator_id_fkey(id, display_name, avatar_url),
-      categories(id, slug, name_ja, name_en, icon, color)
+      categories(id, slug, name_ja, name_en, icon, color),
+      project_milestones(id, amount, title, sort_order)
     `)
     .in("status", ["active", "funded", "completed"]);
 
