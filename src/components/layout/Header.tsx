@@ -120,12 +120,12 @@ export default function Header() {
                     </Link>
                     {isAdmin && (
                       <Link
-                        href="/dashboard/admin"
+                        href="/admin"
                         onClick={() => setShowUserMenu(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors"
                       >
                         <ShieldCheck size={16} />
-                        プロジェクト審査
+                        運営CMS
                       </Link>
                     )}
                     <div className="border-t border-caramel-50 mt-1 pt-1">
