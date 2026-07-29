@@ -55,17 +55,29 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const supabase = getSupabase();
   const metadata = session.metadata || {};
 
-  const shippingAddress = session.shipping_details?.address;
-  const guestAddress = shippingAddress
-    ? {
-        postal_code: shippingAddress.postal_code || "",
-        prefecture: shippingAddress.state || "",
-        city: shippingAddress.city || "",
-        address_line1: shippingAddress.line1 || "",
-        address_line2: shippingAddress.line2 || "",
-        country: shippingAddress.country || "JP",
-      }
-    : null;
+  // 住所はアプリ側で入力されたものを metadata から取得。
+  // 古い形式（Stripe で収集）のセッションにも対応するためフォールバックを残す。
+  let guestAddress: Record<string, string> | null = null;
+  if (metadata.guest_address) {
+    try {
+      guestAddress = JSON.parse(metadata.guest_address);
+    } catch {
+      guestAddress = null;
+    }
+  }
+  if (!guestAddress) {
+    const shippingAddress = session.shipping_details?.address;
+    guestAddress = shippingAddress
+      ? {
+          postal_code: shippingAddress.postal_code || "",
+          prefecture: shippingAddress.state || "",
+          city: shippingAddress.city || "",
+          address_line1: shippingAddress.line1 || "",
+          address_line2: shippingAddress.line2 || "",
+          country: shippingAddress.country || "JP",
+        }
+      : null;
+  }
 
   const { error } = await supabase.from("backers").insert({
     project_id: metadata.project_id,

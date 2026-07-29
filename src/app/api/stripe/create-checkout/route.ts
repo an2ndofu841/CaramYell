@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       guestNickname,
       message,
       isAnonymous,
+      guestAddress,
     } = body as {
       projectId?: string;
       items?: { rewardId: string; quantity: number }[];
@@ -36,6 +37,13 @@ export async function POST(req: NextRequest) {
       guestNickname?: string;
       message?: string;
       isAnonymous?: boolean;
+      guestAddress?: {
+        postal_code?: string;
+        prefecture?: string;
+        city?: string;
+        address_line1?: string;
+        address_line2?: string;
+      } | null;
     };
 
     if (!projectId || !guestEmail) {
@@ -141,6 +149,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 配送先が必要なリターンを含む場合はアプリ側で入力済みの住所を必須にする
+    // （Stripe 側で再入力させないため）
+    let addressJson = "";
+    if (needsAddress) {
+      const a = guestAddress;
+      if (
+        !a?.postal_code ||
+        !a?.prefecture ||
+        !a?.city ||
+        !a?.address_line1
+      ) {
+        return NextResponse.json(
+          { error: "配送先住所を入力してください" },
+          { status: 400 }
+        );
+      }
+      addressJson = JSON.stringify({
+        postal_code: a.postal_code,
+        prefecture: a.prefecture,
+        city: a.city,
+        address_line1: a.address_line1,
+        address_line2: a.address_line2 || "",
+        country: "JP",
+      }).slice(0, 500); // metadata の値は500文字まで
+    }
+
     const feeAmount = Math.round(amount * FEE_RATE);
     const totalAmount = amount + feeAmount;
 
@@ -177,11 +211,10 @@ export async function POST(req: NextRequest) {
         amount: String(amount),
         fee_amount: String(feeAmount),
         total_amount: String(totalAmount),
+        guest_address: addressJson,
       },
-      billing_address_collection: needsAddress ? "required" : "auto",
-      shipping_address_collection: needsAddress
-        ? { allowed_countries: ["JP"] }
-        : undefined,
+      // 住所はアプリ側で取得済みのため Stripe では再入力させない
+      billing_address_collection: "auto",
       locale: "ja",
       payment_intent_data: {
         metadata: { project_id: projectId, reward_id: singleRewardId },

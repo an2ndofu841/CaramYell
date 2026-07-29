@@ -73,6 +73,7 @@ export default function BackingClient({
   const [paymentMethod, setPaymentMethod] = useState("apple_pay");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLookingUpZip, setIsLookingUpZip] = useState(false);
 
   const [guestInfo, setGuestInfo] = useState({
     nickname: "",
@@ -134,6 +135,39 @@ export default function BackingClient({
     return true;
   };
 
+  // 郵便番号から住所を自動補完（7桁そろった時点で検索）
+  const lookupPostalCode = async (raw: string) => {
+    const zip = raw.replace(/[^0-9]/g, "");
+    if (zip.length !== 7) return;
+    setIsLookingUpZip(true);
+    try {
+      const res = await fetch(
+        `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`
+      );
+      const data = await res.json();
+      const r = data?.results?.[0];
+      if (!r) {
+        toast.error("該当する住所が見つかりませんでした");
+        return;
+      }
+      setGuestInfo((p) => ({
+        ...p,
+        address: {
+          ...p.address,
+          prefecture: r.address1 || "",
+          // 市区町村＋町域までを自動入力（番地以降はユーザーが入力）
+          city: `${r.address2 || ""}${r.address3 || ""}`,
+        },
+      }));
+      toast.success("住所を自動入力しました");
+    } catch {
+      // 住所検索に失敗しても手入力できるので通知のみ
+      toast.error("住所の自動入力に失敗しました。手入力してください。");
+    } finally {
+      setIsLookingUpZip(false);
+    }
+  };
+
   const handlePayment = async () => {
     setIsProcessing(true);
 
@@ -161,6 +195,7 @@ export default function BackingClient({
           guestNickname: guestInfo.nickname,
           message: guestInfo.message,
           isAnonymous,
+          guestAddress: needsAddress ? guestInfo.address : null,
         }),
       });
       const data = await res.json();
@@ -445,8 +480,25 @@ export default function BackingClient({
                         label="郵便番号"
                         placeholder="123-4567"
                         value={guestInfo.address.postal_code}
-                        onChange={(e) => setGuestInfo(p => ({ ...p, address: { ...p.address, postal_code: e.target.value } }))}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setGuestInfo((p) => ({
+                            ...p,
+                            address: { ...p.address, postal_code: v },
+                          }));
+                          // 7桁そろったら自動で住所を補完
+                          if (v.replace(/[^0-9]/g, "").length === 7) {
+                            lookupPostalCode(v);
+                          }
+                        }}
+                        onBlur={(e) => lookupPostalCode(e.target.value)}
+                        inputMode="numeric"
                         fullWidth
+                        hint={
+                          isLookingUpZip
+                            ? "住所を検索中..."
+                            : "入力すると都道府県・市区町村を自動入力します"
+                        }
                       />
                       <Input
                         label="都道府県"
@@ -456,8 +508,8 @@ export default function BackingClient({
                         fullWidth
                       />
                       <Input
-                        label="市区町村"
-                        placeholder="渋谷区"
+                        label="市区町村・町域"
+                        placeholder="渋谷区渋谷"
                         value={guestInfo.address.city}
                         onChange={(e) => setGuestInfo(p => ({ ...p, address: { ...p.address, city: e.target.value } }))}
                         fullWidth
@@ -468,6 +520,7 @@ export default function BackingClient({
                         value={guestInfo.address.address_line1}
                         onChange={(e) => setGuestInfo(p => ({ ...p, address: { ...p.address, address_line1: e.target.value } }))}
                         fullWidth
+                        hint="番地・部屋番号までご記入ください"
                       />
                     </div>
                   )}
