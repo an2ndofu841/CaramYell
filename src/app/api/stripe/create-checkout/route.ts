@@ -196,7 +196,16 @@ export async function POST(req: NextRequest) {
     });
 
     const stripe = getStripe();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    // 決済後の戻り先は「実際にアクセスされているURL」を優先する。
+    // 環境変数固定だと、dev サーバーのポートが変わったときや複数ドメインで
+    // 運用したときに存在しないURLへ戻ってしまうため。
+    const origin =
+      req.headers.get("origin") ||
+      (req.headers.get("host")
+        ? `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
+        : null);
+    const appUrl =
+      origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
       // payment_method_types は指定しない：Stripe ダッシュボードで有効化した
