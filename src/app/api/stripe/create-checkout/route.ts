@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
+import { missingAddressFields } from "@/lib/data/countries";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest) {
       message?: string;
       isAnonymous?: boolean;
       guestAddress?: {
+        country?: string;
+        recipient_name?: string;
         postal_code?: string;
         prefecture?: string;
         city?: string;
@@ -150,29 +153,31 @@ export async function POST(req: NextRequest) {
     }
 
     // 配送先が必要なリターンを含む場合はアプリ側で入力済みの住所を必須にする
-    // （Stripe 側で再入力させないため）
-    let addressJson = "";
+    // （Stripe 側で再入力させないため）。必須項目は国ごとに異なる。
+    const addressMeta: Record<string, string> = {};
     if (needsAddress) {
       const a = guestAddress;
-      if (
-        !a?.postal_code ||
-        !a?.prefecture ||
-        !a?.city ||
-        !a?.address_line1
-      ) {
+      if (!a?.recipient_name?.trim()) {
         return NextResponse.json(
-          { error: "配送先住所を入力してください" },
+          { error: "お届け先氏名を入力してください" },
           { status: 400 }
         );
       }
-      addressJson = JSON.stringify({
-        postal_code: a.postal_code,
-        prefecture: a.prefecture,
-        city: a.city,
-        address_line1: a.address_line1,
-        address_line2: a.address_line2 || "",
-        country: "JP",
-      }).slice(0, 500); // metadata の値は500文字まで
+      const missing = missingAddressFields(a?.country, a);
+      if (missing.length > 0) {
+        return NextResponse.json(
+          { error: `配送先住所を入力してください（${missing.join("・")}）` },
+          { status: 400 }
+        );
+      }
+      // metadata は 1 値 500 文字までのため、項目ごとに分けて保存する
+      addressMeta.addr_country = String(a?.country || "JP").slice(0, 500);
+      addressMeta.addr_recipient_name = String(a?.recipient_name || "").slice(0, 500);
+      addressMeta.addr_postal_code = String(a?.postal_code || "").slice(0, 500);
+      addressMeta.addr_prefecture = String(a?.prefecture || "").slice(0, 500);
+      addressMeta.addr_city = String(a?.city || "").slice(0, 500);
+      addressMeta.addr_line1 = String(a?.address_line1 || "").slice(0, 500);
+      addressMeta.addr_line2 = String(a?.address_line2 || "").slice(0, 500);
     }
 
     const feeAmount = Math.round(amount * FEE_RATE);
@@ -194,7 +199,8 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card", "link"],
+      // payment_method_types は指定しない：Stripe ダッシュボードで有効化した
+      // 決済手段（カード / Apple Pay / Link など）が自動で表示される
       line_items: lineItems,
       mode: "payment",
       customer_email: guestEmail,
@@ -211,7 +217,7 @@ export async function POST(req: NextRequest) {
         amount: String(amount),
         fee_amount: String(feeAmount),
         total_amount: String(totalAmount),
-        guest_address: addressJson,
+        ...addressMeta,
       },
       // 住所はアプリ側で取得済みのため Stripe では再入力させない
       billing_address_collection: "auto",

@@ -58,7 +58,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // 住所はアプリ側で入力されたものを metadata から取得。
   // 古い形式（Stripe で収集）のセッションにも対応するためフォールバックを残す。
   let guestAddress: Record<string, string> | null = null;
-  if (metadata.guest_address) {
+  if (metadata.addr_line1 || metadata.addr_postal_code) {
+    guestAddress = {
+      country: metadata.addr_country || "JP",
+      recipient_name: metadata.addr_recipient_name || "",
+      postal_code: metadata.addr_postal_code || "",
+      prefecture: metadata.addr_prefecture || "",
+      city: metadata.addr_city || "",
+      address_line1: metadata.addr_line1 || "",
+      address_line2: metadata.addr_line2 || "",
+    };
+  } else if (metadata.guest_address) {
+    // 旧形式（JSON 1本）のセッション
     try {
       guestAddress = JSON.parse(metadata.guest_address);
     } catch {

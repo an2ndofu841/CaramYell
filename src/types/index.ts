@@ -114,12 +114,15 @@ export interface Reward {
 }
 
 export interface GuestAddress {
-  postal_code: string;
-  prefecture: string;
-  city: string;
-  address_line1: string;
-  address_line2?: string;
+  /** 国コード（JP / US / ... / OTHER）。国ごとに必須項目が異なる */
   country: string;
+  recipient_name?: string;
+  postal_code?: string;
+  /** 都道府県 / State / Province / County など */
+  prefecture?: string;
+  city?: string;
+  address_line1?: string;
+  address_line2?: string;
 }
 
 export interface Backer {
