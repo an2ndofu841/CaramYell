@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Heart, Twitter, Instagram, Youtube } from "lucide-react";
 import AdminOnly from "@/components/auth/AdminOnly";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function Footer() {
+  const t = useT();
   return (
     <footer className="relative mt-auto">
       {/* 波形の上部装飾 */}
@@ -52,10 +56,8 @@ export default function Footer() {
                   CaramYell
                 </span>
               </Link>
-              <p className="text-sm text-white/60 leading-relaxed">
-                みんなで夢を叶える、
-                <br />
-                世界一やさしいクラウドファンディング。
+              <p className="text-sm text-white/60 leading-relaxed whitespace-pre-line">
+                {t.footer.tagline}
               </p>
               <div className="flex gap-3 mt-4">
                 <SocialLink href="#" icon={<Twitter size={18} />} label="Twitter" />
@@ -66,33 +68,33 @@ export default function Footer() {
 
             {/* リンク */}
             <div>
-              <h3 className="font-bold text-sm mb-3 text-white/80">サービス</h3>
+              <h3 className="font-bold text-sm mb-3 text-white/80">{t.footer.service}</h3>
               <ul className="space-y-2">
-                <FooterLink href="/projects">プロジェクト一覧</FooterLink>
+                <FooterLink href="/projects">{t.footer.projectList}</FooterLink>
                 <AdminOnly>
-                  <FooterLink href="/projects/create">プロジェクトを作る</FooterLink>
+                  <FooterLink href="/projects/create">{t.common.createProject}</FooterLink>
                 </AdminOnly>
-                <FooterLink href="/about">CaramYellとは</FooterLink>
-                <FooterLink href="/pricing">手数料について</FooterLink>
+                <FooterLink href="/about">{t.common.about}</FooterLink>
+                <FooterLink href="/pricing">{t.footer.pricing}</FooterLink>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-bold text-sm mb-3 text-white/80">サポート</h3>
+              <h3 className="font-bold text-sm mb-3 text-white/80">{t.footer.support}</h3>
               <ul className="space-y-2">
-                <FooterLink href="/faq">よくある質問</FooterLink>
-                <FooterLink href="/guide">ガイド</FooterLink>
-                <FooterLink href="/contact">お問い合わせ</FooterLink>
-                <FooterLink href="/security">セキュリティ</FooterLink>
+                <FooterLink href="/faq">{t.footer.faq}</FooterLink>
+                <FooterLink href="/guide">{t.footer.guide}</FooterLink>
+                <FooterLink href="/contact">{t.footer.contact}</FooterLink>
+                <FooterLink href="/security">{t.footer.security}</FooterLink>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-bold text-sm mb-3 text-white/80">法的情報</h3>
+              <h3 className="font-bold text-sm mb-3 text-white/80">{t.footer.legal}</h3>
               <ul className="space-y-2">
-                <FooterLink href="/terms">利用規約</FooterLink>
-                <FooterLink href="/privacy">プライバシーポリシー</FooterLink>
-                <FooterLink href="/commercial">特定商取引法に基づく表記</FooterLink>
+                <FooterLink href="/terms">{t.footer.terms}</FooterLink>
+                <FooterLink href="/privacy">{t.footer.privacy}</FooterLink>
+                <FooterLink href="/commercial">{t.footer.commercial}</FooterLink>
               </ul>
             </div>
           </div>

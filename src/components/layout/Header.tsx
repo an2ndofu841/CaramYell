@@ -7,10 +7,13 @@ import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User, ShieldCh
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import AdminOnly from "@/components/auth/AdminOnly";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function Header() {
   const router = useRouter();
   const { user, profile, isAdmin, loading, signOut } = useAuth();
+  const t = useT();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -64,19 +67,20 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            <NavLink href="/projects">プロジェクトを探す</NavLink>
+            <NavLink href="/projects">{t.common.findProjects}</NavLink>
             <AdminOnly>
               <NavLink href="/projects/create">
                 <span className="flex items-center gap-1">
                   <Sparkles size={14} />
-                  はじめる
+                  {t.common.start}
                 </span>
               </NavLink>
             </AdminOnly>
-            <NavLink href="/about">CaramYellとは</NavLink>
+            <NavLink href="/about">{t.common.about}</NavLink>
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
+            <LocaleSwitcher />
             {loading ? (
               <div className="w-8 h-8 rounded-full bg-caramel-100 animate-pulse" />
             ) : user ? (
@@ -108,7 +112,7 @@ export default function Header() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-caramel-50 transition-colors"
                     >
                       <LayoutDashboard size={16} />
-                      ダッシュボード
+                      {t.common.dashboard}
                     </Link>
                     <Link
                       href="/dashboard/settings"
@@ -116,7 +120,7 @@ export default function Header() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-caramel-50 transition-colors"
                     >
                       <User size={16} />
-                      プロフィール設定
+                      {t.common.profileSettings}
                     </Link>
                     {isAdmin && (
                       <Link
@@ -134,7 +138,7 @@ export default function Header() {
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
                       >
                         <LogOut size={16} />
-                        ログアウト
+                        {t.common.logout}
                       </button>
                     </div>
                   </div>
@@ -146,7 +150,7 @@ export default function Header() {
                 className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors duration-200"
               >
                 <LogIn size={16} />
-                ログイン
+                {t.common.login}
               </Link>
             )}
 
@@ -160,7 +164,7 @@ export default function Header() {
                 }}
               >
                 <Plus size={16} />
-                プロジェクトを作る
+                {t.common.createProject}
               </Link>
             </AdminOnly>
           </div>
@@ -188,7 +192,7 @@ export default function Header() {
         <div className="glass border-t border-white/50 mx-4 mt-2 rounded-3xl p-4 shadow-soft-lg">
           <nav className="flex flex-col gap-1">
             <MobileNavLink href="/projects" onClick={() => setIsMenuOpen(false)}>
-              プロジェクトを見る
+              {t.common.viewProjects}
             </MobileNavLink>
             <AdminOnly>
               <MobileNavLink href="/projects/create" onClick={() => setIsMenuOpen(false)}>
@@ -196,11 +200,11 @@ export default function Header() {
               </MobileNavLink>
             </AdminOnly>
             <MobileNavLink href="/about" onClick={() => setIsMenuOpen(false)}>
-              CaramYellとは
+              {t.common.about}
             </MobileNavLink>
             {user && (
               <MobileNavLink href="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                ダッシュボード
+                {t.common.dashboard}
               </MobileNavLink>
             )}
             <div className="border-t border-caramel-100 mt-2 pt-2 flex gap-2">
@@ -219,7 +223,7 @@ export default function Header() {
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
                   >
                     <LogOut size={16} />
-                    ログアウト
+                    {t.common.logout}
                   </button>
                 </>
               ) : (
@@ -230,7 +234,7 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <LogIn size={16} />
-                  ログイン / 新規登録
+                  {t.common.loginOrSignup}
                 </Link>
               )}
             </div>

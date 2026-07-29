@@ -5,17 +5,19 @@ import { usePathname } from "next/navigation";
 import { Home, Search, PlusCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-
-const baseTabs = [
-  { href: "/", icon: Home, label: "ホーム", exact: true },
-  { href: "/projects", icon: Search, label: "探す", exact: false },
-];
-
-const createTab = { href: "/projects/create", icon: PlusCircle, label: "掲載する", exact: true };
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function MobileTabBar() {
   const pathname = usePathname();
   const { user, isAdmin } = useAuth();
+  const t = useT();
+
+  const baseTabs = [
+    { href: "/", icon: Home, label: t.common.home, exact: true },
+    { href: "/projects", icon: Search, label: t.common.search, exact: false },
+  ];
+
+  const createTab = { href: "/projects/create", icon: PlusCircle, label: t.common.createProject, exact: true };
 
   // プロジェクト作成は当面、弊社（管理者）のみ。一般には掲載タブを表示しない。
   const tabs = isAdmin ? [...baseTabs, createTab] : baseTabs;
@@ -59,7 +61,7 @@ export default function MobileTabBar() {
         >
           <User size={22} strokeWidth={pathname.startsWith("/dashboard") ? 2.5 : 2} />
           <span className={cn("text-[10px]", pathname.startsWith("/dashboard") ? "font-bold" : "font-medium")}>
-            マイページ
+            {t.common.myPage}
           </span>
         </Link>
       </div>

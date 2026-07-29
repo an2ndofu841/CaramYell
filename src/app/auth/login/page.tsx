@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function LoginPage() {
   return (
@@ -20,6 +21,7 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
@@ -104,10 +106,10 @@ function LoginForm() {
             C
           </div>
           <h1 className="text-2xl font-bold text-gray-800">
-            {isLogin ? "おかえりなさい！" : "はじめまして！"}
+            {isLogin ? t.auth.welcomeBack : t.auth.hello}
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            {isLogin ? "CaramYellにログインする" : "CaramYellに登録する（無料）"}
+            {isLogin ? t.auth.loginTo : t.auth.signupTo}
           </p>
         </motion.div>
 
@@ -118,7 +120,7 @@ function LoginForm() {
         >
           <Card>
             <div className="flex p-1 bg-caramel-50 rounded-2xl mb-6">
-              {["ログイン", "新規登録"].map((tab, i) => (
+              {[t.auth.tabLogin, t.auth.tabSignup].map((tab, i) => (
                 <button
                   key={tab}
                   onClick={() => setIsLogin(i === 0)}
@@ -140,7 +142,7 @@ function LoginForm() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                label="メールアドレス"
+                label={t.auth.email}
                 type="email"
                 placeholder="caramel@example.com"
                 value={form.email}
@@ -151,9 +153,9 @@ function LoginForm() {
               />
 
               <Input
-                label="パスワード"
+                label={t.auth.password}
                 type={showPassword ? "text" : "password"}
-                placeholder="8文字以上"
+                placeholder={t.auth.passwordPlaceholder}
                 value={form.password}
                 onChange={(e) => setForm(p => ({ ...p, password: e.target.value }))}
                 icon={<Lock size={16} />}
@@ -173,13 +175,13 @@ function LoginForm() {
               {isLogin && (
                 <div className="text-right">
                   <Link href="/auth/forgot-password" className="text-xs text-caramel-500 hover:text-caramel-600 font-semibold">
-                    パスワードを忘れた方
+                    {t.auth.forgot}
                   </Link>
                 </div>
               )}
 
               <Button fullWidth size="lg" loading={isLoading} type="submit">
-                {isLogin ? "ログインする" : "アカウントを作成する"}
+                {isLogin ? t.auth.loginButton : t.auth.signupButton}
               </Button>
             </form>
 
@@ -188,7 +190,7 @@ function LoginForm() {
                 <div className="w-full border-t border-caramel-100" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-white px-3 text-xs text-gray-400 font-medium">または</span>
+                <span className="bg-white px-3 text-xs text-gray-400 font-medium">{t.auth.or}</span>
               </div>
             </div>
 
@@ -203,7 +205,7 @@ function LoginForm() {
                   <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Googleで続ける
+                {t.auth.continueGoogle}
               </button>
 
               <button
@@ -211,25 +213,25 @@ function LoginForm() {
                 className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl border-2 border-caramel-100 hover:bg-caramel-50 transition-colors font-semibold text-sm text-gray-600"
               >
                 <Github size={18} />
-                GitHubで続ける
+                {t.auth.continueGithub}
               </button>
             </div>
 
             <p className="text-xs text-center text-gray-400 mt-6">
-              続けることで、
-              <Link href="/terms" className="text-caramel-500 hover:underline">利用規約</Link>
-              と
-              <Link href="/privacy" className="text-caramel-500 hover:underline">プライバシーポリシー</Link>
-              に同意したことになります
+              {t.auth.agreeNote1}
+              <Link href="/terms" className="text-caramel-500 hover:underline">{t.auth.terms}</Link>
+              {t.auth.agreeNote2}
+              <Link href="/privacy" className="text-caramel-500 hover:underline">{t.auth.privacy}</Link>
+              {t.auth.agreeNote3}
             </p>
           </Card>
         </motion.div>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          <span className="font-semibold">アカウント登録なしでも応援できます！</span>
+          <span className="font-semibold">{t.auth.canBackWithoutAccount}</span>
           <br />
           <Link href="/projects" className="text-caramel-500 hover:text-caramel-600 font-semibold">
-            プロジェクトを見る →
+            {t.common.viewProjects} →
           </Link>
         </p>
       </div>

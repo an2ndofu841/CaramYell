@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Card from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 /**
  * 段階的ゴール（ストレッチゴール）の表示。
@@ -19,6 +20,7 @@ export default function MilestonesProgress({
   milestones: ProjectMilestone[];
   currentAmount: number;
 }) {
+  const t = useT();
   const sorted = [...milestones].sort((a, b) => a.amount - b.amount);
   if (sorted.length === 0) return null;
 
@@ -35,14 +37,14 @@ export default function MilestonesProgress({
       <div className="flex items-center justify-between mb-1">
         <h3 className="font-bold text-gray-800 flex items-center gap-1.5">
           <Flag size={16} className="text-caramel-500" />
-          段階ゴール
+          {t.detail.milestones}
         </h3>
         <span className="text-xs font-bold text-caramel-500">
-          {achievedCount} / {sorted.length} 達成
+          {achievedCount} / {sorted.length} {t.detail.milestonesAchieved}
         </span>
       </div>
       <p className="text-xs text-gray-400 mb-3">
-        達成した段階まで実施します
+        {t.detail.milestonesNote}
       </p>
 
       <ProgressBar
@@ -61,7 +63,7 @@ export default function MilestonesProgress({
             {formatCurrency(currentAmount)}
           </span>
         </span>
-        <span>最終目標 {formatCurrency(topAmount)}</span>
+        <span>{t.common.finalGoal} {formatCurrency(topAmount)}</span>
       </div>
 
       <ol className="space-y-2.5">
@@ -120,11 +122,11 @@ export default function MilestonesProgress({
                 )}
                 {achieved ? (
                   <p className="text-xs text-green-600 font-semibold mt-0.5">
-                    🎉 達成しました！
+                    {t.detail.reachedLabel}
                   </p>
                 ) : isNext ? (
                   <p className="text-xs text-caramel-600 font-semibold mt-0.5">
-                    あと {formatCurrency(remaining)} で達成
+                    {formatCurrency(remaining)}{t.detail.remainingToReach}
                   </p>
                 ) : null}
               </div>

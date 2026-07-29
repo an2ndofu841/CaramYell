@@ -35,6 +35,7 @@ import Card from "@/components/ui/Card";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface ProjectDetailClientProps {
   project: Project;
@@ -42,12 +43,13 @@ interface ProjectDetailClientProps {
 }
 
 export default function ProjectDetailClient({ project, isPreview = false }: ProjectDetailClientProps) {
+  const { t, pick } = useLocale();
   const allowComments = project.allow_comments !== false;
   const tabs = [
-    { id: "story", label: "プロジェクト詳細" },
-    { id: "rewards", label: "リターン" },
-    { id: "updates", label: "活動報告" },
-    ...(allowComments ? [{ id: "comments", label: "コメント" }] : []),
+    { id: "story", label: t.detail.tabStory },
+    { id: "rewards", label: t.detail.tabRewards },
+    { id: "updates", label: t.detail.tabUpdates },
+    ...(allowComments ? [{ id: "comments", label: t.detail.tabComments }] : []),
   ];
 
   const [activeTab, setActiveTab] = useState("story");
@@ -120,7 +122,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
           className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-caramel-600 transition-colors font-medium"
         >
           <ChevronLeft size={16} />
-          プロジェクト一覧
+          {t.detail.breadcrumb}
         </Link>
       </div>
 
@@ -150,7 +152,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                   <div className="absolute top-4 right-4">
                     <span className="px-4 py-2 rounded-full text-sm font-bold text-white"
                       style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)" }}>
-                      🎉 {hasMilestones ? "全目標達成！" : "目標達成！"}
+                      {hasMilestones ? t.detail.allGoalsBadge : t.detail.goalAchievedBadge}
                     </span>
                   </div>
                 )}
@@ -172,9 +174,9 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 leading-tight">
-                  {project.title}
+                  {pick(project.title, project.title_en)}
                 </h1>
-                <p className="text-lg text-gray-500">{project.tagline}</p>
+                <p className="text-lg text-gray-500">{pick(project.tagline, project.tagline_en)}</p>
 
                 {/* クリエイター情報 */}
                 {project.profiles && (
@@ -195,7 +197,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                       )}
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 font-medium">プロジェクトオーナー</p>
+                      <p className="text-xs text-gray-400 font-medium">{t.detail.owner}</p>
                       <p className="font-bold text-gray-800">{project.profiles.display_name}</p>
                       {project.profiles.bio && (
                         <p className="text-xs text-gray-500">{project.profiles.bio}</p>
@@ -254,7 +256,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                 <Card>
                   <div className="prose max-w-none">
                     <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
-                      {project.description}
+                      {pick(project.description, project.description_en)}
                     </div>
                     {project.story && (
                       <>
@@ -300,7 +302,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                 <Card>
                   <div className="text-center py-8 text-gray-400">
                     <MessageSquare size={40} className="mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">コメントはまだありません</p>
+                    <p className="font-medium">{t.detail.noComments}</p>
                     <p className="text-sm mt-1">最初のコメントを書いてみましょう！</p>
                   </div>
                 </Card>
@@ -321,7 +323,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                       </span>
                     </div>
                     <p className="text-sm text-gray-400">
-                      {hasMilestones ? "最終目標" : "目標金額"} {formatCurrency(finalGoal)} の
+                      {hasMilestones ? t.common.finalGoal : t.common.goalAmount} {formatCurrency(finalGoal)} {t.common.of}
                       <span className="font-bold text-caramel-500"> {hasMilestones ? headlinePct : stats.progress_percentage}%</span>
                     </p>
                   </div>
@@ -356,38 +358,38 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                       <p className="text-lg font-bold text-gray-800">
                         {formatNumber(project.backer_count)}
                       </p>
-                      <p className="text-xs text-gray-400">人が応援</p>
+                      <p className="text-xs text-gray-400">{t.common.backers}</p>
                     </div>
                     <div className="text-center p-3 rounded-2xl bg-caramel-50">
                       <Clock size={16} className="mx-auto mb-1 text-caramel-500" />
                       <p className="text-lg font-bold text-gray-800">
                         {stats.days_left > 0 ? `${stats.days_left}日` : "終了"}
                       </p>
-                      <p className="text-xs text-gray-400">残り</p>
+                      <p className="text-xs text-gray-400">{t.common.daysLeft}</p>
                     </div>
                   </div>
 
                   {isPreview ? (
                     <Button fullWidth size="lg" className="mb-3" disabled>
-                      プレビュー中は応援できません
+                      {t.detail.previewDisabled}
                     </Button>
                   ) : (
                     <Link href={`/back/${project.slug}`}>
                       <Button fullWidth size="lg" className="mb-3">
-                        💝 このプロジェクトを応援する
+                        💝 {t.common.backThisProject}
                       </Button>
                     </Link>
                   )}
 
                   <p className="text-xs text-center text-gray-400">
-                    アカウント登録なしで応援できます ✨
+                    {t.common.noAccountNeeded}
                   </p>
 
                   <div className="border-t border-caramel-100 mt-4 pt-4">
-                    <p className="text-xs text-gray-400 text-center mb-2">手数料について</p>
+                    <p className="text-xs text-gray-400 text-center mb-2">{t.detail.feesTitle}</p>
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>出資者の手数料</span>
-                      <span className="font-semibold">+10%（決済時）</span>
+                      <span>{t.detail.backerFee}</span>
+                      <span className="font-semibold">{t.detail.backerFeeValue}</span>
                     </div>
                   </div>
                 </Card>
@@ -424,9 +426,9 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
               {/* 決済方法 */}
               <AnimatedSection animation="slide-right" delay={100}>
                 <Card variant="outlined">
-                  <p className="text-xs font-bold text-gray-500 mb-3">対応決済方法</p>
+                  <p className="text-xs font-bold text-gray-500 mb-3">{t.detail.paymentMethods}</p>
                   <div className="flex flex-wrap gap-2">
-                    {[" Apple Pay", " Google Pay", " カード", " PayPal"].map((method) => (
+                    {["💳 カード", "🍎 Apple Pay", "🔗 Link"].map((method) => (
                       <span key={method} className="px-2.5 py-1 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
                         {method}
                       </span>
@@ -434,7 +436,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                   </div>
                   <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-400">
                     <Globe size={12} />
-                    <span>海外からの支援にも対応</span>
+                    <span>{t.detail.intlNote}</span>
                   </div>
                 </Card>
               </AnimatedSection>

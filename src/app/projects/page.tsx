@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { getAllMockProjects } from "@/lib/data/mockProjects";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 const categories = [
   { slug: "all", name: "すべて", icon: "🌟" },
@@ -30,6 +31,7 @@ const sortOptions = [
 ];
 
 export default function ProjectsPage() {
+  const t = useT();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState("trending");
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,23 +89,23 @@ export default function ProjectsPage() {
         <div className="relative z-10 max-w-3xl mx-auto px-4">
           <AnimatedSection animation="fade-up">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3">
-              プロジェクトを
+              {t.projects.title}
               <span style={{
                 background: "linear-gradient(135deg, #F2807B, #F5A34B)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-              }}> 探す</span>
+              }}>{t.projects.titleAccent}</span>
             </h1>
             <p className="text-gray-500 text-lg">
-              {allProjects.length}件のプロジェクトが応援を待っています
+              {allProjects.length}{t.projects.waiting}
             </p>
           </AnimatedSection>
 
           {/* 検索 */}
           <AnimatedSection animation="fade-up" delay={100} className="mt-6">
             <Input
-              placeholder="🔍 プロジェクトを検索..."
+              placeholder={`🔍 ${t.projects.searchPlaceholder}`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="text-base shadow-soft"
@@ -163,7 +165,7 @@ export default function ProjectsPage() {
 
         {/* 件数 */}
         <p className="text-sm text-gray-400 font-medium mb-6">
-          {filteredProjects.length}件のプロジェクト
+          {filteredProjects.length}{t.projects.count}
         </p>
 
         {/* プロジェクトグリッド */}
@@ -179,7 +181,7 @@ export default function ProjectsPage() {
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-bold text-gray-600 mb-2">
-              プロジェクトが見つかりませんでした
+              {t.projects.notFound}
             </h3>
             <p className="text-gray-400">
               キーワードやカテゴリーを変えて試してみてください

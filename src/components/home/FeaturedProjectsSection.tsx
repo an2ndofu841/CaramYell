@@ -7,8 +7,10 @@ import AnimatedSection from "@/components/animations/AnimatedSection";
 import ProjectCard from "@/components/project/ProjectCard";
 import { getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Project } from "@/types";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function FeaturedProjectsSection() {
+  const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
   // 実データ（掲載中）を優先し、無ければデモ用モックを表示
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>(() =>
@@ -44,7 +46,7 @@ export default function FeaturedProjectsSection() {
             <h2 className="text-2xl sm:text-3xl font-black text-cocoa-700 flex items-center gap-2"
               style={{ fontFamily: "var(--font-display)" }}>
               <span className="text-2xl">🔥</span>
-              注目のプロジェクト
+              {t.home.featured}
             </h2>
           </div>
           <div className="flex items-center gap-3">
@@ -69,7 +71,7 @@ export default function FeaturedProjectsSection() {
               href="/projects"
               className="flex items-center gap-1 text-sm font-bold text-caramel-500 hover:text-caramel-600 transition-colors whitespace-nowrap"
             >
-              すべて見る
+              {t.home.seeAll}
               <ArrowRight size={14} />
             </Link>
           </div>

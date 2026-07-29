@@ -32,12 +32,19 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Reward, Project } from "@/types";
+import { useT } from "@/components/i18n/LocaleProvider";
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY,
+  getCountryFormat,
+  missingAddressFields,
+} from "@/lib/data/countries";
 
 const steps = [
-  { id: 1, title: "リターン選択", icon: "🎁" },
-  { id: 2, title: "あなたの情報", icon: "👤" },
-  { id: 3, title: "お支払い", icon: "💳" },
-  { id: 4, title: "完了", icon: "🎉" },
+  { id: 1, key: "stepReward" as const, icon: "🎁" },
+  { id: 2, key: "stepInfo" as const, icon: "👤" },
+  { id: 3, key: "stepPayment" as const, icon: "💳" },
+  { id: 4, key: "stepDone" as const, icon: "🎉" },
 ];
 
 const paymentMethods = [
@@ -59,6 +66,7 @@ export default function BackingClient({
   realProject?: Project | null;
 }) {
   // 実プロジェクトがあれば実データ＋実決済、なければモック＋デモ決済
+  const t = useT();
   const isReal = !!realProject;
   const project =
     realProject || getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
@@ -80,12 +88,17 @@ export default function BackingClient({
     email: "",
     message: "",
     address: {
+      country: DEFAULT_COUNTRY,
+      recipient_name: "",
       postal_code: "",
       prefecture: "",
       city: "",
       address_line1: "",
-    },
+      address_line2: "",
+    } as Record<string, string>,
   });
+
+  const countryFormat = getCountryFormat(guestInfo.address.country);
 
   // 在庫上限（設定があれば残数まで）
   const remainingStock = (r: Reward) =>
@@ -128,7 +141,11 @@ export default function BackingClient({
     if (step === 2) {
       if (!guestInfo.email) return false;
       if (needsAddress) {
-        return !!(guestInfo.address.postal_code && guestInfo.address.prefecture && guestInfo.address.city && guestInfo.address.address_line1);
+        if (!guestInfo.address.recipient_name?.trim()) return false;
+        return (
+          missingAddressFields(guestInfo.address.country, guestInfo.address)
+            .length === 0
+        );
       }
       return true;
     }
@@ -219,7 +236,7 @@ export default function BackingClient({
           className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-caramel-600 transition-colors font-medium py-4"
         >
           <ChevronLeft size={16} />
-          プロジェクトへ戻る
+          {t.backing.backToProject}
         </Link>
 
         {/* プロジェクト概要 */}
@@ -257,7 +274,7 @@ export default function BackingClient({
                   {s.id < step ? <Check size={16} /> : s.icon}
                 </div>
                 <span className={cn("text-xs font-semibold hidden sm:block", s.id === step ? "text-caramel-600" : "text-gray-400")}>
-                  {s.title}
+                  {t.backing[s.key]}
                 </span>
               </div>
             ))}
@@ -276,9 +293,9 @@ export default function BackingClient({
             {step === 1 && (
               <div className="space-y-4">
                 <Card>
-                  <h2 className="text-xl font-bold text-gray-800 mb-1">🎁 応援の方法を選ぶ</h2>
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">🎁 {t.backing.chooseSupport}</h2>
                   <p className="text-sm text-gray-500 mb-4">
-                    ほしいリターンを個数分えらべます。複数種類の組み合わせもOK ✨
+                    {t.backing.chooseSupportNote}
                   </p>
 
                   {/* リターン一覧（数量選択） */}
@@ -309,7 +326,7 @@ export default function BackingClient({
                               </span>
                               {!reward.needs_address && (
                                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
-                                  住所不要
+                                  {t.backing.addressNotRequired}
                                 </span>
                               )}
                               {stock != null && (
@@ -323,7 +340,7 @@ export default function BackingClient({
 
                           {/* 数量ステッパー */}
                           <div className="flex items-center justify-end gap-3 mt-3">
-                            <span className="text-xs text-gray-400">個数</span>
+                            <span className="text-xs text-gray-400">{t.backing.quantity}</span>
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
@@ -358,9 +375,9 @@ export default function BackingClient({
                       <div className="flex items-center gap-3 mb-2">
                         <Heart size={20} className="text-candy-pink flex-shrink-0" />
                         <div>
-                          <p className="font-bold text-gray-800">自由な金額で応援（リターンなし）</p>
+                          <p className="font-bold text-gray-800">{t.backing.freeAmountTitle}</p>
                           <p className="text-xs text-gray-400">
-                            リターンに上乗せ、または単独での応援もできます
+                            {t.backing.freeAmountNote}
                           </p>
                         </div>
                       </div>
@@ -395,20 +412,20 @@ export default function BackingClient({
                       ))}
                       {effectiveFree > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">自由応援</span>
+                          <span className="text-gray-500">{t.backing.freeSupport}</span>
                           <span className="font-semibold">{formatCurrency(effectiveFree)}</span>
                         </div>
                       )}
                       <div className="border-t border-caramel-100 pt-2 flex justify-between text-sm">
-                        <span className="text-gray-500">応援金額 小計</span>
+                        <span className="text-gray-500">{t.backing.subtotal}</span>
                         <span className="font-semibold">{formatCurrency(amount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">手数料（10%）</span>
+                        <span className="text-gray-500">{t.backing.fee}</span>
                         <span className="font-semibold">{formatCurrency(fee)}</span>
                       </div>
                       <div className="border-t border-caramel-100 pt-2 flex justify-between">
-                        <span className="font-bold">お支払い合計</span>
+                        <span className="font-bold">{t.backing.total}</span>
                         <span className="text-xl font-bold text-caramel-600">{formatCurrency(total)}</span>
                       </div>
                     </div>
@@ -420,36 +437,36 @@ export default function BackingClient({
             {/* STEP 2: ゲスト情報入力 */}
             {step === 2 && (
               <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">👤 あなたの情報</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">👤 {t.backing.yourInfo}</h2>
                 <p className="text-sm text-gray-500 mb-6">
-                  アカウント登録は不要です。メールアドレスだけでOK ✨
+                  {t.backing.yourInfoNote}
                 </p>
 
                 <div className="space-y-4">
                   <Input
-                    label="ニックネーム（任意）"
+                    label={t.backing.nickname}
                     placeholder="例：たろう、匿名希望"
                     value={guestInfo.nickname}
                     onChange={(e) => setGuestInfo(p => ({ ...p, nickname: e.target.value }))}
                     icon={<User size={16} />}
                     fullWidth
-                    hint="リターンに名前を使用する場合に記入してください"
+                    hint={t.backing.nicknameHint}
                   />
 
                   <Input
-                    label="メールアドレス ※必須"
+                    label={t.backing.email}
                     type="email"
                     placeholder="caramel@example.com"
                     value={guestInfo.email}
                     onChange={(e) => setGuestInfo(p => ({ ...p, email: e.target.value }))}
                     icon={<Mail size={16} />}
                     fullWidth
-                    hint="決済確認・リターンの受け取りに使用します"
+                    hint={t.backing.emailHint}
                   />
 
                   <Textarea
-                    label="応援メッセージ（任意）"
-                    placeholder="クリエイターへの応援メッセージを書いてください"
+                    label={t.backing.messageLabel}
+                    placeholder={t.backing.messagePlaceholder}
                     value={guestInfo.message}
                     onChange={(e) => setGuestInfo(p => ({ ...p, message: e.target.value }))}
                     rows={3}
@@ -464,7 +481,7 @@ export default function BackingClient({
                       className="rounded"
                     />
                     <span className="text-sm text-gray-600 font-medium">
-                      匿名で応援する（支援者一覧に名前を表示しない）
+                      {t.backing.anonymous}
                     </span>
                   </label>
 
@@ -473,55 +490,92 @@ export default function BackingClient({
                     <div className="space-y-3 pt-2 border-t border-caramel-100">
                       <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
                         <MapPin size={16} className="text-caramel-500" />
-                        配送先住所（物品リターンのため必須）
+                        {t.backing.shippingTitle}
                       </p>
 
+                      {/* 配送先の国（選ぶと住所欄がその国の形式に切り替わります） */}
+                      <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-sm font-semibold text-gray-700">
+                          {t.backing.country}
+                        </label>
+                        <select
+                          value={guestInfo.address.country}
+                          onChange={(e) =>
+                            setGuestInfo((p) => ({
+                              ...p,
+                              address: {
+                                // 国を変えたら住所欄はリセット（形式が変わるため）
+                                country: e.target.value,
+                                recipient_name: p.address.recipient_name,
+                                postal_code: "",
+                                prefecture: "",
+                                city: "",
+                                address_line1: "",
+                                address_line2: "",
+                              },
+                            }))
+                          }
+                          className="w-full px-4 py-3 rounded-2xl border-2 border-caramel-100 bg-white text-gray-800 outline-none focus:border-candy-pink transition-colors"
+                        >
+                          {COUNTRIES.map((c) => (
+                            <option key={c.code} value={c.code}>
+                              {c.flag} {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
                       <Input
-                        label="郵便番号"
-                        placeholder="123-4567"
-                        value={guestInfo.address.postal_code}
-                        onChange={(e) => {
-                          const v = e.target.value;
+                        label={t.backing.recipientName}
+                        placeholder={
+                          guestInfo.address.country === "JP"
+                            ? "山田 太郎"
+                            : "Taro Yamada"
+                        }
+                        value={guestInfo.address.recipient_name}
+                        onChange={(e) =>
                           setGuestInfo((p) => ({
                             ...p,
-                            address: { ...p.address, postal_code: v },
-                          }));
-                          // 7桁そろったら自動で住所を補完
-                          if (v.replace(/[^0-9]/g, "").length === 7) {
-                            lookupPostalCode(v);
-                          }
-                        }}
-                        onBlur={(e) => lookupPostalCode(e.target.value)}
-                        inputMode="numeric"
-                        fullWidth
-                        hint={
-                          isLookingUpZip
-                            ? "住所を検索中..."
-                            : "入力すると都道府県・市区町村を自動入力します"
+                            address: { ...p.address, recipient_name: e.target.value },
+                          }))
                         }
-                      />
-                      <Input
-                        label="都道府県"
-                        placeholder="東京都"
-                        value={guestInfo.address.prefecture}
-                        onChange={(e) => setGuestInfo(p => ({ ...p, address: { ...p.address, prefecture: e.target.value } }))}
                         fullWidth
                       />
-                      <Input
-                        label="市区町村・町域"
-                        placeholder="渋谷区渋谷"
-                        value={guestInfo.address.city}
-                        onChange={(e) => setGuestInfo(p => ({ ...p, address: { ...p.address, city: e.target.value } }))}
-                        fullWidth
-                      />
-                      <Input
-                        label="番地・建物名"
-                        placeholder="1-2-3 カラメルビル101"
-                        value={guestInfo.address.address_line1}
-                        onChange={(e) => setGuestInfo(p => ({ ...p, address: { ...p.address, address_line1: e.target.value } }))}
-                        fullWidth
-                        hint="番地・部屋番号までご記入ください"
-                      />
+
+                      {/* 国ごとの住所フォーマットで入力欄を出し分け */}
+                      {countryFormat.fields.map((f) => (
+                        <Input
+                          key={f.key}
+                          label={f.label}
+                          placeholder={f.placeholder}
+                          value={guestInfo.address[f.key] || ""}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setGuestInfo((p) => ({
+                              ...p,
+                              address: { ...p.address, [f.key]: v },
+                            }));
+                            // 日本の郵便番号は7桁そろった時点で自動補完
+                            if (f.lookup && v.replace(/[^0-9]/g, "").length === 7) {
+                              lookupPostalCode(v);
+                            }
+                          }}
+                          onBlur={
+                            f.lookup
+                              ? (e) => lookupPostalCode(e.target.value)
+                              : undefined
+                          }
+                          inputMode={f.lookup ? "numeric" : undefined}
+                          fullWidth
+                          hint={
+                            f.lookup
+                              ? isLookingUpZip
+                                ? t.backing.lookingUp
+                                : t.backing.zipHint
+                              : undefined
+                          }
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -532,8 +586,29 @@ export default function BackingClient({
             {step === 3 && (
               <div className="space-y-4">
                 <Card>
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">💳 お支払い方法</h2>
+                  <h2 className="text-xl font-bold text-gray-800 mb-4">💳 {t.backing.paymentTitle}</h2>
 
+                  {isReal ? (
+                    // 実決済では Stripe の安全な決済ページで支払い方法を選ぶ
+                    <div className="p-4 rounded-2xl border-2 border-caramel-100 bg-caramel-50/50">
+                      <p className="text-sm font-bold text-gray-700 mb-1">
+                        {t.backing.paymentNote}
+                      </p>
+                      <p className="text-xs text-gray-500 mb-3">
+                        {t.backing.paymentNote2}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {["💳 カード", "🍎 Apple Pay", "🔗 Link"].map((m) => (
+                          <span
+                            key={m}
+                            className="px-3 py-1.5 rounded-full text-xs font-bold bg-white border-2 border-caramel-100 text-gray-600"
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
                   <div className="space-y-3">
                     {paymentMethods.map((method) => (
                       <button
@@ -559,25 +634,26 @@ export default function BackingClient({
                       </button>
                     ))}
                   </div>
+                  )}
 
                   <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
                     <Lock size={12} />
-                    <span>Stripeによる安全な決済。カード情報はCaramYellには保存されません。</span>
+                    <span>{t.backing.secureNote}</span>
                   </div>
                 </Card>
 
                 {/* 最終確認 */}
                 <Card variant="outlined">
-                  <p className="font-bold text-gray-700 mb-3">お支払い内容の確認</p>
+                  <p className="font-bold text-gray-700 mb-3">{t.backing.confirmTitle}</p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">プロジェクト</span>
+                      <span className="text-gray-500">{t.backing.project}</span>
                       <span className="font-semibold text-right max-w-[60%] line-clamp-1">
                         {project.title}
                       </span>
                     </div>
                     <div className="flex justify-between gap-2">
-                      <span className="text-gray-500 flex-shrink-0">リターン</span>
+                      <span className="text-gray-500 flex-shrink-0">{t.backing.reward}</span>
                       <span className="font-semibold text-right">
                         {selectedItems.length === 0 ? (
                           effectiveFree > 0 ? "応援のみ（リターンなし）" : "-"
@@ -596,11 +672,11 @@ export default function BackingClient({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">メールアドレス</span>
+                      <span className="text-gray-500">{t.backing.emailShort}</span>
                       <span className="font-semibold">{guestInfo.email}</span>
                     </div>
                     <div className="border-t border-caramel-100 pt-2 flex justify-between">
-                      <span className="font-bold">合計</span>
+                      <span className="font-bold">{t.backing.total}</span>
                       <span className="text-xl font-bold text-caramel-600">{formatCurrency(total)}</span>
                     </div>
                   </div>
@@ -613,7 +689,7 @@ export default function BackingClient({
                   onClick={handlePayment}
                   icon={<Lock size={18} />}
                 >
-                  {formatCurrency(total)} を安全に支払う
+                  {formatCurrency(total)}{t.backing.payButton}
                 </Button>
               </div>
             )}
@@ -636,7 +712,7 @@ export default function BackingClient({
                     transition={{ delay: 0.4 }}
                     className="text-2xl font-bold text-gray-800 mb-3"
                   >
-                    応援ありがとうございます！
+                    {t.backing.thanks}
                   </motion.h2>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -706,7 +782,7 @@ export default function BackingClient({
               onClick={() => setStep(s => s - 1)}
               disabled={step === 1}
             >
-              戻る
+              {t.common.back}
             </Button>
             {step < 3 && (
               <Button
@@ -715,7 +791,7 @@ export default function BackingClient({
                 onClick={() => setStep(s => s + 1)}
                 disabled={!canProceed()}
               >
-                次へ
+                {t.common.next}
               </Button>
             )}
           </div>

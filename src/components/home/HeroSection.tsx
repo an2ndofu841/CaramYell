@@ -6,8 +6,10 @@ import { ArrowRight, Heart, Megaphone, Star } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
 import AdminOnly from "@/components/auth/AdminOnly";
+import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function HeroSection() {
+  const t = useT();
   return (
     <section
       className="relative overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20"
@@ -52,9 +54,9 @@ export default function HeroSection() {
               className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6 text-cocoa-700"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              あなたの想いに、
+              {t.home.heroTitle1}
               <br />
-              <span className="text-gradient-candy">甘く熱いエールを。</span>
+              <span className="text-gradient-candy">{t.home.heroTitle2}</span>
             </motion.h1>
 
             <motion.p
@@ -63,8 +65,7 @@ export default function HeroSection() {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="text-base sm:text-lg text-cocoa-500/70 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
-              CaramYellは、クリエイターの夢や挑戦を応援する
-              クラウドファンディングサービスです。
+              {t.home.heroLead}
             </motion.p>
 
             {/* CTA */}
@@ -76,13 +77,13 @@ export default function HeroSection() {
             >
               <Link href="/projects">
                 <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right">
-                  プロジェクトを見る
+                  {t.common.viewProjects}
                 </Button>
               </Link>
               <AdminOnly>
                 <Link href="/projects/create">
                   <Button size="lg" variant="outline" heartOnHover>
-                    はじめる
+                    {t.common.start}
                   </Button>
                 </Link>
               </AdminOnly>
