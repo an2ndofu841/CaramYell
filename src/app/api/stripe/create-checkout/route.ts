@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createClient } from "@/lib/supabase/server";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -7,84 +8,171 @@ function getStripe() {
   });
 }
 
+const FEE_RATE = 0.1;
+
 export async function POST(req: NextRequest) {
   try {
-    const stripe = getStripe();
+    if (!process.env.STRIPE_SECRET_KEY?.startsWith("sk_")) {
+      return NextResponse.json(
+        { error: "決済が未設定です。STRIPE_SECRET_KEY を設定してください。" },
+        { status: 503 }
+      );
+    }
+
+    const body = await req.json();
     const {
       projectId,
-      projectTitle,
-      rewardId,
-      rewardTitle,
-      amount,
-      feeAmount,
-      totalAmount,
+      items, // [{ rewardId, quantity }]
+      freeAmount, // 追加の自由応援額（円）
       guestEmail,
       guestNickname,
       message,
       isAnonymous,
-      needsAddress,
-      successUrl,
-      cancelUrl,
-    } = await req.json();
+    } = body as {
+      projectId?: string;
+      items?: { rewardId: string; quantity: number }[];
+      freeAmount?: number;
+      guestEmail?: string;
+      guestNickname?: string;
+      message?: string;
+      isAnonymous?: boolean;
+    };
 
-    if (!amount || !guestEmail || !projectId) {
-      return NextResponse.json({ error: "必須パラメータが不足しています" }, { status: 400 });
+    if (!projectId || !guestEmail) {
+      return NextResponse.json(
+        { error: "必須パラメータが不足しています" },
+        { status: 400 }
+      );
     }
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      {
-        price_data: {
-          currency: "jpy",
-          product_data: {
-            name: rewardTitle || `${projectTitle}への応援`,
-            description: rewardId
-              ? `プロジェクト: ${projectTitle} / リターン: ${rewardTitle}`
-              : `プロジェクト: ${projectTitle} への直接応援`,
-          },
-          unit_amount: amount,
-        },
-        quantity: 1,
-      },
-    ];
+    const supabase = await createClient();
 
-    if (feeAmount > 0) {
+    // プロジェクトは掲載中(active)のみ支援可能
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id, title, status, allow_free_amount")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (!project) {
+      return NextResponse.json(
+        { error: "プロジェクトが見つかりません" },
+        { status: 404 }
+      );
+    }
+    if (project.status !== "active") {
+      return NextResponse.json(
+        { error: "このプロジェクトは現在支援を受け付けていません" },
+        { status: 400 }
+      );
+    }
+
+    // 金額はサーバー側でDBのリターン価格から再計算（クライアントの申告額は信用しない）
+    const cart = Array.isArray(items) ? items : [];
+    const rewardIds = cart.map((c) => c.rewardId).filter(Boolean);
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    let rewardsTotal = 0;
+    let needsAddress = false;
+    let singleRewardId = "";
+
+    if (rewardIds.length > 0) {
+      const { data: rewards } = await supabase
+        .from("rewards")
+        .select("id, title, amount, needs_address, quantity_total, quantity_claimed, project_id")
+        .eq("project_id", projectId)
+        .in("id", rewardIds);
+
+      const rewardMap = new Map((rewards || []).map((r) => [r.id, r]));
+
+      for (const c of cart) {
+        const r = rewardMap.get(c.rewardId);
+        if (!r) continue;
+        const qty = Math.max(1, Math.floor(Number(c.quantity) || 0));
+        if (qty <= 0) continue;
+        // 在庫チェック
+        if (r.quantity_total != null) {
+          const remaining = r.quantity_total - (r.quantity_claimed || 0);
+          if (qty > remaining) {
+            return NextResponse.json(
+              { error: `「${r.title}」の在庫が不足しています` },
+              { status: 400 }
+            );
+          }
+        }
+        rewardsTotal += r.amount * qty;
+        if (r.needs_address) needsAddress = true;
+        lineItems.push({
+          price_data: {
+            currency: "jpy",
+            product_data: { name: r.title },
+            unit_amount: r.amount,
+          },
+          quantity: qty,
+        });
+      }
+      if (cart.length === 1 && rewardMap.has(cart[0].rewardId)) {
+        singleRewardId = cart[0].rewardId;
+      }
+    }
+
+    // 自由応援額（掲載者が許可している場合のみ）
+    const free =
+      project.allow_free_amount !== false && Number(freeAmount) > 0
+        ? Math.floor(Number(freeAmount))
+        : 0;
+    if (free > 0) {
+      singleRewardId = ""; // リターン単体ではない
       lineItems.push({
         price_data: {
           currency: "jpy",
-          product_data: {
-            name: "サービス手数料",
-            description: "CaramYell サービス手数料 (10%)",
-          },
-          unit_amount: feeAmount,
+          product_data: { name: `${project.title} への応援` },
+          unit_amount: free,
         },
         quantity: 1,
       });
     }
 
-    const paymentMethodTypes: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = [
-      "card",
-      "link",
-    ];
+    const amount = rewardsTotal + free;
+    if (amount < 100) {
+      return NextResponse.json(
+        { error: "応援金額は100円以上で指定してください" },
+        { status: 400 }
+      );
+    }
+
+    const feeAmount = Math.round(amount * FEE_RATE);
+    const totalAmount = amount + feeAmount;
+
+    lineItems.push({
+      price_data: {
+        currency: "jpy",
+        product_data: {
+          name: "サービス手数料",
+          description: "CaramYell サービス手数料 (10%)",
+        },
+        unit_amount: feeAmount,
+      },
+      quantity: 1,
+    });
+
+    const stripe = getStripe();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: paymentMethodTypes,
-      payment_method_options: {
-        card: {
-          request_three_d_secure: "automatic",
-        },
-      },
+      payment_method_types: ["card", "link"],
       line_items: lineItems,
       mode: "payment",
       customer_email: guestEmail,
-      success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/back/${projectId}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/back/${projectId}`,
+      success_url: `${appUrl}/back/${projectId}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/back/${projectId}`,
       metadata: {
         project_id: projectId,
-        reward_id: rewardId || "",
+        reward_id: singleRewardId,
         guest_email: guestEmail,
         guest_nickname: guestNickname || "",
         message: message || "",
-        is_anonymous: String(isAnonymous),
+        is_anonymous: String(!!isAnonymous),
         needs_address: String(needsAddress),
         amount: String(amount),
         fee_amount: String(feeAmount),
@@ -92,21 +180,19 @@ export async function POST(req: NextRequest) {
       },
       billing_address_collection: needsAddress ? "required" : "auto",
       shipping_address_collection: needsAddress
-        ? { allowed_countries: ["JP", "US", "GB", "CA", "AU", "FR", "DE", "KR", "TW"] }
+        ? { allowed_countries: ["JP"] }
         : undefined,
       locale: "ja",
       payment_intent_data: {
-        metadata: {
-          project_id: projectId,
-          reward_id: rewardId || "",
-        },
+        metadata: { project_id: projectId, reward_id: singleRewardId },
       },
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error: unknown) {
     console.error("Stripe checkout error:", error);
-    const message = error instanceof Error ? error.message : "決済の作成に失敗しました";
+    const message =
+      error instanceof Error ? error.message : "決済の作成に失敗しました";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

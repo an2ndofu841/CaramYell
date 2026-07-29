@@ -31,7 +31,7 @@ import { calcFee, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
-import type { Reward } from "@/types";
+import type { Reward, Project } from "@/types";
 
 const steps = [
   { id: 1, title: "リターン選択", icon: "🎁" },
@@ -51,13 +51,17 @@ export default function BackingClient({
   projectSlug,
   selectedRewardId,
   allowFreeAmount = true,
+  realProject = null,
 }: {
   projectSlug: string;
   selectedRewardId?: string;
   allowFreeAmount?: boolean;
+  realProject?: Project | null;
 }) {
+  // 実プロジェクトがあれば実データ＋実決済、なければモック＋デモ決済
+  const isReal = !!realProject;
   const project =
-    getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
+    realProject || getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
   const rewards = project.rewards || [];
 
   const [step, setStep] = useState(1);
@@ -132,9 +136,43 @@ export default function BackingClient({
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    await new Promise(r => setTimeout(r, 2000));
-    setIsProcessing(false);
-    setStep(4);
+
+    // デモ（モックプロジェクト）は疑似決済のまま
+    if (!isReal) {
+      await new Promise((r) => setTimeout(r, 2000));
+      setIsProcessing(false);
+      setStep(4);
+      return;
+    }
+
+    // 実プロジェクトは Stripe Checkout へ遷移
+    try {
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: project.id,
+          items: selectedItems.map((it) => ({
+            rewardId: it.reward.id,
+            quantity: it.qty,
+          })),
+          freeAmount: effectiveFree,
+          guestEmail: guestInfo.email,
+          guestNickname: guestInfo.nickname,
+          message: guestInfo.message,
+          isAnonymous,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "決済ページの作成に失敗しました");
+      }
+      // Stripe の決済ページへ
+      window.location.href = data.url;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "決済に失敗しました");
+      setIsProcessing(false);
+    }
   };
 
   return (
