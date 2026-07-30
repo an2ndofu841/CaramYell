@@ -28,7 +28,9 @@ import {
   Package,
   Smartphone,
   Star,
+  Truck,
 } from "lucide-react";
+import FulfillmentTab from "@/components/dashboard/FulfillmentTab";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -45,7 +47,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import type { Project, Reward, Backer, ProjectUpdate } from "@/types";
 
-type Tab = "overview" | "edit" | "backers" | "rewards" | "updates";
+type Tab = "overview" | "edit" | "backers" | "fulfillment" | "rewards" | "updates";
 
 interface ProjectStats {
   totalRaised: number;
@@ -116,6 +118,7 @@ export default function ProjectManageClient() {
     { id: "overview", label: "概要", icon: <BarChart3 size={16} /> },
     { id: "edit", label: "編集", icon: <Edit3 size={16} /> },
     { id: "backers", label: "支援者", icon: <Users size={16} /> },
+    { id: "fulfillment", label: "発送管理", icon: <Truck size={16} /> },
     { id: "rewards", label: "リターン", icon: <Gift size={16} /> },
     { id: "updates", label: "活動報告", icon: <Megaphone size={16} /> },
   ];
@@ -225,6 +228,17 @@ export default function ProjectManageClient() {
           <EditTab project={project} onSaved={fetchData} />
         )}
         {activeTab === "backers" && <BackersTab backers={backers} />}
+        {activeTab === "fulfillment" && (
+          <FulfillmentTab
+            projectId={projectId}
+            backers={backers}
+            onUpdated={(updated) =>
+              setBackers((prev) =>
+                prev.map((b) => (b.id === updated.id ? { ...b, ...updated } : b))
+              )
+            }
+          />
+        )}
         {activeTab === "rewards" && (
           <RewardsTab
             project={project}

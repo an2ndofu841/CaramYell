@@ -90,7 +90,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       : null;
   }
 
-  const { error } = await supabase.from("backers").insert({
+  const { data: inserted, error } = await supabase.from("backers").insert({
     project_id: metadata.project_id,
     reward_id: metadata.reward_id || null,
     guest_email: metadata.guest_email,
@@ -106,10 +106,53 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     payment_method: "card",
     status: "paid",
     currency: "JPY",
-  });
+  })
+  .select("id")
+  .single();
 
   if (error) {
     console.error("Error saving backer:", error);
+    return;
+  }
+
+  // 発送作業用に「どのリターンを何個」を明細として保存する
+  if (inserted?.id && metadata.cart_items) {
+    try {
+      const cart = JSON.parse(metadata.cart_items) as { i: string; q: number }[];
+      if (Array.isArray(cart) && cart.length > 0) {
+        const { data: rewards } = await supabase
+          .from("rewards")
+          .select("id, title, amount, needs_address")
+          .in("id", cart.map((c) => c.i));
+        const map = new Map((rewards || []).map((r) => [r.id, r]));
+
+        const rows = cart
+          .map((c) => {
+            const r = map.get(c.i);
+            if (!r) return null;
+            return {
+              backer_id: inserted.id,
+              reward_id: r.id,
+              reward_title: r.title,
+              unit_amount: r.amount,
+              quantity: c.q,
+              needs_address: r.needs_address,
+            };
+          })
+          .filter(Boolean);
+
+        if (rows.length > 0) {
+          const { error: itemsError } = await supabase
+            .from("backer_items")
+            .insert(rows);
+          if (itemsError) {
+            console.error("Error saving backer items:", itemsError);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing cart_items:", e);
+    }
   }
 }
 

@@ -125,6 +125,19 @@ export interface GuestAddress {
   address_line2?: string;
 }
 
+export type ShippingStatus = "pending" | "preparing" | "shipped" | "delivered";
+
+export interface BackerItem {
+  id: string;
+  backer_id: string;
+  reward_id?: string;
+  reward_title: string;
+  unit_amount: number;
+  quantity: number;
+  needs_address: boolean;
+  created_at: string;
+}
+
 export interface Backer {
   id: string;
   project_id: string;
@@ -144,11 +157,18 @@ export interface Backer {
   payment_method?: PaymentMethod;
   status: BackerStatus;
   digital_delivered_at?: string;
+  // 発送管理
+  shipping_status?: ShippingStatus;
+  shipped_at?: string;
+  tracking_number?: string;
+  shipping_carrier?: string;
+  fulfillment_note?: string;
   created_at: string;
   updated_at: string;
   // Joined
   profiles?: Profile;
   rewards?: Reward;
+  backer_items?: BackerItem[];
 }
 
 export interface ProjectUpdate {

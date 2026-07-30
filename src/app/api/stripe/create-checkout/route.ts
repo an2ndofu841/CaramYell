@@ -86,6 +86,8 @@ export async function POST(req: NextRequest) {
     let rewardsTotal = 0;
     let needsAddress = false;
     let singleRewardId = "";
+    // 発送管理用に「どのリターンを何個」を記録する（webhook で明細化）
+    const cartMeta: { i: string; q: number }[] = [];
 
     if (rewardIds.length > 0) {
       const { data: rewards } = await supabase
@@ -113,6 +115,7 @@ export async function POST(req: NextRequest) {
         }
         rewardsTotal += r.amount * qty;
         if (r.needs_address) needsAddress = true;
+        cartMeta.push({ i: r.id, q: qty });
         lineItems.push({
           price_data: {
             currency: "jpy",
@@ -226,6 +229,9 @@ export async function POST(req: NextRequest) {
         amount: String(amount),
         fee_amount: String(feeAmount),
         total_amount: String(totalAmount),
+        // metadata は1値500文字まで。多すぎる場合は明細を諦めて決済は通す
+        cart_items:
+          JSON.stringify(cartMeta).length <= 500 ? JSON.stringify(cartMeta) : "",
         ...addressMeta,
       },
       // 住所はアプリ側で取得済みのため Stripe では再入力させない
