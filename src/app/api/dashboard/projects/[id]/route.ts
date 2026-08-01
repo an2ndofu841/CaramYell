@@ -35,9 +35,16 @@ export async function GET(
     );
   }
 
+  // 発送タブが「送るもの」を出せるよう、リターンと明細も一緒に取得する
   const { data: backers } = await supabase
     .from("backers")
-    .select("*")
+    .select(
+      `
+      *,
+      rewards(id, title, reward_type),
+      backer_items(id, reward_id, reward_title, unit_amount, quantity, needs_address)
+    `
+    )
     .eq("project_id", id)
     .order("created_at", { ascending: false });
 
