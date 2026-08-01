@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User, ShieldCheck } from "lucide-react";
+import { Menu, X, Plus, LogIn, UserPlus, Sparkles, LayoutDashboard, LogOut, User, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import CreatorOnly from "@/components/auth/CreatorOnly";
@@ -145,13 +145,26 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link
-                href="/auth/login"
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors duration-200"
-              >
-                <LogIn size={16} />
-                {t.common.login}
-              </Link>
+              <>
+                <Link
+                  href="/auth/login"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors duration-200"
+                >
+                  <LogIn size={16} />
+                  {t.common.login}
+                </Link>
+                <Link
+                  href="/auth/login?mode=signup"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
+                  style={{
+                    background: "linear-gradient(135deg, #F2807B, #E8842C)",
+                    boxShadow: "0 4px 15px rgba(232, 132, 44, 0.4)",
+                  }}
+                >
+                  <UserPlus size={16} />
+                  {t.common.signup}
+                </Link>
+              </>
             )}
 
             <CreatorOnly>
@@ -227,15 +240,25 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/auth/login"
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-white"
-                  style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <LogIn size={16} />
-                  {t.common.loginOrSignup}
-                </Link>
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <LogIn size={16} />
+                    {t.common.login}
+                  </Link>
+                  <Link
+                    href="/auth/login?mode=signup"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white"
+                    style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <UserPlus size={16} />
+                    {t.common.signup}
+                  </Link>
+                </>
               )}
             </div>
           </nav>

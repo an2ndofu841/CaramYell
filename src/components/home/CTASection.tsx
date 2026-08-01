@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, UserPlus } from "lucide-react";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import Button from "@/components/ui/Button";
 import CreatorOnly from "@/components/auth/CreatorOnly";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CTASection() {
+  const { user, loading } = useAuth();
+
   return (
     <section className="py-20 relative overflow-hidden">
       <div
@@ -90,6 +93,13 @@ export default function CTASection() {
                 </Button>
               </Link>
             </CreatorOnly>
+            {!loading && !user && (
+              <Link href="/auth/login?mode=signup">
+                <Button size="xl" icon={<UserPlus size={20} />}>
+                  無料でアカウントを作る
+                </Button>
+              </Link>
+            )}
             <Link href="/projects">
               <button className="flex items-center gap-2 px-8 py-4 rounded-full text-lg font-bold text-white/80 border-2 border-white/20 hover:bg-white/10 hover:text-white transition-all duration-200">
                 プロジェクトを見る
