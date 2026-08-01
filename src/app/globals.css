@@ -235,6 +235,10 @@ img {
 .project-theme h1,
 .project-theme h2 {
   font-family: var(--pt-font-display);
+  /* 書体が持っているウェイトに固定する。font-bold のまま単一ウェイトの
+     書体を使うとブラウザが合成ボールドをかけ、画数の多い漢字が潰れる */
+  font-weight: var(--pt-font-display-weight, 700);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* 面 */
@@ -341,6 +345,11 @@ img {
 .project-theme[data-dark="true"] .text-green-600,
 .project-theme[data-dark="true"] .text-green-700 {
   color: #7BE8C0;
+}
+
+/* FAQ の details は自前の矢印を出すので、ブラウザ既定の三角は消す */
+.project-theme summary::-webkit-details-marker {
+  display: none;
 }
 
 /* テーマ配下の入力可能要素のフォーカスリング */

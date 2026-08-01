@@ -19,6 +19,13 @@ export interface ThemeFont {
   stack: string;
   /** Google Fonts の family パラメータ。既定で読み込み済みのものは null */
   googleFamily: string | null;
+  /**
+   * 見出しに使う実ウェイト。
+   * 書体が持っていないウェイトを指定するとブラウザが合成ボールドで
+   * 字画を太らせてしまい、画数の多い漢字が塗り潰れる。読み込んでいる
+   * ウェイトの中で一番太いものをここで固定して合成を避ける。
+   */
+  displayWeight: number;
 }
 
 export const THEME_FONTS: Record<ThemeFontKey, ThemeFont> = {
@@ -26,26 +33,32 @@ export const THEME_FONTS: Record<ThemeFontKey, ThemeFont> = {
     label: "ゴシック（標準）",
     stack: "'Noto Sans JP', sans-serif",
     googleFamily: null,
+    displayWeight: 700,
   },
   rounded: {
     label: "まるゴシック",
     stack: "'Zen Maru Gothic', 'Noto Sans JP', sans-serif",
     googleFamily: null,
+    displayWeight: 900,
   },
   modern: {
     label: "モダンゴシック",
     stack: "'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif",
     googleFamily: "Zen+Kaku+Gothic+New:wght@500;700;900",
+    displayWeight: 900,
   },
   impact: {
-    label: "インパクト（太め）",
+    label: "インパクト（極太・短いタイトル向き）",
     stack: "'Dela Gothic One', 'Noto Sans JP', sans-serif",
     googleFamily: "Dela+Gothic+One",
+    // 400 の 1 ウェイトしか無い書体。太字合成させると漢字が潰れる
+    displayWeight: 400,
   },
   mincho: {
     label: "明朝",
     stack: "'Shippori Mincho', serif",
     googleFamily: "Shippori+Mincho:wght@500;700;800",
+    displayWeight: 800,
   },
 };
 
@@ -118,7 +131,9 @@ export const THEME_PRESETS: ThemePreset[] = [
       accent: "#7BF0DA",
       gradient: "linear-gradient(135deg, #6D28D9 0%, #A855F7 70%, #3FC7B4 100%)",
       glow: "rgba(160, 90, 255, 0.45)",
-      font: "impact",
+      // 装飾書体はタイトルの漢字が読みにくくなるので、世界観は配色で作り
+      // 見出しの書体は既定と同じ標準ゴシックに揃える
+      font: "sans",
       radius: "1.25rem",
     },
   },
@@ -232,6 +247,7 @@ export function themeToCssVars(theme: ProjectTheme): React.CSSProperties {
     "--pt-gradient": theme.gradient,
     "--pt-glow": theme.glow,
     "--pt-font-display": THEME_FONTS[theme.font].stack,
+    "--pt-font-display-weight": THEME_FONTS[theme.font].displayWeight,
     "--pt-radius": theme.radius,
   } as React.CSSProperties;
 }
