@@ -122,6 +122,8 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
                       width={16}
                       height={16}
                       className="object-cover"
+                      // アイコンURLは掲載者が指定できるため最適化は通さない
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[8px]">

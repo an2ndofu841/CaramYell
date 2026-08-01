@@ -18,6 +18,7 @@ import {
   Loader2,
   Trash2,
   AlertTriangle,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
@@ -144,13 +145,20 @@ export default function DashboardClient() {
                 プロジェクトの状況を管理しましょう
               </p>
             </div>
-            <AdminOnly>
-              <Link href="/projects/create">
-                <Button icon={<Plus size={18} />} size="md">
-                  新しいプロジェクト
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard/settings">
+                <Button variant="secondary" size="md" icon={<Settings size={18} />}>
+                  <span className="hidden sm:inline">プロフィール設定</span>
                 </Button>
               </Link>
-            </AdminOnly>
+              <AdminOnly>
+                <Link href="/projects/create">
+                  <Button icon={<Plus size={18} />} size="md">
+                    新しいプロジェクト
+                  </Button>
+                </Link>
+              </AdminOnly>
+            </div>
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ import {
   Star,
   MessageSquare,
   Globe,
+  AtSign,
   Check,
 } from "lucide-react";
 import { Project, Reward } from "@/types";
@@ -188,7 +189,9 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                           alt={project.profiles.display_name || ""}
                           width={48}
                           height={48}
-                          className="object-cover"
+                          className="w-full h-full object-cover"
+                          // アイコンURLは掲載者が指定できるため最適化は通さない
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xl font-bold text-caramel-400">
@@ -196,11 +199,39 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                         </div>
                       )}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-400 font-medium">{t.detail.owner}</p>
                       <p className="font-bold text-gray-800">{project.profiles.display_name}</p>
                       {project.profiles.bio && (
-                        <p className="text-xs text-gray-500">{project.profiles.bio}</p>
+                        <p className="text-xs text-gray-500 whitespace-pre-line">
+                          {project.profiles.bio}
+                        </p>
+                      )}
+                      {(project.profiles.website_url || project.profiles.twitter_handle) && (
+                        <div className="flex items-center gap-3 mt-1.5">
+                          {project.profiles.website_url && (
+                            <a
+                              href={project.profiles.website_url}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-caramel-600 hover:text-caramel-700 transition-colors"
+                            >
+                              <Globe size={12} />
+                              Webサイト
+                            </a>
+                          )}
+                          {project.profiles.twitter_handle && (
+                            <a
+                              href={`https://x.com/${project.profiles.twitter_handle}`}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-caramel-600 hover:text-caramel-700 transition-colors"
+                            >
+                              <AtSign size={12} />
+                              {project.profiles.twitter_handle}
+                            </a>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="ml-auto flex gap-2">

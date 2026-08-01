@@ -26,6 +26,8 @@ export interface AuthContextValue extends AuthState {
     provider: "google" | "github"
   ) => Promise<{ data: unknown; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
+  /** プロフィール更新後にヘッダー等の表示を追随させる */
+  refreshProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(
@@ -124,6 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { data, error };
   };
 
+  const refreshProfile = useCallback(async () => {
+    const userId = state.user?.id;
+    if (!userId) return;
+    const profile = await fetchProfile(userId);
+    setState((s) => (s.user?.id === userId ? { ...s, profile } : s));
+  }, [state.user?.id, fetchProfile]);
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
@@ -139,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUpWithEmail,
     signInWithOAuth,
     signOut,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

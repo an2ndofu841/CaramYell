@@ -54,7 +54,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### 2. Supabaseのセットアップ
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成
-2. `supabase/migrations/001_initial_schema.sql` をSupabaseのSQLエディタで実行
+2. `supabase/migrations/` 配下のSQLを番号順にSupabaseのSQLエディタで実行
+   （`011_profile_editing.sql` はプロフィール編集で使うアイコン用バケットと
+   role の自己昇格防止を含むため、既存プロジェクトでも適用が必要）
 3. Authentication設定でGoogle/GitHubプロバイダーを有効化
 4. Authentication → URL Configuration で以下を設定
    - Site URL: `https://caramyell.com`
