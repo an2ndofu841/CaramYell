@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { countUniqueBackers } from "@/lib/utils";
 
 export async function GET(
   _req: NextRequest,
@@ -55,16 +56,12 @@ export async function GET(
     .order("created_at", { ascending: false });
 
   const paidBackers = (backers || []).filter((b) => b.status === "paid");
+  const totalRaised = paidBackers.reduce((sum, b) => sum + b.amount, 0);
+  const totalBackers = countUniqueBackers(paidBackers);
   const stats = {
-    totalRaised: paidBackers.reduce((sum, b) => sum + b.amount, 0),
-    totalBackers: paidBackers.length,
-    avgBacking:
-      paidBackers.length > 0
-        ? Math.round(
-            paidBackers.reduce((sum, b) => sum + b.amount, 0) /
-              paidBackers.length
-          )
-        : 0,
+    totalRaised,
+    totalBackers,
+    avgBacking: totalBackers > 0 ? Math.round(totalRaised / totalBackers) : 0,
     progressPercentage: Math.min(
       Math.round(
         ((project.current_amount || 0) / (project.goal_amount || 1)) * 100

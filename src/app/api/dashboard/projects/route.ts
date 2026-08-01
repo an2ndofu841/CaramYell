@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { backerIdentity } from "@/lib/utils";
 
 export async function GET() {
   const supabase = await createClient();
@@ -37,19 +38,27 @@ export async function GET() {
   if (projectIds.length > 0) {
     const { data: backers } = await supabase
       .from("backers")
-      .select("project_id, amount, status")
+      .select("project_id, amount, user_id, guest_email")
       .in("project_id", projectIds)
       .eq("status", "paid");
 
     if (backers) {
-      backerStats = backers.reduce(
-        (acc, b) => {
-          if (!acc[b.project_id]) acc[b.project_id] = { count: 0, total: 0 };
-          acc[b.project_id].count += 1;
-          acc[b.project_id].total += b.amount;
-          return acc;
-        },
-        {} as Record<string, { count: number; total: number }>
+      // 同じ人の複数回の支援は1人として数える
+      const grouped = new Map<string, { total: number; people: Set<string> }>();
+      for (const b of backers) {
+        const entry = grouped.get(b.project_id) ?? {
+          total: 0,
+          people: new Set<string>(),
+        };
+        entry.total += b.amount;
+        entry.people.add(backerIdentity(b));
+        grouped.set(b.project_id, entry);
+      }
+      backerStats = Object.fromEntries(
+        [...grouped].map(([projectId, { total, people }]) => [
+          projectId,
+          { count: people.size, total },
+        ])
       );
     }
   }

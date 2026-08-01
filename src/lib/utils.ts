@@ -23,6 +23,21 @@ export function formatNumber(num: number): string {
   return new Intl.NumberFormat("ja-JP").format(num);
 }
 
+type BackerIdentityFields = {
+  user_id?: string | null;
+  guest_email?: string | null;
+};
+
+/** 同一人物の判定キー。ログイン支援は user_id、ゲスト支援はメールアドレス */
+export function backerIdentity(backer: BackerIdentityFields): string {
+  return backer.user_id ?? (backer.guest_email || "").trim().toLowerCase();
+}
+
+/** 応援した人数。同じ人が複数回支援しても1人として数える */
+export function countUniqueBackers(backers: BackerIdentityFields[]): number {
+  return new Set(backers.map(backerIdentity)).size;
+}
+
 export function calcProjectStats(project: {
   goal_amount: number;
   current_amount: number;
