@@ -26,10 +26,19 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
 
-  const { signInWithEmail, signUpWithEmail, resendSignUpEmail, signInWithOAuth } =
-    useAuth();
+  const {
+    user,
+    loading: authLoading,
+    signInWithEmail,
+    signUpWithEmail,
+    resendSignUpEmail,
+    signInWithOAuth,
+  } = useAuth();
 
-  const [isLogin, setIsLogin] = useState(true);
+  // ヘッダーの「新規登録」から来た人を登録タブで迎える
+  const [isLogin, setIsLogin] = useState(
+    searchParams.get("mode") !== "signup"
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -37,12 +46,23 @@ function LoginForm() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    if (searchParams.get("error") === "auth_failed") {
+    const error = searchParams.get("error");
+    if (error === "link_expired") {
       toast.error(
         "確認リンクの有効期限が切れているか、既に使われています。もう一度お試しください。"
       );
+    } else if (error === "auth_failed") {
+      toast.error("ログインに失敗しました。もう一度お試しください。");
     }
   }, [searchParams]);
+
+  // ログイン済みの人をログイン画面に留めない。
+  // メールのリンクや別タブでセッションが張られた場合もここで拾う
+  useEffect(() => {
+    if (!authLoading && user && !pendingEmail) {
+      router.replace(redirectTo);
+    }
+  }, [user, authLoading, pendingEmail, redirectTo, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
