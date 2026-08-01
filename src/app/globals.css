@@ -218,3 +218,145 @@ img {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* ============ プロジェクトページのデザインテーマ ============
+   掲載者が選んだテーマは --pt-* としてラッパーに流し込まれる。
+   ページ本体は既存のブランド色クラスで書かれているので、この
+   スコープ内でだけそれらを変数に読み替えることで、マークアップを
+   書き換えずに配色を差し替えられるようにしている。
+   スコープ外（サイト共通の画面）には一切影響しない。 */
+.project-theme {
+  background: var(--pt-bg);
+  color: var(--pt-text);
+}
+
+.project-theme h1,
+.project-theme h2,
+.project-theme h3 {
+  font-family: var(--pt-font-display);
+}
+
+/* 面 */
+.project-theme .bg-white {
+  background-color: var(--pt-surface);
+}
+.project-theme .bg-caramel-50,
+.project-theme .bg-caramel-100,
+.project-theme .bg-gray-50,
+.project-theme .bg-gray-100 {
+  background-color: var(--pt-surface-soft);
+}
+.project-theme .hover\:bg-caramel-50:hover,
+.project-theme .hover\:bg-pink-50:hover {
+  background-color: var(--pt-surface-soft);
+}
+
+/* 文字 */
+.project-theme .text-gray-800,
+.project-theme .text-gray-700,
+.project-theme .text-gray-600 {
+  color: var(--pt-text);
+}
+.project-theme .text-gray-500,
+.project-theme .text-gray-400 {
+  color: var(--pt-text-muted);
+}
+.project-theme .text-caramel-400,
+.project-theme .text-caramel-500,
+.project-theme .text-caramel-600,
+.project-theme .text-caramel-700,
+.project-theme .text-candy-pink {
+  color: var(--pt-accent);
+}
+.project-theme .hover\:text-caramel-500:hover,
+.project-theme .hover\:text-caramel-600:hover,
+.project-theme .hover\:text-caramel-700:hover,
+.project-theme .hover\:text-gray-700:hover {
+  color: var(--pt-accent);
+}
+
+/* 枠線 */
+.project-theme .border-caramel-100,
+.project-theme .border-caramel-300,
+.project-theme .border-gray-100,
+.project-theme .border-gray-300 {
+  border-color: var(--pt-border);
+}
+.project-theme .border-candy-pink,
+.project-theme .hover\:border-caramel-300:hover {
+  border-color: var(--pt-accent);
+}
+.project-theme .bg-candy-pink {
+  background-color: var(--pt-accent);
+}
+
+/* 影 */
+.project-theme .shadow-soft {
+  box-shadow: 0 4px 30px var(--pt-glow);
+}
+.project-theme .shadow-soft-lg {
+  box-shadow: 0 8px 40px var(--pt-glow);
+}
+.project-theme .shadow-candy,
+.project-theme .hover\:shadow-soft:hover {
+  box-shadow: 0 6px 28px var(--pt-glow);
+}
+
+/* 角丸 */
+.project-theme .rounded-3xl {
+  border-radius: var(--pt-radius);
+}
+.project-theme .rounded-4xl {
+  border-radius: calc(var(--pt-radius) * 1.35);
+}
+
+/* 進捗バー（fill の背景は ProgressBar 側が変数を直接参照する） */
+.project-theme .progress-bar {
+  background: var(--pt-surface-soft);
+}
+.project-theme .bg-caramel-400 {
+  background-color: var(--pt-accent);
+}
+.project-theme .ring-white {
+  --tw-ring-color: var(--pt-surface);
+}
+
+/* 淡いパステルのバッジは暗いテーマだと浮いてしまうので、面の色に寄せる。
+   グラデーション地に白文字のバッジ（達成バッジなど）は対象外にする。 */
+.project-theme[data-dark="true"] span.rounded-full:not(.text-white) {
+  background-color: var(--pt-surface-soft);
+  color: var(--pt-accent);
+}
+
+/* 達成を示す緑も、暗いテーマでは面をテーマ色に寄せて文字だけ緑を残す */
+.project-theme[data-dark="true"] .bg-green-50,
+.project-theme[data-dark="true"] .bg-green-100 {
+  background-color: var(--pt-surface-soft);
+}
+.project-theme[data-dark="true"] .border-green-100,
+.project-theme[data-dark="true"] .border-green-200 {
+  border-color: var(--pt-border);
+}
+.project-theme[data-dark="true"] .text-green-600,
+.project-theme[data-dark="true"] .text-green-700 {
+  color: #7BE8C0;
+}
+
+/* テーマ配下の入力可能要素のフォーカスリング */
+.project-theme :focus-visible {
+  outline-color: var(--pt-accent);
+}
+
+/* ヘッダーはページ最上部では透明なので、暗いテーマだと文字が沈む。
+   共通ヘッダー自体は変えず、暗いテーマのページにいる間だけ明るくする。 */
+html[data-project-theme="dark"] header.bg-transparent .text-gray-700,
+html[data-project-theme="dark"] header.bg-transparent .text-gray-600,
+html[data-project-theme="dark"] header.bg-transparent .text-caramel-600 {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* 全ページ共通の浮遊パーティクルはクリーム色なので、暗いテーマでは目立たせない。
+   粒の opacity は生成時にインラインで付くため !important で上書きする */
+html[data-project-theme="dark"] .floating-particles > div {
+  opacity: 0.1 !important;
+}

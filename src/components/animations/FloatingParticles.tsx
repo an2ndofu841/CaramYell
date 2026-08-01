@@ -57,7 +57,7 @@ export default function FloatingParticles() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 overflow-hidden pointer-events-none z-0"
+      className="floating-particles fixed inset-0 overflow-hidden pointer-events-none z-0"
       aria-hidden="true"
     />
   );

@@ -1,3 +1,7 @@
+import type { ProjectTheme } from "@/lib/theme/project-theme";
+
+export type { ProjectTheme };
+
 export type ProjectStatus =
   | "draft"
   | "reviewing"
@@ -75,6 +79,8 @@ export interface Project {
   reviewed_at?: string;
   rejection_reason?: string;
   preview_token?: string;
+  /** ページの配色・フォント設定。未設定なら既定テーマ */
+  theme?: ProjectTheme | null;
   share_count: number;
   created_at: string;
   updated_at: string;

@@ -37,13 +37,21 @@ import AnimatedSection from "@/components/animations/AnimatedSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import ProjectThemeScope from "@/components/project/ProjectThemeScope";
+import { ProjectTheme, resolveTheme } from "@/lib/theme/project-theme";
 
 interface ProjectDetailClientProps {
   project: Project;
   isPreview?: boolean;
+  /** 管理画面のプレビューで、保存前のテーマを当てるための上書き */
+  themeOverride?: ProjectTheme;
 }
 
-export default function ProjectDetailClient({ project, isPreview = false }: ProjectDetailClientProps) {
+export default function ProjectDetailClient({
+  project,
+  isPreview = false,
+  themeOverride,
+}: ProjectDetailClientProps) {
   const { t, pick } = useLocale();
   const allowComments = project.allow_comments !== false;
   const tabs = [
@@ -119,8 +127,10 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
     }
   };
 
+  const theme = themeOverride ?? resolveTheme(project.theme);
+
   return (
-    <div className="min-h-screen pt-20" style={{ background: "#FFFBF5" }}>
+    <ProjectThemeScope theme={theme} className="min-h-screen pt-20" pageLevel>
       {/* パンくず */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <Link
@@ -276,7 +286,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                     )}
                     style={
                       activeTab === tab.id
-                        ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
+                        ? { background: "var(--pt-gradient)" }
                         : {}
                     }
                   >
@@ -510,7 +520,7 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
           </div>
         </div>
       </div>
-    </div>
+    </ProjectThemeScope>
   );
 }
 
@@ -547,7 +557,7 @@ function RewardCard({
             ? "border-caramel-100 hover:border-caramel-300 hover:shadow-soft bg-white"
             : "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed"
         )}
-        style={selected ? { background: "rgba(242, 128, 123, 0.03)" } : {}}
+        style={selected ? { background: "var(--pt-surface-soft)" } : {}}
       >
         <div className="flex items-start gap-3">
           {/* チェック */}

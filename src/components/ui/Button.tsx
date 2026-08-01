@@ -54,11 +54,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       xl: "px-10 py-4 text-lg rounded-full",
     };
 
+    // プロジェクトページのテーマ配下では --pt-* が定義される。
+    // それ以外の画面では変数が無いのでフォールバックの標準配色になる。
     const primaryStyle =
       variant === "primary"
         ? {
-            background: "linear-gradient(135deg, #F2807B 0%, #E8842C 60%, #F5A34B 100%)",
-            boxShadow: "0 4px 20px rgba(232, 132, 44, 0.4)",
+            background:
+              "var(--pt-gradient, linear-gradient(135deg, #F2807B 0%, #E8842C 60%, #F5A34B 100%))",
+            boxShadow: "0 4px 20px var(--pt-glow, rgba(232, 132, 44, 0.4))",
           }
         : {};
 

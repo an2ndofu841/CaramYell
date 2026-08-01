@@ -42,7 +42,8 @@ export default function ProgressBar({
   }, [percentage, animated]);
 
   const gradients = {
-    candy: "linear-gradient(90deg, #F2807B, #F5A34B)",
+    // 既定色はプロジェクトページのテーマ変数に追従する
+    candy: "var(--pt-gradient, linear-gradient(90deg, #F2807B, #F5A34B))",
     caramel: "linear-gradient(90deg, #F47B0A, #FF9A2E)",
     mint: "linear-gradient(90deg, #8FD4C4, #A8D8CB)",
   };

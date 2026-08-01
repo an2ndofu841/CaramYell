@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
+import { resolveTheme } from "@/lib/theme/project-theme";
 
 export async function GET(
   _req: NextRequest,
@@ -101,7 +102,7 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { title, tagline, description, story, goalAmount, endDate } = body;
+  const { title, tagline, description, story, goalAmount, endDate, theme } = body;
 
   const updateData: Record<string, unknown> = {};
   if (title !== undefined) updateData.title = title;
@@ -110,6 +111,10 @@ export async function PUT(
   if (story !== undefined) updateData.story = story;
   if (goalAmount !== undefined) updateData.goal_amount = goalAmount;
   if (endDate !== undefined) updateData.end_date = endDate;
+  // null は「既定テーマに戻す」の意味なのでそのまま通す
+  if (theme !== undefined) {
+    updateData.theme = theme === null ? null : resolveTheme(theme);
+  }
 
   const { data, error } = await supabase
     .from("projects")
