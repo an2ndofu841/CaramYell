@@ -11,6 +11,7 @@ import {
   Users,
   TrendingUp,
   ChevronLeft,
+  ChevronDown,
   MapPin,
   Package,
   Smartphone,
@@ -54,9 +55,9 @@ export default function ProjectDetailClient({
 }: ProjectDetailClientProps) {
   const { t, pick } = useLocale();
   const allowComments = project.allow_comments !== false;
+  // リターンはタブに隠さず本文の下に常時並べるので、タブからは外している
   const tabs = [
     { id: "story", label: t.detail.tabStory },
-    { id: "rewards", label: t.detail.tabRewards },
     { id: "updates", label: t.detail.tabUpdates },
     ...(allowComments ? [{ id: "comments", label: t.detail.tabComments }] : []),
   ];
@@ -134,14 +135,20 @@ export default function ProjectDetailClient({
   const fundingSummary = (
     <Card>
       <div className="mb-4">
-        <div className="flex items-baseline gap-2 mb-1">
+        <p className="text-xs font-semibold text-gray-400 mb-0.5">
+          {t.common.raisedSoFar}
+        </p>
+        <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 mb-1">
           <span className="text-3xl font-bold text-caramel-600">
             {formatCurrency(project.current_amount)}
           </span>
+          <span className="text-2xl font-bold text-caramel-500">
+            {hasMilestones ? headlinePct : stats.progress_percentage}%
+          </span>
         </div>
         <p className="text-sm text-gray-400">
-          {hasMilestones ? t.common.finalGoal : t.common.goalAmount} {formatCurrency(finalGoal)} {t.common.of}
-          <span className="font-bold text-caramel-500"> {hasMilestones ? headlinePct : stats.progress_percentage}%</span>
+          {hasMilestones ? t.common.finalGoal : t.common.goalAmount}{" "}
+          {formatCurrency(finalGoal)}
         </p>
       </div>
 
@@ -212,6 +219,68 @@ export default function ProjectDetailClient({
     </Card>
   );
 
+  // 掲載者の紹介は支援判断より優先度が低いので、本文を読み終えた後ろに置く
+  const creatorPanel = project.profiles ? (
+    <Card variant="outlined">
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-full overflow-hidden bg-caramel-100 flex-shrink-0">
+          {project.profiles.avatar_url ? (
+            <Image
+              src={project.profiles.avatar_url}
+              alt={project.profiles.display_name || ""}
+              width={44}
+              height={44}
+              className="w-full h-full object-cover"
+              // アイコンURLは掲載者が指定できるため最適化は通さない
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-lg font-bold text-caramel-400">
+              {project.profiles.display_name?.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-gray-400 font-medium">{t.detail.owner}</p>
+          <p className="font-bold text-gray-800">
+            {project.profiles.display_name}
+          </p>
+          {project.profiles.bio && (
+            <p className="text-sm text-gray-500 whitespace-pre-line mt-1 leading-relaxed">
+              {project.profiles.bio}
+            </p>
+          )}
+          {(project.profiles.website_url || project.profiles.twitter_handle) && (
+            <div className="flex items-center gap-3 mt-2">
+              {project.profiles.website_url && (
+                <a
+                  href={project.profiles.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-caramel-600 hover:text-caramel-700 transition-colors"
+                >
+                  <Globe size={12} />
+                  Webサイト
+                </a>
+              )}
+              {project.profiles.twitter_handle && (
+                <a
+                  href={`https://x.com/${project.profiles.twitter_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-caramel-600 hover:text-caramel-700 transition-colors"
+                >
+                  <AtSign size={12} />
+                  {project.profiles.twitter_handle}
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  ) : null;
+
   const milestonesPanel = hasMilestones ? (
     <MilestonesProgress
       milestones={milestones}
@@ -279,85 +348,34 @@ export default function ProjectDetailClient({
                   ))}
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 leading-tight">
+                <h1 className="text-[1.75rem] sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2 leading-snug">
                   {pick(project.title, project.title_en)}
                 </h1>
                 <p className="text-lg text-gray-500">{pick(project.tagline, project.tagline_en)}</p>
 
-                {/* クリエイター情報 */}
-                {project.profiles && (
-                  <div className="flex items-center gap-3 mt-4 p-4 rounded-2xl bg-white shadow-soft">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-caramel-100 flex-shrink-0">
-                      {project.profiles.avatar_url ? (
-                        <Image
-                          src={project.profiles.avatar_url}
-                          alt={project.profiles.display_name || ""}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                          // アイコンURLは掲載者が指定できるため最適化は通さない
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl font-bold text-caramel-400">
-                          {project.profiles.display_name?.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-gray-400 font-medium">{t.detail.owner}</p>
-                      <p className="font-bold text-gray-800">{project.profiles.display_name}</p>
-                      {project.profiles.bio && (
-                        <p className="text-xs text-gray-500 whitespace-pre-line">
-                          {project.profiles.bio}
-                        </p>
-                      )}
-                      {(project.profiles.website_url || project.profiles.twitter_handle) && (
-                        <div className="flex items-center gap-3 mt-1.5">
-                          {project.profiles.website_url && (
-                            <a
-                              href={project.profiles.website_url}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-caramel-600 hover:text-caramel-700 transition-colors"
-                            >
-                              <Globe size={12} />
-                              Webサイト
-                            </a>
-                          )}
-                          {project.profiles.twitter_handle && (
-                            <a
-                              href={`https://x.com/${project.profiles.twitter_handle}`}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-caramel-600 hover:text-caramel-700 transition-colors"
-                            >
-                              <AtSign size={12} />
-                              {project.profiles.twitter_handle}
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-auto flex gap-2">
-                      <button
-                        onClick={() => setLiked(!liked)}
-                        className={cn(
-                          "p-2 rounded-full transition-all duration-200",
-                          liked ? "bg-pink-100 text-pink-500" : "bg-gray-100 text-gray-400 hover:bg-pink-50 hover:text-pink-400"
-                        )}
-                      >
-                        <Heart size={18} className={liked ? "fill-current" : ""} />
-                      </button>
-                      <button
-                        onClick={handleShare}
-                        className="p-2 rounded-full bg-gray-100 text-gray-400 hover:bg-caramel-50 hover:text-caramel-500 transition-all duration-200"
-                      >
-                        <Share2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* 応援・シェアだけをここに残し、掲載者の紹介は本文の後ろに送る */}
+                <div className="flex items-center gap-2 mt-4">
+                  <button
+                    onClick={() => setLiked(!liked)}
+                    aria-pressed={liked}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold transition-all duration-200",
+                      liked
+                        ? "bg-pink-100 text-pink-500"
+                        : "bg-gray-100 text-gray-500 hover:bg-pink-50 hover:text-pink-400"
+                    )}
+                  >
+                    <Heart size={16} className={liked ? "fill-current" : ""} />
+                    {t.detail.likeAction}
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gray-100 text-gray-500 text-sm font-semibold hover:bg-caramel-50 hover:text-caramel-500 transition-all duration-200"
+                  >
+                    <Share2 size={16} />
+                    {t.detail.shareAction}
+                  </button>
+                </div>
               </div>
             </AnimatedSection>
 
@@ -418,25 +436,6 @@ export default function ProjectDetailClient({
                 </Card>
               )}
 
-              {activeTab === "rewards" && (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-400 font-medium">
-                    💡 リターンを選んで応援しましょう
-                  </p>
-                  {(project.rewards || []).map((reward, i) => (
-                    <RewardCard
-                      key={reward.id}
-                      reward={reward}
-                      selected={selectedReward?.id === reward.id}
-                      onSelect={() => setSelectedReward(
-                        selectedReward?.id === reward.id ? null : reward
-                      )}
-                      index={i}
-                    />
-                  ))}
-                </div>
-              )}
-
               {activeTab === "updates" &&
                 (updates.length > 0 ? (
                   <div className="space-y-4">
@@ -486,6 +485,68 @@ export default function ProjectDetailClient({
                 </Card>
               )}
             </AnimatedSection>
+
+            {/* リターンは支援導線そのものなので、タブ切り替えに関係なく本文の下に出す */}
+            {(project.rewards?.length ?? 0) > 0 && (
+              <AnimatedSection animation="fade-up" delay={80}>
+                <section id="rewards" className="mt-10">
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">
+                    {t.detail.tabRewards}
+                  </h2>
+                  <p className="text-sm text-gray-400 font-medium mb-4">
+                    {t.detail.rewardsLead}
+                  </p>
+                  <div className="space-y-4">
+                    {(project.rewards || []).map((reward, i) => (
+                      <RewardCard
+                        key={reward.id}
+                        reward={reward}
+                        selected={selectedReward?.id === reward.id}
+                        onSelect={() =>
+                          setSelectedReward(
+                            selectedReward?.id === reward.id ? null : reward
+                          )
+                        }
+                        index={i}
+                      />
+                    ))}
+                  </div>
+                </section>
+              </AnimatedSection>
+            )}
+
+            <AnimatedSection animation="fade-up" delay={80}>
+              <section className="mt-10">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  {t.detail.faqTitle}
+                </h2>
+                <div className="space-y-2">
+                  {t.detail.faqItems.map((item) => (
+                    <details
+                      key={item.q}
+                      className="group rounded-2xl bg-white shadow-soft"
+                    >
+                      <summary className="flex items-center justify-between gap-3 p-4 cursor-pointer list-none text-sm font-semibold text-gray-800">
+                        {item.q}
+                        <ChevronDown
+                          size={18}
+                          className="flex-shrink-0 text-gray-400 transition-transform duration-200 group-open:rotate-180"
+                        />
+                      </summary>
+                      <p className="px-4 pb-4 text-sm text-gray-500 leading-relaxed">
+                        {item.a}
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            </AnimatedSection>
+
+            {creatorPanel && (
+              <AnimatedSection animation="fade-up" delay={100}>
+                <div className="mt-10">{creatorPanel}</div>
+              </AnimatedSection>
+            )}
           </div>
 
           {/* サイドバー */}

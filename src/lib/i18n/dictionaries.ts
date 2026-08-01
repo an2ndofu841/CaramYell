@@ -32,6 +32,7 @@ export const dictionaries = {
       days: "日",
       daysLeft: "残り",
       backers: "人が応援",
+      raisedSoFar: "現在の支援総額",
       ended: "終了",
       achieved: "達成",
       goalAmount: "目標金額",
@@ -66,6 +67,8 @@ export const dictionaries = {
       tabUpdates: "活動報告",
       tabComments: "コメント",
       owner: "プロジェクトオーナー",
+      likeAction: "応援",
+      shareAction: "シェア",
       milestones: "段階ゴール",
       milestonesNote: "達成した段階まで実施します",
       milestonesAchieved: "達成",
@@ -83,6 +86,30 @@ export const dictionaries = {
       noComments: "コメントはまだありません",
       noUpdates: "まだ活動報告はありません",
       backersOnlyUpdate: "支援者限定",
+      rewardsLead: "💡 リターンを選んで応援しましょう",
+      faqTitle: "支援に関するよくある質問",
+      faqItems: [
+        {
+          q: "手数料はいくらかかりますか？",
+          a: "プロジェクト掲載者の手数料は0%です。出資者側に10%のサービス手数料をご負担いただいています。1,000円のリターンであれば、お支払い総額は1,100円になります。",
+        },
+        {
+          q: "アカウントを作らなくても応援できますか？",
+          a: "はい。ニックネーム（任意）とメールアドレスだけで応援できます。デジタルリターンの場合は住所の入力も不要です。",
+        },
+        {
+          q: "目標金額に届かなかった場合はどうなりますか？",
+          a: "All-or-Nothing方式のプロジェクトでは、目標未達の場合は出資者への課金は行われません。All-In方式では目標金額に関わらず実施されます。段階ゴールが設定されている場合は、達成した段階まで実施されます。",
+        },
+        {
+          q: "どんな決済方法が使えますか？",
+          a: "クレジットカード・Apple Pay・Link に対応しています。海外発行カードでの支援、海外へのお届けにも対応しています。",
+        },
+        {
+          q: "リターンはいつ届きますか？",
+          a: "お届け予定の時期は各リターンに記載しています。変更が生じた場合は、掲載者から活動報告でお知らせします。",
+        },
+      ],
     },
     // 応援フロー
     backing: {
@@ -203,6 +230,7 @@ export const dictionaries = {
       days: " days",
       daysLeft: "left",
       backers: "backers",
+      raisedSoFar: "Total raised",
       ended: "Ended",
       achieved: "funded",
       goalAmount: "Goal",
@@ -234,6 +262,8 @@ export const dictionaries = {
       tabUpdates: "Updates",
       tabComments: "Comments",
       owner: "Project owner",
+      likeAction: "Like",
+      shareAction: "Share",
       milestones: "Stretch goals",
       milestonesNote: "We deliver every goal that gets funded",
       milestonesAchieved: "reached",
@@ -251,6 +281,30 @@ export const dictionaries = {
       noComments: "No comments yet",
       noUpdates: "No updates yet",
       backersOnlyUpdate: "Backers only",
+      rewardsLead: "💡 Pick a reward to back this project",
+      faqTitle: "Frequently asked questions",
+      faqItems: [
+        {
+          q: "What fees are charged?",
+          a: "Creators pay 0%. Backers cover a 10% service fee, so a ¥1,000 reward costs ¥1,100 at checkout.",
+        },
+        {
+          q: "Can I back a project without an account?",
+          a: "Yes. A nickname (optional) and an email address are all you need. Digital rewards don't require an address either.",
+        },
+        {
+          q: "What happens if the goal isn't reached?",
+          a: "All-or-Nothing projects don't charge backers when the goal is missed. All-In projects go ahead regardless of the total. When stretch goals are set, every goal that gets funded is delivered.",
+        },
+        {
+          q: "Which payment methods are supported?",
+          a: "Credit cards, Apple Pay and Link. Internationally issued cards and worldwide delivery are supported.",
+        },
+        {
+          q: "When will rewards be delivered?",
+          a: "Each reward lists its estimated delivery window. The creator will post an update here if anything changes.",
+        },
+      ],
     },
     backing: {
       backToProject: "Back to project",
