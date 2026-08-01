@@ -5,7 +5,6 @@ import { X } from "lucide-react";
 import ProjectCard from "@/components/project/ProjectCard";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import { Input } from "@/components/ui/Input";
-import { getAllMockProjects } from "@/lib/data/mockProjects";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types";
 import { useT } from "@/components/i18n/LocaleProvider";
@@ -35,21 +34,20 @@ export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSort, setSelectedSort] = useState("trending");
   const [searchQuery, setSearchQuery] = useState("");
-  // 実データ（掲載中）を優先し、無ければデモ用モックを表示
-  const [allProjects, setAllProjects] = useState<Project[]>(() =>
-    getAllMockProjects()
-  );
+  // 取得前は null（スケルトン表示）。ダミーを初期値にすると一瞬だけ
+  // 実在しないプロジェクトが表示されてしまうため。
+  const [projectsData, setProjectsData] = useState<Project[] | null>(null);
+  const allProjects = projectsData ?? [];
+  const isLoading = projectsData === null;
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch("/api/projects?limit=100");
         const data = await res.json();
-        if (Array.isArray(data.projects) && data.projects.length > 0) {
-          setAllProjects(data.projects);
-        }
+        setProjectsData(Array.isArray(data.projects) ? data.projects : []);
       } catch {
-        // 取得失敗時はモックのまま
+        setProjectsData([]);
       }
     })();
   }, []);
@@ -165,11 +163,28 @@ export default function ProjectsPage() {
 
         {/* 件数 */}
         <p className="text-sm text-gray-400 font-medium mb-6">
-          {filteredProjects.length}{t.projects.count}
+          {isLoading ? " " : `${filteredProjects.length}${t.projects.count}`}
         </p>
 
         {/* プロジェクトグリッド */}
-        {filteredProjects.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-3xl overflow-hidden bg-white shadow-soft animate-pulse"
+              >
+                <div className="aspect-[4/3] bg-caramel-100" />
+                <div className="p-4 space-y-3">
+                  <div className="h-3 w-1/3 rounded-full bg-caramel-100" />
+                  <div className="h-4 w-4/5 rounded-full bg-caramel-100" />
+                  <div className="h-2 w-full rounded-full bg-caramel-100" />
+                  <div className="h-3 w-2/3 rounded-full bg-caramel-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProjects.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project, i) => (
               <AnimatedSection key={project.id} animation="fade-up" delay={i * 50}>

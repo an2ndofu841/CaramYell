@@ -5,16 +5,16 @@ import { useRef, useEffect, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import ProjectCard from "@/components/project/ProjectCard";
-import { getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Project } from "@/types";
 import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function FeaturedProjectsSection() {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
-  // 実データ（掲載中）を優先し、無ければデモ用モックを表示
-  const [featuredProjects, setFeaturedProjects] = useState<Project[]>(() =>
-    getAllMockProjects().slice(0, 6)
+  // 取得前はスケルトンを出す。ダミーを初期値にすると一瞬だけ実在しない
+  // プロジェクトが表示されてしまうため。
+  const [featuredProjects, setFeaturedProjects] = useState<Project[] | null>(
+    null
   );
 
   useEffect(() => {
@@ -22,14 +22,16 @@ export default function FeaturedProjectsSection() {
       try {
         const res = await fetch("/api/projects?sort=newest&limit=6");
         const data = await res.json();
-        if (Array.isArray(data.projects) && data.projects.length > 0) {
-          setFeaturedProjects(data.projects);
-        }
+        setFeaturedProjects(Array.isArray(data.projects) ? data.projects : []);
       } catch {
-        // 取得失敗時はモックのまま
+        setFeaturedProjects([]);
       }
     })();
   }, []);
+
+  const isLoading = featuredProjects === null;
+  // 掲載中のプロジェクトが1件も無ければセクションごと隠す
+  if (!isLoading && featuredProjects.length === 0) return null;
 
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
@@ -82,16 +84,34 @@ export default function FeaturedProjectsSection() {
           ref={scrollRef}
           className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {featuredProjects.map((project, i) => (
-            <div
-              key={project.id}
-              className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start"
-            >
-              <AnimatedSection animation="fade-up" delay={i * 80}>
-                <ProjectCard project={project} />
-              </AnimatedSection>
-            </div>
-          ))}
+          {isLoading
+            ? // 読み込み中はカード型のスケルトン
+              Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start"
+                >
+                  <div className="rounded-3xl overflow-hidden bg-white shadow-soft animate-pulse">
+                    <div className="aspect-[4/3] bg-caramel-100" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-3 w-1/3 rounded-full bg-caramel-100" />
+                      <div className="h-4 w-4/5 rounded-full bg-caramel-100" />
+                      <div className="h-2 w-full rounded-full bg-caramel-100" />
+                      <div className="h-3 w-2/3 rounded-full bg-caramel-100" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            : featuredProjects.map((project, i) => (
+                <div
+                  key={project.id}
+                  className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start"
+                >
+                  <AnimatedSection animation="fade-up" delay={i * 80}>
+                    <ProjectCard project={project} />
+                  </AnimatedSection>
+                </div>
+              ))}
         </div>
       </div>
     </section>
