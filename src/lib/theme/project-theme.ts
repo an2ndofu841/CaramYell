@@ -10,9 +10,9 @@
 export type ThemeFontKey =
   | "sans"
   | "rounded"
-  | "mincho"
-  | "antique"
-  | "impact";
+  | "modern"
+  | "impact"
+  | "mincho";
 
 export interface ThemeFont {
   label: string;
@@ -32,20 +32,20 @@ export const THEME_FONTS: Record<ThemeFontKey, ThemeFont> = {
     stack: "'Zen Maru Gothic', 'Noto Sans JP', sans-serif",
     googleFamily: null,
   },
+  modern: {
+    label: "モダンゴシック",
+    stack: "'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif",
+    googleFamily: "Zen+Kaku+Gothic+New:wght@500;700;900",
+  },
+  impact: {
+    label: "インパクト（太め）",
+    stack: "'Dela Gothic One', 'Noto Sans JP', sans-serif",
+    googleFamily: "Dela+Gothic+One",
+  },
   mincho: {
     label: "明朝",
     stack: "'Shippori Mincho', serif",
     googleFamily: "Shippori+Mincho:wght@500;700;800",
-  },
-  antique: {
-    label: "レトロ明朝",
-    stack: "'Zen Antique', serif",
-    googleFamily: "Zen+Antique",
-  },
-  impact: {
-    label: "インパクト",
-    stack: "'Dela Gothic One', 'Noto Sans JP', sans-serif",
-    googleFamily: "Dela+Gothic+One",
   },
 };
 
@@ -112,12 +112,13 @@ export const THEME_PRESETS: ThemePreset[] = [
       surface: "rgba(40, 21, 68, 0.72)",
       surfaceSoft: "rgba(150, 100, 235, 0.12)",
       border: "rgba(178, 132, 255, 0.24)",
-      text: "#EFE6FF",
-      textMuted: "#A38FCC",
-      accent: "#C9A7FF",
-      gradient: "linear-gradient(135deg, #7B3FE4 0%, #B57BFF 55%, #6EE7D2 100%)",
+      text: "#F3EDFF",
+      textMuted: "#BCACDE",
+      // 背景と同系の紫だと金額が沈むので、強調色だけ補色寄りの碧にして浮かせる
+      accent: "#7BF0DA",
+      gradient: "linear-gradient(135deg, #6D28D9 0%, #A855F7 70%, #3FC7B4 100%)",
       glow: "rgba(160, 90, 255, 0.45)",
-      font: "mincho",
+      font: "impact",
       radius: "1.25rem",
     },
   },
@@ -130,12 +131,12 @@ export const THEME_PRESETS: ThemePreset[] = [
       surface: "rgba(18, 38, 60, 0.78)",
       surfaceSoft: "rgba(90, 170, 255, 0.10)",
       border: "rgba(110, 180, 255, 0.20)",
-      text: "#E6F1FF",
-      textMuted: "#8AA6C4",
-      accent: "#67D3FF",
+      text: "#E9F3FF",
+      textMuted: "#9CB6D2",
+      accent: "#7FE0FF",
       gradient: "linear-gradient(135deg, #2C7BE5 0%, #35C7F0 100%)",
       glow: "rgba(53, 199, 240, 0.38)",
-      font: "sans",
+      font: "modern",
       radius: "1rem",
     },
   },
@@ -149,11 +150,11 @@ export const THEME_PRESETS: ThemePreset[] = [
       surfaceSoft: "#FFF0F4",
       border: "#FADCE4",
       text: "#3B2A31",
-      textMuted: "#8A7078",
-      accent: "#D9538A",
+      textMuted: "#7E626A",
+      accent: "#C93B77",
       gradient: "linear-gradient(135deg, #F58BB0 0%, #E36F9B 100%)",
       glow: "rgba(227, 111, 155, 0.30)",
-      font: "mincho",
+      font: "modern",
       radius: "1.75rem",
     },
   },
@@ -254,6 +255,128 @@ export function isDarkTheme(theme: ProjectTheme): boolean {
   const b = parseInt(full.slice(4, 6), 16);
   // 本文が明るい＝背景が暗い
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+}
+
+interface Rgba {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+function parseColor(input: string): Rgba | null {
+  const value = input.trim();
+
+  const hex = value.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+  if (hex) {
+    const h =
+      hex[1].length === 3
+        ? hex[1]
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : hex[1];
+    return {
+      r: parseInt(h.slice(0, 2), 16),
+      g: parseInt(h.slice(2, 4), 16),
+      b: parseInt(h.slice(4, 6), 16),
+      a: 1,
+    };
+  }
+
+  const fn = value.match(
+    /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)(?:[\s,/]+([\d.]+))?\s*\)$/
+  );
+  if (fn) {
+    return {
+      r: Number(fn[1]),
+      g: Number(fn[2]),
+      b: Number(fn[3]),
+      a: fn[4] === undefined ? 1 : Number(fn[4]),
+    };
+  }
+
+  return null;
+}
+
+/**
+ * グラデーションでも代表的な一色に均す。
+ * コントラストの目安を出すためのものなので、色の平均で足りる。
+ */
+function flattenToSolid(input: string): Rgba | null {
+  const direct = parseColor(input);
+  if (direct) return direct;
+
+  const found = input.match(/#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)/g);
+  if (!found?.length) return null;
+
+  const parsed = found
+    .map(parseColor)
+    .filter((c): c is Rgba => c !== null && c.a > 0);
+  if (!parsed.length) return null;
+
+  const avg = (pick: (c: Rgba) => number) =>
+    parsed.reduce((sum, c) => sum + pick(c), 0) / parsed.length;
+  return { r: avg((c) => c.r), g: avg((c) => c.g), b: avg((c) => c.b), a: 1 };
+}
+
+function composite(over: Rgba, under: Rgba): Rgba {
+  const a = over.a;
+  return {
+    r: over.r * a + under.r * (1 - a),
+    g: over.g * a + under.g * (1 - a),
+    b: over.b * a + under.b * (1 - a),
+    a: 1,
+  };
+}
+
+function relativeLuminance({ r, g, b }: Rgba): number {
+  const channel = (v: number) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return (
+    0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+  );
+}
+
+function contrastRatio(a: Rgba, b: Rgba): number {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort(
+    (x, y) => y - x
+  );
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+export interface ContrastWarning {
+  label: string;
+  ratio: number;
+}
+
+/**
+ * カードの上に載る文字が読みにくくなっていないか調べる。
+ * 掲載者が自由に色を変えられるので、金額のような大事な数字が背景に
+ * 沈んでいたら気付けるようにするための目安。
+ */
+export function themeContrastWarnings(theme: ProjectTheme): ContrastWarning[] {
+  const pageBg = flattenToSolid(theme.bg);
+  const surfaceRaw = parseColor(theme.surface) ?? flattenToSolid(theme.surface);
+  if (!pageBg || !surfaceRaw) return [];
+
+  const surface = composite(surfaceRaw, pageBg);
+
+  // 強調色は主に大きな金額に使うので、大きい文字の基準（3:1）で見る
+  const checks: { label: string; color: string; min: number }[] = [
+    { label: "本文の文字", color: theme.text, min: 4.5 },
+    { label: "補足の文字", color: theme.textMuted, min: 4.5 },
+    { label: "強調色（金額など）", color: theme.accent, min: 3 },
+  ];
+
+  return checks.flatMap(({ label, color, min }) => {
+    const fg = parseColor(color);
+    if (!fg) return [];
+    const ratio = contrastRatio(composite(fg, surface), surface);
+    return ratio < min ? [{ label, ratio }] : [];
+  });
 }
 
 /** 見出しフォントの追加読み込みが必要な場合の Google Fonts URL */

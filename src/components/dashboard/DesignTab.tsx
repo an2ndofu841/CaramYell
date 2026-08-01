@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Palette, RotateCcw, Save, Sparkles } from "lucide-react";
+import { AlertTriangle, Palette, RotateCcw, Save, Sparkles } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import ProjectThemePreview from "@/components/project/ProjectThemePreview";
@@ -12,6 +12,7 @@ import {
   THEME_PRESETS,
   ThemeFontKey,
   resolveTheme,
+  themeContrastWarnings,
   themeFromPreset,
 } from "@/lib/theme/project-theme";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,10 @@ export default function DesignTab({ project, onSaved }: DesignTabProps) {
   );
 
   const [gradFrom, gradTo] = gradientStops(theme.gradient);
+  const contrastWarnings = useMemo(
+    () => themeContrastWarnings(theme),
+    [theme]
+  );
 
   const patch = (changes: Partial<ProjectTheme>) =>
     setTheme((prev) => ({ ...prev, ...changes }));
@@ -146,6 +151,27 @@ export default function DesignTab({ project, onSaved }: DesignTabProps) {
         <p className="text-sm text-gray-500 mb-4">
           実際のページと同じ部品で表示しています。保存するまで公開ページは変わりません。
         </p>
+
+        {contrastWarnings.length > 0 && (
+          <div className="mb-4 p-4 rounded-2xl bg-yellow-50 border-2 border-yellow-200">
+            <p className="flex items-center gap-2 text-sm font-bold text-yellow-800">
+              <AlertTriangle size={15} />
+              カードの上で読みにくくなっている色があります
+            </p>
+            <ul className="mt-2 space-y-1">
+              {contrastWarnings.map((w) => (
+                <li key={w.label} className="text-sm text-yellow-800">
+                  {w.label}（コントラスト比 {w.ratio.toFixed(1)}：1）
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-yellow-700 mt-2 leading-relaxed">
+              金額のような大事な数字が背景に沈んでしまいます。文字は 4.5：1、大きく出る強調色は
+              3：1 が目安です。背景と近い色相だと比率が足りていても沈んで見えるので、強調色は思い切って別の色相にすると読みやすくなります。
+            </p>
+          </div>
+        )}
+
         <ProjectThemePreview
           theme={theme}
           title={project.title}

@@ -230,9 +230,10 @@ img {
   color: var(--pt-text);
 }
 
+/* 見出しフォントは太い書体も選べるようにしてあるので、ページ見出しまでに留める。
+   リターン名や活動報告のタイトル（h3）は本文の書体のままにして読みやすさを保つ。 */
 .project-theme h1,
-.project-theme h2,
-.project-theme h3 {
+.project-theme h2 {
   font-family: var(--pt-font-display);
 }
 
