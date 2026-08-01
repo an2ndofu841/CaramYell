@@ -83,6 +83,7 @@ export interface Project {
   categories?: Category;
   rewards?: Reward[];
   project_milestones?: ProjectMilestone[];
+  project_updates?: ProjectUpdate[];
 }
 
 export interface ProjectMilestone {

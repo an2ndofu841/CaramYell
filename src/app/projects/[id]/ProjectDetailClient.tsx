@@ -58,6 +58,11 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
   const [liked, setLiked] = useState(false);
   const stats = calcProjectStats(project);
   const milestones = project.project_milestones ?? [];
+  // ネストした select は並び順を保証しないので新着順に並べ直す
+  const updates = [...(project.project_updates ?? [])].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
   const hasMilestones = milestones.length > 0;
   // 段階ゴールがある場合は「最終目標」を基準に進捗を見せる（第1目標達成で満タンに見せない）
   const sortedMilestones = [...milestones].sort((a, b) => a.amount - b.amount);
@@ -320,14 +325,44 @@ export default function ProjectDetailClient({ project, isPreview = false }: Proj
                 </div>
               )}
 
-              {activeTab === "updates" && (
-                <Card>
-                  <div className="text-center py-8 text-gray-400">
-                    <MessageSquare size={40} className="mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">まだ活動報告はありません</p>
+              {activeTab === "updates" &&
+                (updates.length > 0 ? (
+                  <div className="space-y-4">
+                    {updates.map((update, i) => (
+                      <AnimatedSection
+                        key={update.id}
+                        animation="fade-up"
+                        delay={i * 50}
+                      >
+                        <Card>
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <h3 className="font-bold text-gray-800">
+                              {pick(update.title, update.title_en)}
+                            </h3>
+                            {update.is_backers_only && (
+                              <Badge color="pink" size="sm">
+                                {t.detail.backersOnlyUpdate}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {pick(update.content, update.content_en)}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-3">
+                            {timeAgo(update.created_at)}
+                          </p>
+                        </Card>
+                      </AnimatedSection>
+                    ))}
                   </div>
-                </Card>
-              )}
+                ) : (
+                  <Card>
+                    <div className="text-center py-8 text-gray-400">
+                      <MessageSquare size={40} className="mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">{t.detail.noUpdates}</p>
+                    </div>
+                  </Card>
+                ))}
 
               {activeTab === "comments" && (
                 <Card>

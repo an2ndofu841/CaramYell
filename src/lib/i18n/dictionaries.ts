@@ -80,6 +80,8 @@ export const dictionaries = {
       intlNote: "海外発行カードでの支援・海外へのお届けにも対応",
       previewDisabled: "プレビュー中は応援できません",
       noComments: "コメントはまだありません",
+      noUpdates: "まだ活動報告はありません",
+      backersOnlyUpdate: "支援者限定",
     },
     // 応援フロー
     backing: {
@@ -238,6 +240,8 @@ export const dictionaries = {
       intlNote: "International cards and worldwide delivery supported",
       previewDisabled: "Backing is disabled in preview",
       noComments: "No comments yet",
+      noUpdates: "No updates yet",
+      backersOnlyUpdate: "Backers only",
     },
     backing: {
       backToProject: "Back to project",

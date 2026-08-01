@@ -21,7 +21,8 @@ async function getProject(slugOrId: string): Promise<Project | null> {
         profiles!projects_creator_id_fkey(*),
         categories(*),
         rewards(*),
-        project_milestones(*)
+        project_milestones(*),
+        project_updates(*)
       `
       )
       .in("status", ["active", "funded", "completed"]);
