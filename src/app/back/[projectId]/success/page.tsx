@@ -1,19 +1,20 @@
 import Link from "next/link";
-import Stripe from "stripe";
 import type { Metadata } from "next";
+import {
+  getStripeClient,
+  recordBackingFromSession,
+} from "@/lib/stripe/record-backing";
 
 export const metadata: Metadata = {
   title: "応援ありがとうございます",
 };
 
+export const dynamic = "force-dynamic";
+
 async function getSession(sessionId?: string) {
   if (!sessionId || !process.env.STRIPE_SECRET_KEY) return null;
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-02-24.acacia",
-    });
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    return session;
+    return await getStripeClient().checkout.sessions.retrieve(sessionId);
   } catch {
     return null;
   }
@@ -29,6 +30,15 @@ export default async function BackingSuccessPage({
   const { projectId } = await params;
   const { session_id } = await searchParams;
   const session = await getSession(session_id);
+
+  // webhook が届かない環境（ローカル開発など）や配信失敗に備えて、
+  // 戻ってきた時点でも支援を確定させる。二重登録は UNIQUE 制約で防いでいる。
+  if (session) {
+    const result = await recordBackingFromSession(session);
+    if (result.status === "error") {
+      console.error("Failed to record backing on success page:", result.message);
+    }
+  }
 
   const paid = session?.payment_status === "paid";
   const total = session?.amount_total ?? null;

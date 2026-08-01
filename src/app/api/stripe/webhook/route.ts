@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2025-02-24.acacia",
-  });
-}
+import {
+  getStripeClient,
+  recordBackingFromSession,
+} from "@/lib/stripe/record-backing";
 
 function getSupabase() {
   return createClient(
@@ -16,7 +14,7 @@ function getSupabase() {
 }
 
 export async function POST(req: NextRequest) {
-  const stripe = getStripe();
+  const stripe = getStripeClient();
   const body = await req.text();
   const sig = req.headers.get("stripe-signature")!;
 
@@ -33,127 +31,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
-      await handleCheckoutCompleted(session);
-      break;
+  try {
+    switch (event.type) {
+      // 遅延決済（コンビニ・銀行振込など）は completed 時点では未払いのため、
+      // 入金確定イベントも同じ処理に通す
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const result = await recordBackingFromSession(session);
+        if (result.status === "error") {
+          // 200 を返すと Stripe が再送しないため、決済成功なのに
+          // DB に残らない取りこぼしが確定してしまう
+          console.error("Error saving backer:", result.message);
+          return NextResponse.json(
+            { error: "Failed to record backing" },
+            { status: 500 }
+          );
+        }
+        break;
+      }
+      case "payment_intent.payment_failed": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        await handlePaymentFailed(pi);
+        break;
+      }
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
-    case "payment_intent.payment_failed": {
-      const pi = event.data.object as Stripe.PaymentIntent;
-      await handlePaymentFailed(pi);
-      break;
-    }
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
+  } catch (err) {
+    console.error(`Error handling ${event.type}:`, err);
+    return NextResponse.json({ error: "Handler failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
-}
-
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const supabase = getSupabase();
-  const metadata = session.metadata || {};
-
-  // 住所はアプリ側で入力されたものを metadata から取得。
-  // 古い形式（Stripe で収集）のセッションにも対応するためフォールバックを残す。
-  let guestAddress: Record<string, string> | null = null;
-  if (metadata.addr_line1 || metadata.addr_postal_code) {
-    guestAddress = {
-      country: metadata.addr_country || "JP",
-      recipient_name: metadata.addr_recipient_name || "",
-      postal_code: metadata.addr_postal_code || "",
-      prefecture: metadata.addr_prefecture || "",
-      city: metadata.addr_city || "",
-      address_line1: metadata.addr_line1 || "",
-      address_line2: metadata.addr_line2 || "",
-    };
-  } else if (metadata.guest_address) {
-    // 旧形式（JSON 1本）のセッション
-    try {
-      guestAddress = JSON.parse(metadata.guest_address);
-    } catch {
-      guestAddress = null;
-    }
-  }
-  if (!guestAddress) {
-    const shippingAddress = session.shipping_details?.address;
-    guestAddress = shippingAddress
-      ? {
-          postal_code: shippingAddress.postal_code || "",
-          prefecture: shippingAddress.state || "",
-          city: shippingAddress.city || "",
-          address_line1: shippingAddress.line1 || "",
-          address_line2: shippingAddress.line2 || "",
-          country: shippingAddress.country || "JP",
-        }
-      : null;
-  }
-
-  const { data: inserted, error } = await supabase.from("backers").insert({
-    project_id: metadata.project_id,
-    reward_id: metadata.reward_id || null,
-    guest_email: metadata.guest_email,
-    guest_nickname: metadata.guest_nickname || null,
-    guest_address: guestAddress,
-    amount: parseInt(metadata.amount),
-    fee_amount: parseInt(metadata.fee_amount),
-    total_amount: parseInt(metadata.total_amount),
-    message: metadata.message || null,
-    is_anonymous: metadata.is_anonymous === "true",
-    stripe_payment_intent_id: session.payment_intent as string,
-    stripe_session_id: session.id,
-    payment_method: "card",
-    status: "paid",
-    currency: "JPY",
-  })
-  .select("id")
-  .single();
-
-  if (error) {
-    console.error("Error saving backer:", error);
-    return;
-  }
-
-  // 発送作業用に「どのリターンを何個」を明細として保存する
-  if (inserted?.id && metadata.cart_items) {
-    try {
-      const cart = JSON.parse(metadata.cart_items) as { i: string; q: number }[];
-      if (Array.isArray(cart) && cart.length > 0) {
-        const { data: rewards } = await supabase
-          .from("rewards")
-          .select("id, title, amount, needs_address")
-          .in("id", cart.map((c) => c.i));
-        const map = new Map((rewards || []).map((r) => [r.id, r]));
-
-        const rows = cart
-          .map((c) => {
-            const r = map.get(c.i);
-            if (!r) return null;
-            return {
-              backer_id: inserted.id,
-              reward_id: r.id,
-              reward_title: r.title,
-              unit_amount: r.amount,
-              quantity: c.q,
-              needs_address: r.needs_address,
-            };
-          })
-          .filter(Boolean);
-
-        if (rows.length > 0) {
-          const { error: itemsError } = await supabase
-            .from("backer_items")
-            .insert(rows);
-          if (itemsError) {
-            console.error("Error saving backer items:", itemsError);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Error parsing cart_items:", e);
-    }
-  }
 }
 
 async function handlePaymentFailed(pi: Stripe.PaymentIntent) {
@@ -165,5 +75,6 @@ async function handlePaymentFailed(pi: Stripe.PaymentIntent) {
 
   if (error) {
     console.error("Error updating failed payment:", error);
+    throw new Error(error.message);
   }
 }

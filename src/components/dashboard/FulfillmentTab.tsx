@@ -308,9 +308,9 @@ export default function FulfillmentTab({
                     </ul>
                   ) : (
                     <p className="text-sm text-gray-600">
-                      {b.rewards?.title || "（明細なし）"}
+                      {b.rewards?.title || "（リターンなしの応援）"}
                       <span className="text-xs text-gray-400 ml-2">
-                        ※明細記録前の支援
+                        ※品目の内訳が記録されていません
                       </span>
                     </p>
                   )}
