@@ -9,7 +9,7 @@ import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function MobileTabBar() {
   const pathname = usePathname();
-  const { user, isAdmin } = useAuth();
+  const { user, isCreator } = useAuth();
   const t = useT();
 
   const baseTabs = [
@@ -19,8 +19,7 @@ export default function MobileTabBar() {
 
   const createTab = { href: "/projects/create", icon: PlusCircle, label: t.common.createProject, exact: true };
 
-  // プロジェクト作成は当面、弊社（管理者）のみ。一般には掲載タブを表示しない。
-  const tabs = isAdmin ? [...baseTabs, createTab] : baseTabs;
+  const tabs = isCreator ? [...baseTabs, createTab] : baseTabs;
 
   const myPageHref = user ? "/dashboard" : "/auth/login";
 

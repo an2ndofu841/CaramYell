@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Heart, Megaphone, Star } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
-import AdminOnly from "@/components/auth/AdminOnly";
+import CreatorOnly from "@/components/auth/CreatorOnly";
 import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function HeroSection() {
@@ -80,13 +80,13 @@ export default function HeroSection() {
                   {t.common.viewProjects}
                 </Button>
               </Link>
-              <AdminOnly>
+              <CreatorOnly>
                 <Link href="/projects/create">
                   <Button size="lg" variant="outline" heartOnHover>
                     {t.common.start}
                   </Button>
                 </Link>
-              </AdminOnly>
+              </CreatorOnly>
             </motion.div>
 
             {/* キャンペーンバッジ */}

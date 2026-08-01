@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import Button from "@/components/ui/Button";
-import AdminOnly from "@/components/auth/AdminOnly";
+import CreatorOnly from "@/components/auth/CreatorOnly";
 
 export default function CTASection() {
   return (
@@ -83,13 +83,13 @@ export default function CTASection() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <AdminOnly>
+            <CreatorOnly>
               <Link href="/projects/create">
                 <Button size="xl" icon={<Sparkles size={20} />}>
                   無料でプロジェクトを作る
                 </Button>
               </Link>
-            </AdminOnly>
+            </CreatorOnly>
             <Link href="/projects">
               <button className="flex items-center gap-2 px-8 py-4 rounded-full text-lg font-bold text-white/80 border-2 border-white/20 hover:bg-white/10 hover:text-white transition-all duration-200">
                 プロジェクトを見る

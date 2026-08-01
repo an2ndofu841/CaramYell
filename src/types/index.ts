@@ -18,7 +18,7 @@ export type PaymentMethod =
   | "paypal"
   | "link";
 
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "creator" | "admin";
 
 export interface Profile {
   id: string;

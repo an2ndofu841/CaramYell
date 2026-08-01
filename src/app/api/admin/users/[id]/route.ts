@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/types";
 
 export async function PATCH(
   req: NextRequest,
@@ -25,9 +26,9 @@ export async function PATCH(
   }
 
   const body = await req.json();
-  const { role } = body as { role?: "user" | "admin" };
+  const { role } = body as { role?: UserRole };
 
-  if (role !== "user" && role !== "admin") {
+  if (role !== "user" && role !== "creator" && role !== "admin") {
     return NextResponse.json({ error: "不正な権限です" }, { status: 400 });
   }
 

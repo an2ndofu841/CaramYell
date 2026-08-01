@@ -70,16 +70,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
-  // プロジェクト作成は当面、弊社（管理者）アカウントのみに限定
+  // プロジェクト作成は運営が承認した掲載者のみ
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  if (profile?.role !== "creator" && profile?.role !== "admin") {
     return NextResponse.json(
-      { error: "プロジェクトの作成は現在準備中です。一般公開までお待ちください。" },
+      { error: "プロジェクトの掲載には運営の承認が必要です。" },
       { status: 403 }
     );
   }

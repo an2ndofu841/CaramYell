@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Heart, Twitter, Instagram, Youtube } from "lucide-react";
-import AdminOnly from "@/components/auth/AdminOnly";
+import CreatorOnly from "@/components/auth/CreatorOnly";
 import { useT } from "@/components/i18n/LocaleProvider";
 
 export default function Footer() {
@@ -71,9 +71,9 @@ export default function Footer() {
               <h3 className="font-bold text-sm mb-3 text-white/80">{t.footer.service}</h3>
               <ul className="space-y-2">
                 <FooterLink href="/projects">{t.footer.projectList}</FooterLink>
-                <AdminOnly>
+                <CreatorOnly>
                   <FooterLink href="/projects/create">{t.common.createProject}</FooterLink>
-                </AdminOnly>
+                </CreatorOnly>
                 <FooterLink href="/about">{t.common.about}</FooterLink>
                 <FooterLink href="/pricing">{t.footer.pricing}</FooterLink>
               </ul>

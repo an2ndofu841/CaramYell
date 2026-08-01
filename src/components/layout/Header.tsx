@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Plus, LogIn, Sparkles, LayoutDashboard, LogOut, User, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import AdminOnly from "@/components/auth/AdminOnly";
+import CreatorOnly from "@/components/auth/CreatorOnly";
 import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import { useT } from "@/components/i18n/LocaleProvider";
 
@@ -68,14 +68,14 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center gap-1">
             <NavLink href="/projects">{t.common.findProjects}</NavLink>
-            <AdminOnly>
+            <CreatorOnly>
               <NavLink href="/projects/create">
                 <span className="flex items-center gap-1">
                   <Sparkles size={14} />
                   {t.common.start}
                 </span>
               </NavLink>
-            </AdminOnly>
+            </CreatorOnly>
             <NavLink href="/about">{t.common.about}</NavLink>
           </nav>
 
@@ -154,7 +154,7 @@ export default function Header() {
               </Link>
             )}
 
-            <AdminOnly>
+            <CreatorOnly>
               <Link
                 href="/projects/create"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
@@ -166,7 +166,7 @@ export default function Header() {
                 <Plus size={16} />
                 {t.common.createProject}
               </Link>
-            </AdminOnly>
+            </CreatorOnly>
           </div>
 
           <button
@@ -194,11 +194,11 @@ export default function Header() {
             <MobileNavLink href="/projects" onClick={() => setIsMenuOpen(false)}>
               {t.common.viewProjects}
             </MobileNavLink>
-            <AdminOnly>
+            <CreatorOnly>
               <MobileNavLink href="/projects/create" onClick={() => setIsMenuOpen(false)}>
                 掲載する（AI支援あり）
               </MobileNavLink>
-            </AdminOnly>
+            </CreatorOnly>
             <MobileNavLink href="/about" onClick={() => setIsMenuOpen(false)}>
               {t.common.about}
             </MobileNavLink>

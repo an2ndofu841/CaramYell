@@ -63,7 +63,7 @@ type RewardInput = {
 
 export default function CreateProjectClient() {
   const router = useRouter();
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isCreator, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
@@ -358,8 +358,8 @@ export default function CreateProjectClient() {
     );
   }
 
-  // プロジェクト作成は当面、弊社（管理者）アカウントのみ。一般開放は今後。
-  if (!isAdmin) {
+  // 掲載は運営が承認したアカウントのみ
+  if (!isCreator) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4" style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}>
         <motion.div
@@ -372,12 +372,12 @@ export default function CreateProjectClient() {
             🚧
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-3">
-            プロジェクト作成は準備中です
+            掲載には運営の承認が必要です
           </h1>
           <p className="text-gray-500 mb-8 leading-relaxed">
-            現在プロジェクトの掲載は運営（弊社）が手がけるものに限定しています。
+            プロジェクトの掲載は、運営が内容を確認したアカウントのみが行えます。
             <br />
-            一般の方の作成は今後の開放を予定しています。もうしばらくお待ちください。
+            掲載をご希望の方はお問い合わせください。順次ご案内しています。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button

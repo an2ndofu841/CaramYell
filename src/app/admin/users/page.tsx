@@ -2,21 +2,28 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Search, ShieldCheck, User as UserIcon } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { toast } from "sonner";
+import type { UserRole } from "@/types";
 
 interface AdminUser {
   id: string;
   email: string;
   display_name: string | null;
   avatar_url: string | null;
-  role: "user" | "admin";
+  role: UserRole;
   total_backed: number;
   total_created: number;
   created_at: string;
 }
+
+const ROLES: { value: UserRole; label: string; note: string }[] = [
+  { value: "user", label: "支援者", note: "応援のみ" },
+  { value: "creator", label: "掲載者", note: "プロジェクトを掲載できる" },
+  { value: "admin", label: "管理者", note: "運営CMSを使える" },
+];
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -42,7 +49,8 @@ export default function AdminUsersPage() {
     })();
   }, []);
 
-  const setRole = async (u: AdminUser, role: "user" | "admin") => {
+  const setRole = async (u: AdminUser, role: UserRole) => {
+    if (u.role === role) return;
     setBusyId(u.id);
     try {
       const res = await fetch(`/api/admin/users/${u.id}`, {
@@ -53,7 +61,8 @@ export default function AdminUsersPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "更新に失敗しました");
       setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role } : x)));
-      toast.success(role === "admin" ? "管理者に設定しました" : "一般ユーザーにしました");
+      const label = ROLES.find((r) => r.value === role)?.label ?? role;
+      toast.success(`${label}に設定しました`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "エラーが発生しました");
     } finally {
@@ -72,7 +81,7 @@ export default function AdminUsersPage() {
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-1">ユーザー管理</h1>
       <p className="text-sm text-gray-500 mb-6">
-        登録ユーザーの一覧・権限（管理者）の設定
+        登録ユーザーの一覧と権限の設定。掲載者にするとプロジェクトを作成できるようになります。
       </p>
 
       <div className="relative mb-6">
@@ -105,7 +114,7 @@ export default function AdminUsersPage() {
               transition={{ delay: Math.min(i * 0.02, 0.3) }}
             >
               <Card>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
                     style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
@@ -120,6 +129,9 @@ export default function AdminUsersPage() {
                       {u.role === "admin" && (
                         <Badge color="caramel" size="sm">管理者</Badge>
                       )}
+                      {u.role === "creator" && (
+                        <Badge color="mint" size="sm">掲載者</Badge>
+                      )}
                       {u.id === selfId && (
                         <span className="text-[10px] text-gray-400">あなた</span>
                       )}
@@ -130,27 +142,30 @@ export default function AdminUsersPage() {
                     </p>
                   </div>
 
-                  {u.id !== selfId &&
-                    (u.role === "admin" ? (
-                      <button
-                        onClick={() => setRole(u, "user")}
-                        disabled={busyId === u.id}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors disabled:opacity-50"
-                      >
-                        {busyId === u.id ? <Loader2 size={13} className="animate-spin" /> : <UserIcon size={13} />}
-                        管理者を解除
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setRole(u, "admin")}
-                        disabled={busyId === u.id}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white transition-colors disabled:opacity-50"
-                        style={{ background: "linear-gradient(135deg, #C9A87C, #8FD4C4)" }}
-                      >
-                        {busyId === u.id ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={13} />}
-                        管理者にする
-                      </button>
-                    ))}
+                  {u.id !== selfId && (
+                    <div className="flex items-center gap-1 p-1 rounded-2xl bg-caramel-50 flex-shrink-0">
+                      {busyId === u.id ? (
+                        <div className="px-6 py-1.5">
+                          <Loader2 size={14} className="animate-spin text-candy-pink" />
+                        </div>
+                      ) : (
+                        ROLES.map((r) => (
+                          <button
+                            key={r.value}
+                            onClick={() => setRole(u, r.value)}
+                            title={r.note}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+                              u.role === r.value
+                                ? "bg-white text-caramel-600 shadow-sm"
+                                : "text-gray-400 hover:text-gray-600"
+                            }`}
+                          >
+                            {r.label}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               </Card>
             </motion.div>
