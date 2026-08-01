@@ -43,21 +43,28 @@ STRIPE_WEBHOOK_SECRET=your_webhook_secret
 # OpenAI
 OPENAI_API_KEY=your_openai_api_key
 
-# App
+# App（ローカル開発時。本番/Vercelでは https://caramyell.com を設定）
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+> 本番ドメインは `caramyell.com`（`src/lib/config/site.ts` で定義）。
+> `NEXT_PUBLIC_APP_URL` はローカル開発でのみ参照され、本番ビルドでは常に本番ドメインが使われます。
+> 独自プレビュー環境などで上書きしたい場合のみ `NEXT_PUBLIC_SITE_URL` を設定してください。
 
 ### 2. Supabaseのセットアップ
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成
 2. `supabase/migrations/001_initial_schema.sql` をSupabaseのSQLエディタで実行
 3. Authentication設定でGoogle/GitHubプロバイダーを有効化
+4. Authentication → URL Configuration で以下を設定
+   - Site URL: `https://caramyell.com`
+   - Redirect URLs: `https://caramyell.com/auth/callback`（ローカル用に `http://localhost:3000/auth/callback` も追加）
 
 ### 3. Stripeのセットアップ
 
 1. [Stripe](https://stripe.com) でアカウント作成
-2. Apple Pay / Google Pay のドメイン設定
-3. Webhookエンドポイントを `/api/stripe/webhook` に設定
+2. Apple Pay / Google Pay のドメイン登録に `caramyell.com` を追加
+3. Webhookエンドポイントを `https://caramyell.com/api/stripe/webhook` に設定
    - `checkout.session.completed` イベントを選択
    - `payment_intent.payment_failed` イベントを選択
 
@@ -69,6 +76,17 @@ npm run dev
 ```
 
 http://localhost:3000 でアクセス
+
+### 5. ドメイン設定（本番）
+
+本番ドメインは `caramyell.com`。コード側の参照は `src/lib/config/site.ts` に集約しているため、
+ドメインを変える場合はこのファイルと以下の外部設定を更新します。
+
+- Vercel: Project → Settings → Domains に `caramyell.com` と `www.caramyell.com` を追加
+- Vercel: 環境変数 `NEXT_PUBLIC_APP_URL` を `https://caramyell.com` に設定
+- Supabase: Site URL / Redirect URLs（上記2-4）
+- Stripe: Webhook URL と Apple Pay ドメイン登録（上記3）
+- Google / GitHub OAuth: 各コンソールのコールバックURLを Supabase の callback に合わせて更新
 
 ## 📁 ディレクトリ構成
 

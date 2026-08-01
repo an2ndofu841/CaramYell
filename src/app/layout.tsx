@@ -7,8 +7,10 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileTabBar from "@/components/layout/MobileTabBar";
 import FloatingParticles from "@/components/animations/FloatingParticles";
+import { SITE_NAME, SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "CaramYell | みんなで夢を叶えるクラウドファンディング",
     template: "%s | CaramYell",
@@ -22,13 +24,17 @@ export const metadata: Metadata = {
     "CaramYell",
     "手数料無料",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "CaramYell | みんなで夢を叶えるクラウドファンディング",
     description:
       "手数料0%・アカウント不要で出資できる、世界一やさしいクラウドファンディング",
     type: "website",
     locale: "ja_JP",
-    siteName: "CaramYell",
+    siteName: SITE_NAME,
+    url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",

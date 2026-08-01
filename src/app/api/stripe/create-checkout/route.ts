@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { missingAddressFields } from "@/lib/data/countries";
+import { SITE_URL } from "@/lib/config/site";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -207,8 +208,7 @@ export async function POST(req: NextRequest) {
       (req.headers.get("host")
         ? `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
         : null);
-    const appUrl =
-      origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = origin || SITE_URL;
 
     const session = await stripe.checkout.sessions.create({
       // payment_method_types は指定しない：Stripe ダッシュボードで有効化した
