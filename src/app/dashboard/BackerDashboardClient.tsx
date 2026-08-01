@@ -172,6 +172,10 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
   const [showDetail, setShowDetail] = useState(false);
   const project = backing.projects;
   const items = backing.backer_items || [];
+  const itemsTotal = items.reduce(
+    (sum, item) => sum + item.unit_amount * item.quantity,
+    0
+  );
   const needsShipping = !!backing.guest_address;
   const shipping = SHIPPING_META[backing.shipping_status || "pending"];
 
@@ -279,20 +283,37 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
         </div>
 
         {showDetail && (
-          <div className="mt-3 pt-3 border-t border-caramel-100 text-xs text-gray-500 space-y-1">
-            <div className="flex justify-between">
-              <span>応援金額</span>
-              <span className="font-semibold text-gray-700">
-                {formatCurrency(backing.amount)}
-              </span>
-            </div>
+          <div className="mt-3 pt-3 border-t border-caramel-100 text-xs text-gray-500 space-y-1.5">
+            {items.map((item) => (
+              <div key={item.id} className="flex justify-between gap-3">
+                <span className="min-w-0">
+                  {item.reward_title}
+                  <span className="text-gray-400">
+                    {" "}
+                    {formatCurrency(item.unit_amount)} × {item.quantity}
+                  </span>
+                </span>
+                <span className="font-semibold text-gray-700 whitespace-nowrap">
+                  {formatCurrency(item.unit_amount * item.quantity)}
+                </span>
+              </div>
+            ))}
+            {/* リターンなしの応援や、リターンに上乗せした自由応援額 */}
+            {backing.amount > itemsTotal && (
+              <div className="flex justify-between">
+                <span>{items.length > 0 ? "追加の応援金額" : "応援金額"}</span>
+                <span className="font-semibold text-gray-700">
+                  {formatCurrency(backing.amount - itemsTotal)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span>手数料</span>
               <span className="font-semibold text-gray-700">
                 {formatCurrency(backing.fee_amount)}
               </span>
             </div>
-            <div className="flex justify-between pt-1 border-t border-caramel-50">
+            <div className="flex justify-between pt-1.5 border-t border-caramel-50">
               <span className="font-bold text-gray-700">お支払い合計</span>
               <span className="font-bold text-caramel-600">
                 {formatCurrency(backing.total_amount)}
