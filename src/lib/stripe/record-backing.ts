@@ -1,5 +1,9 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import {
+  sendBackingConfirmation,
+  type BackingConfirmationItem,
+} from "@/lib/email/backing-confirmation";
 
 export type RecordBackingResult =
   | { status: "created" }
@@ -95,6 +99,7 @@ export async function recordBackingFromSession(
   }
 
   const supabase = getServiceSupabase();
+  const guestAddress = resolveGuestAddress(session);
 
   const { data: inserted, error } = await supabase
     .from("backers")
@@ -104,7 +109,7 @@ export async function recordBackingFromSession(
         reward_id: metadata.reward_id || null,
         guest_email: guestEmail,
         guest_nickname: metadata.guest_nickname || null,
-        guest_address: resolveGuestAddress(session),
+        guest_address: guestAddress,
         amount,
         fee_amount: feeAmount,
         total_amount: totalAmount,
@@ -130,7 +135,26 @@ export async function recordBackingFromSession(
     return { status: "duplicate" };
   }
 
-  await saveBackerItems(supabase, inserted.id, session, projectId);
+  const items = await saveBackerItems(supabase, inserted.id, session, projectId);
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("title, slug")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  await sendBackingConfirmation({
+    backerId: inserted.id,
+    to: guestEmail,
+    nickname: metadata.guest_nickname,
+    projectTitle: project?.title || "プロジェクト",
+    projectPath: `/projects/${project?.slug || projectId}`,
+    amount,
+    feeAmount,
+    totalAmount,
+    items,
+    address: guestAddress,
+  });
 
   return { status: "created" };
 }
@@ -183,23 +207,23 @@ async function deriveCartFromLineItems(
   }
 }
 
-/** 発送作業用に「どのリターンを何個」を明細として保存する */
+/** 発送作業用に「どのリターンを何個」を明細として保存し、確認メール用に返す */
 async function saveBackerItems(
   supabase: ReturnType<typeof getServiceSupabase>,
   backerId: string,
   session: Stripe.Checkout.Session,
   projectId: string
-) {
+): Promise<BackingConfirmationItem[]> {
   const { data: rewards } = await supabase
     .from("rewards")
     .select("id, title, amount, needs_address")
     .eq("project_id", projectId);
-  if (!rewards || rewards.length === 0) return;
+  if (!rewards || rewards.length === 0) return [];
 
   const cart =
     parseCartMetadata(session.metadata?.cart_items) ??
     (await deriveCartFromLineItems(session, rewards));
-  if (cart.length === 0) return;
+  if (cart.length === 0) return [];
 
   const rewardMap = new Map(rewards.map((r) => [r.id, r]));
   const rows = cart.flatMap((c) => {
@@ -216,12 +240,17 @@ async function saveBackerItems(
       },
     ];
   });
-  if (rows.length === 0) return;
+  if (rows.length === 0) return [];
 
   const { error } = await supabase.from("backer_items").insert(rows);
   if (error) {
     console.error("Error saving backer items:", error);
   }
+  return rows.map(({ reward_title, unit_amount, quantity }) => ({
+    reward_title,
+    unit_amount,
+    quantity,
+  }));
 }
 
 /** session_id から支払い状況を取得して backers に記録する（成功ページ用のフォールバック） */
