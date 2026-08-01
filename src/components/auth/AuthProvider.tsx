@@ -12,16 +12,24 @@ interface AuthState {
   loading: boolean;
 }
 
+export type SignUpOutcome =
+  | { result: "confirm_email" }
+  | { result: "signed_in" }
+  | { result: "already_registered" }
+  | { result: "error"; message: string };
+
 export interface AuthContextValue extends AuthState {
   isAdmin: boolean;
+  /** プロジェクトを掲載できる権限。運営が個別に付与する */
+  isCreator: boolean;
   signInWithEmail: (
     email: string,
     password: string
   ) => Promise<{ data: unknown; error: AuthError | null }>;
-  signUpWithEmail: (
-    email: string,
-    password: string
-  ) => Promise<{ data: unknown; error: AuthError | null }>;
+  signUpWithEmail: (email: string, password: string) => Promise<SignUpOutcome>;
+  resendSignUpEmail: (email: string) => Promise<{ error: AuthError | null }>;
+  sendPasswordReset: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
   signInWithOAuth: (
     provider: "google" | "github"
   ) => Promise<{ data: unknown; error: AuthError | null }>;
@@ -105,7 +113,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { data, error };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (
+    email: string,
+    password: string
+  ): Promise<SignUpOutcome> => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -113,7 +124,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    return { data, error };
+
+    if (error) return { result: "error", message: error.message };
+    if (data.session) return { result: "signed_in" };
+    // 登録済みのメールでも Supabase は成功を返す（アカウントの存在を隠すため）。
+    // その場合だけ identities が空になるので、ここで見分ける
+    if (data.user && data.user.identities?.length === 0) {
+      return { result: "already_registered" };
+    }
+    return { result: "confirm_email" };
+  };
+
+  const resendSignUpEmail = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    return { error };
+  };
+
+  const sendPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // callback でセッションを張ってから再設定フォームへ送る
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error };
   };
 
   const signInWithOAuth = async (provider: "google" | "github") => {
@@ -144,8 +187,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextValue = {
     ...state,
     isAdmin: state.profile?.role === "admin",
+    isCreator:
+      state.profile?.role === "creator" || state.profile?.role === "admin",
     signInWithEmail,
     signUpWithEmail,
+    resendSignUpEmail,
+    sendPasswordReset,
+    updatePassword,
     signInWithOAuth,
     signOut,
     refreshProfile,

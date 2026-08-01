@@ -152,6 +152,13 @@ export const dictionaries = {
       agreeNote2: "と",
       agreeNote3: "に同意したことになります",
       canBackWithoutAccount: "アカウント登録なしでも応援できます！",
+      confirmTitle: "確認メールを送りました",
+      confirmBody:
+        "メール内のリンクを開くと登録が完了します。リンクの有効期限は24時間です。",
+      confirmSpamNote:
+        "数分待っても届かない場合は、迷惑メールフォルダもご確認ください。",
+      confirmResend: "確認メールを再送する",
+      confirmBackToLogin: "ログイン画面に戻る",
     },
     // フッター
     footer: {
@@ -310,6 +317,13 @@ export const dictionaries = {
       agreeNote2: " and ",
       agreeNote3: ".",
       canBackWithoutAccount: "You can support without an account!",
+      confirmTitle: "Check your inbox",
+      confirmBody:
+        "Open the link in the email to finish signing up. The link expires in 24 hours.",
+      confirmSpamNote:
+        "If it hasn't arrived after a few minutes, check your spam folder.",
+      confirmResend: "Resend confirmation email",
+      confirmBackToLogin: "Back to log in",
     },
     footer: {
       tagline:

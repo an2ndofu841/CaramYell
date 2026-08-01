@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Github } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Github, MailCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
@@ -26,12 +26,23 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
 
-  const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
+  const { signInWithEmail, signUpWithEmail, resendSignUpEmail, signInWithOAuth } =
+    useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
+  /** 登録直後の確認待ち。セットされている間はフォームではなく案内画面を出す */
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "auth_failed") {
+      toast.error(
+        "確認リンクの有効期限が切れているか、既に使われています。もう一度お試しください。"
+      );
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,35 +54,83 @@ function LoginForm() {
         const { error } = await signInWithEmail(form.email, form.password);
         if (error) {
           toast.error(
-            error.message === "Invalid login credentials"
-              ? "メールアドレスまたはパスワードが正しくありません"
-              : error.message
+            error.message === "Email not confirmed"
+              ? "メールアドレスの確認が済んでいません。確認メールのリンクを開いてください。"
+              : error.message === "Invalid login credentials"
+                ? "メールアドレスまたはパスワードが正しくありません"
+                : error.message
           );
           return;
         }
         toast.success("ログインしました！");
         router.push(redirectTo);
-      } else {
-        if (form.password.length < 8) {
-          toast.error("パスワードは8文字以上にしてください");
-          return;
-        }
-        const { error } = await signUpWithEmail(form.email, form.password);
-        if (error) {
-          toast.error(error.message);
-          return;
-        }
-        toast.success("確認メールを送信しました。メールを確認してください。");
+        return;
+      }
+
+      if (form.password.length < 8) {
+        toast.error("パスワードは8文字以上にしてください");
+        return;
+      }
+
+      const outcome = await signUpWithEmail(form.email, form.password);
+      switch (outcome.result) {
+        case "signed_in":
+          toast.success("アカウントを作成しました！");
+          router.push(redirectTo);
+          break;
+        case "already_registered":
+          toast.error("このメールアドレスは既に登録されています。ログインしてください。");
+          setIsLogin(true);
+          setForm((p) => ({ ...p, password: "" }));
+          break;
+        case "confirm_email":
+          setPendingEmail(form.email);
+          break;
+        case "error":
+          toast.error(outcome.message);
+          break;
       }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleResend = async () => {
+    if (!pendingEmail) return;
+    setIsLoading(true);
+    try {
+      const { error } = await resendSignUpEmail(pendingEmail);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("確認メールを再送しました。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const backToForm = () => {
+    setPendingEmail(null);
+    setIsLogin(true);
+    setForm((p) => ({ ...p, password: "" }));
+  };
+
   const handleOAuth = async (provider: "google" | "github") => {
     const { error } = await signInWithOAuth(provider);
     if (error) toast.error(error.message);
   };
+
+  if (pendingEmail) {
+    return (
+      <ConfirmEmailNotice
+        email={pendingEmail}
+        isLoading={isLoading}
+        onResend={handleResend}
+        onBack={backToForm}
+      />
+    );
+  }
 
   return (
     <div
@@ -235,6 +294,70 @@ function LoginForm() {
           </Link>
         </p>
       </div>
+    </div>
+  );
+}
+
+function ConfirmEmailNotice({
+  email,
+  isLoading,
+  onResend,
+  onBack,
+}: {
+  email: string;
+  isLoading: boolean;
+  onResend: () => void;
+  onBack: () => void;
+}) {
+  const t = useT();
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4"
+      style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <Card>
+          <div className="text-center py-4">
+            <div
+              className="w-16 h-16 rounded-3xl mx-auto mb-5 flex items-center justify-center text-white shadow-candy"
+              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+            >
+              <MailCheck size={30} />
+            </div>
+
+            <h1 className="text-xl font-bold text-gray-800 mb-3">
+              {t.auth.confirmTitle}
+            </h1>
+            <p className="text-sm text-gray-500 leading-relaxed mb-4">
+              {t.auth.confirmBody}
+            </p>
+
+            <p className="inline-block px-4 py-2 rounded-xl bg-caramel-50 text-sm font-bold text-gray-700 break-all mb-6">
+              {email}
+            </p>
+
+            <p className="text-xs text-gray-400 leading-relaxed mb-6">
+              {t.auth.confirmSpamNote}
+            </p>
+
+            <Button fullWidth size="lg" loading={isLoading} onClick={onResend}>
+              {t.auth.confirmResend}
+            </Button>
+
+            <button
+              onClick={onBack}
+              className="mt-4 text-sm text-caramel-500 hover:text-caramel-600 font-semibold"
+            >
+              {t.auth.confirmBackToLogin}
+            </button>
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 }
