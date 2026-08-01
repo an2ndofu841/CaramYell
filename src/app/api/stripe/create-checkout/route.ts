@@ -59,6 +59,11 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
+    // ログイン中なら支援をアカウントに紐付ける。未ログインならゲスト支援のまま
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     // プロジェクトは掲載中(active)のみ支援可能
     const { data: project } = await supabase
       .from("projects")
@@ -221,6 +226,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         project_id: projectId,
         reward_id: singleRewardId,
+        user_id: user?.id || "",
         guest_email: guestEmail,
         guest_nickname: guestNickname || "",
         message: message || "",

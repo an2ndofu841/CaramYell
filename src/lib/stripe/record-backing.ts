@@ -107,6 +107,7 @@ export async function recordBackingFromSession(
       {
         project_id: projectId,
         reward_id: metadata.reward_id || null,
+        user_id: metadata.user_id || null,
         guest_email: guestEmail,
         guest_nickname: metadata.guest_nickname || null,
         guest_address: guestAddress,
