@@ -8,17 +8,14 @@ import {
   TrendingUp,
   Users,
   DollarSign,
-  Clock,
   Plus,
   BarChart3,
   Eye,
   Share2,
   ChevronRight,
-  Heart,
   Loader2,
   Trash2,
   AlertTriangle,
-  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
@@ -26,9 +23,9 @@ import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import AnimatedSection from "@/components/animations/AnimatedSection";
+import DashboardShell from "../DashboardShell";
 import { formatCurrency, formatNumber, getStatusLabel } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import AdminOnly from "@/components/auth/AdminOnly";
 import type { Project, Category, Reward } from "@/types";
 
 interface DashboardProject extends Project {
@@ -38,9 +35,9 @@ interface DashboardProject extends Project {
   live_current_amount: number;
 }
 
-export default function DashboardClient() {
+export default function CreatorDashboardClient() {
   const router = useRouter();
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isCreator, loading: authLoading } = useAuth();
   const [projects, setProjects] = useState<DashboardProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<DashboardProject | null>(null);
@@ -82,12 +79,18 @@ export default function DashboardClient() {
   };
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/auth/login?redirect=/dashboard");
+    if (authLoading) return;
+    if (!user) {
+      router.push("/auth/login?redirect=/dashboard/projects");
       return;
     }
-    if (user) fetchProjects();
-  }, [user, authLoading, router, fetchProjects]);
+    // 掲載権限がない人にはこの画面自体を見せず、応援側に戻す
+    if (!isCreator) {
+      router.replace("/dashboard");
+      return;
+    }
+    fetchProjects();
+  }, [user, isCreator, authLoading, router, fetchProjects]);
 
   if (authLoading || loading) {
     return (
@@ -100,7 +103,7 @@ export default function DashboardClient() {
     );
   }
 
-  if (!user) return null;
+  if (!user || !isCreator) return null;
 
   const activeProjects = projects.filter((p) =>
     ["active", "funded"].includes(p.status)
@@ -132,38 +135,18 @@ export default function DashboardClient() {
   };
 
   return (
-    <div className="min-h-screen pt-20" style={{ background: "#FFFBF5" }}>
-      <div
-        className="py-8"
-        style={{ background: "linear-gradient(135deg, #4A2C17 0%, #31200E 100%)" }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white mb-1">ダッシュボード</h1>
-              <p className="text-white/50 text-sm">
-                プロジェクトの状況を管理しましょう
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link href="/dashboard/settings">
-                <Button variant="secondary" size="md" icon={<Settings size={18} />}>
-                  <span className="hidden sm:inline">プロフィール設定</span>
-                </Button>
-              </Link>
-              <AdminOnly>
-                <Link href="/projects/create">
-                  <Button icon={<Plus size={18} />} size="md">
-                    新しいプロジェクト
-                  </Button>
-                </Link>
-              </AdminOnly>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <DashboardShell
+      title="掲載中のプロジェクト"
+      description="プロジェクトの状況を管理しましょう"
+      actions={
+        <Link href="/projects/create">
+          <Button icon={<Plus size={18} />} size="md">
+            <span className="hidden sm:inline">新しいプロジェクト</span>
+          </Button>
+        </Link>
+      }
+    >
+      <>
         {/* サマリーカード */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
@@ -215,37 +198,20 @@ export default function DashboardClient() {
         {projects.length === 0 ? (
           <AnimatedSection animation="fade-up">
             <Card>
-              {isAdmin ? (
-                <div className="text-center py-12">
-                  <div className="text-5xl mb-4">🚀</div>
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    最初のプロジェクトを作りましょう
-                  </h2>
-                  <p className="text-gray-500 mb-6">
-                    AIのサポートで、最短10分でページが完成します
-                  </p>
-                  <Link href="/projects/create">
-                    <Button icon={<Plus size={18} />} size="lg">
-                      プロジェクトを作る
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="text-5xl mb-4">🍬</div>
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    気になるプロジェクトを応援しよう
-                  </h2>
-                  <p className="text-gray-500 mb-6">
-                    プロジェクトの作成は現在準備中です。まずは応援から始めましょう。
-                  </p>
-                  <Link href="/projects">
-                    <Button size="lg">
-                      プロジェクトを見る
-                    </Button>
-                  </Link>
-                </div>
-              )}
+              <div className="text-center py-12">
+                <div className="text-5xl mb-4">🚀</div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">
+                  最初のプロジェクトを作りましょう
+                </h2>
+                <p className="text-gray-500 mb-6">
+                  AIのサポートで、最短10分でページが完成します
+                </p>
+                <Link href="/projects/create">
+                  <Button icon={<Plus size={18} />} size="lg">
+                    プロジェクトを作る
+                  </Button>
+                </Link>
+              </div>
             </Card>
           </AnimatedSection>
         ) : (
@@ -357,10 +323,9 @@ export default function DashboardClient() {
             </div>
           </AnimatedSection>
         )}
-      </div>
 
-      {/* 削除確認モーダル */}
-      {deleteTarget && (
+        {/* 削除確認モーダル */}
+        {deleteTarget && (
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40"
           onClick={() => !isDeleting && setDeleteTarget(null)}
@@ -406,7 +371,8 @@ export default function DashboardClient() {
             </div>
           </motion.div>
         </div>
-      )}
-    </div>
+        )}
+      </>
+    </DashboardShell>
   );
 }

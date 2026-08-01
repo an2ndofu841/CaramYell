@@ -1,11 +1,11 @@
-import DashboardClient from "./DashboardClient";
+import BackerDashboardClient from "./BackerDashboardClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ダッシュボード",
-  description: "プロジェクトの状況を管理する",
+  title: "マイページ",
+  description: "応援したプロジェクトとリターンのお届け状況",
 };
 
 export default function DashboardPage() {
-  return <DashboardClient />;
+  return <BackerDashboardClient />;
 }
