@@ -293,14 +293,14 @@ export default function FulfillmentTab({
                     送るもの
                   </p>
                   {items.length > 0 ? (
-                    <ul className="space-y-1">
+                    <ul className="space-y-1.5">
                       {items.map((it) => (
                         <li
                           key={it.id}
-                          className="flex justify-between text-sm text-gray-700"
+                          className="flex items-center gap-2 text-sm text-gray-700"
                         >
                           <span className="font-semibold">{it.reward_title}</span>
-                          <span className="font-bold text-caramel-600">
+                          <span className="px-2 py-0.5 rounded-lg bg-white font-bold text-caramel-600 tabular-nums">
                             × {it.quantity}
                           </span>
                         </li>
