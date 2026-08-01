@@ -129,6 +129,96 @@ export default function ProjectDetailClient({
 
   const theme = themeOverride ?? resolveTheme(project.theme);
 
+  // 支援状況はスマホでは本文より前に、PC ではサイドバーに置きたいので、
+  // 同じ中身を置き場所だけ変えて使い回す
+  const fundingSummary = (
+    <Card>
+      <div className="mb-4">
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-3xl font-bold text-caramel-600">
+            {formatCurrency(project.current_amount)}
+          </span>
+        </div>
+        <p className="text-sm text-gray-400">
+          {hasMilestones ? t.common.finalGoal : t.common.goalAmount} {formatCurrency(finalGoal)} {t.common.of}
+          <span className="font-bold text-caramel-500"> {hasMilestones ? headlinePct : stats.progress_percentage}%</span>
+        </p>
+      </div>
+
+      <ProgressBar
+        percentage={hasMilestones ? headlinePct : stats.progress_percentage}
+        markers={milestoneMarkers}
+        className={hasMilestones ? "mb-2" : "mb-4"}
+      />
+
+      {hasMilestones && (
+        nextMilestone ? (
+          <div className="mb-4 p-3 rounded-2xl text-center bg-caramel-50 border-2 border-caramel-100">
+            <p className="text-sm font-bold text-caramel-700">
+              あと {formatCurrency(nextMilestone.amount - project.current_amount)} で
+              <br />
+              「{nextMilestone.title}」を達成！
+            </p>
+          </div>
+        ) : (
+          <div className="mb-4 p-3 rounded-2xl text-center bg-green-50 border-2 border-green-100">
+            <p className="text-sm font-bold text-green-700">
+              🎉 全ての目標を達成しました！
+            </p>
+          </div>
+        )
+      )}
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="text-center p-3 rounded-2xl bg-caramel-50">
+          <Users size={16} className="mx-auto mb-1 text-caramel-500" />
+          <p className="text-lg font-bold text-gray-800">
+            {formatNumber(project.backer_count)}
+          </p>
+          <p className="text-xs text-gray-400">{t.common.backers}</p>
+        </div>
+        <div className="text-center p-3 rounded-2xl bg-caramel-50">
+          <Clock size={16} className="mx-auto mb-1 text-caramel-500" />
+          <p className="text-lg font-bold text-gray-800">
+            {stats.days_left > 0 ? `${stats.days_left}日` : "終了"}
+          </p>
+          <p className="text-xs text-gray-400">{t.common.daysLeft}</p>
+        </div>
+      </div>
+
+      {isPreview ? (
+        <Button fullWidth size="lg" className="mb-3" disabled>
+          {t.detail.previewDisabled}
+        </Button>
+      ) : (
+        <Link href={`/back/${project.slug}`}>
+          <Button fullWidth size="lg" className="mb-3">
+            💝 {t.common.backThisProject}
+          </Button>
+        </Link>
+      )}
+
+      <p className="text-xs text-center text-gray-400">
+        {t.common.noAccountNeeded}
+      </p>
+
+      <div className="border-t border-caramel-100 mt-4 pt-4">
+        <p className="text-xs text-gray-400 text-center mb-2">{t.detail.feesTitle}</p>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t.detail.backerFee}</span>
+          <span className="font-semibold">{t.detail.backerFeeValue}</span>
+        </div>
+      </div>
+    </Card>
+  );
+
+  const milestonesPanel = hasMilestones ? (
+    <MilestonesProgress
+      milestones={milestones}
+      currentAmount={project.current_amount}
+    />
+  ) : null;
+
   return (
     <ProjectThemeScope theme={theme} className="min-h-screen pt-20" pageLevel>
       {/* パンくず */}
@@ -271,6 +361,18 @@ export default function ProjectDetailClient({
               </div>
             </AnimatedSection>
 
+            {/* 支援状況（スマホのみ。本文を読む前に金額と応援ボタンが見えるようにする） */}
+            <div className="lg:hidden space-y-4 mb-6">
+              <AnimatedSection animation="fade-up" delay={120}>
+                {fundingSummary}
+              </AnimatedSection>
+              {milestonesPanel && (
+                <AnimatedSection animation="fade-up" delay={160}>
+                  {milestonesPanel}
+                </AnimatedSection>
+              )}
+            </div>
+
             {/* タブナビ */}
             <AnimatedSection animation="fade-up" delay={150}>
               <div className="flex gap-1 p-1 bg-white rounded-2xl shadow-soft mb-6 overflow-x-auto">
@@ -389,97 +491,17 @@ export default function ProjectDetailClient({
           {/* サイドバー */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
-              {/* 支援状況カード */}
-              <AnimatedSection animation="slide-right">
-                <Card>
-                  <div className="mb-4">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-3xl font-bold text-caramel-600">
-                        {formatCurrency(project.current_amount)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      {hasMilestones ? t.common.finalGoal : t.common.goalAmount} {formatCurrency(finalGoal)} {t.common.of}
-                      <span className="font-bold text-caramel-500"> {hasMilestones ? headlinePct : stats.progress_percentage}%</span>
-                    </p>
-                  </div>
-
-                  <ProgressBar
-                    percentage={hasMilestones ? headlinePct : stats.progress_percentage}
-                    markers={milestoneMarkers}
-                    className={hasMilestones ? "mb-2" : "mb-4"}
-                  />
-
-                  {hasMilestones && (
-                    nextMilestone ? (
-                      <div className="mb-4 p-3 rounded-2xl text-center bg-caramel-50 border-2 border-caramel-100">
-                        <p className="text-sm font-bold text-caramel-700">
-                          あと {formatCurrency(nextMilestone.amount - project.current_amount)} で
-                          <br />
-                          「{nextMilestone.title}」を達成！
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="mb-4 p-3 rounded-2xl text-center bg-green-50 border-2 border-green-100">
-                        <p className="text-sm font-bold text-green-700">
-                          🎉 全ての目標を達成しました！
-                        </p>
-                      </div>
-                    )
-                  )}
-
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="text-center p-3 rounded-2xl bg-caramel-50">
-                      <Users size={16} className="mx-auto mb-1 text-caramel-500" />
-                      <p className="text-lg font-bold text-gray-800">
-                        {formatNumber(project.backer_count)}
-                      </p>
-                      <p className="text-xs text-gray-400">{t.common.backers}</p>
-                    </div>
-                    <div className="text-center p-3 rounded-2xl bg-caramel-50">
-                      <Clock size={16} className="mx-auto mb-1 text-caramel-500" />
-                      <p className="text-lg font-bold text-gray-800">
-                        {stats.days_left > 0 ? `${stats.days_left}日` : "終了"}
-                      </p>
-                      <p className="text-xs text-gray-400">{t.common.daysLeft}</p>
-                    </div>
-                  </div>
-
-                  {isPreview ? (
-                    <Button fullWidth size="lg" className="mb-3" disabled>
-                      {t.detail.previewDisabled}
-                    </Button>
-                  ) : (
-                    <Link href={`/back/${project.slug}`}>
-                      <Button fullWidth size="lg" className="mb-3">
-                        💝 {t.common.backThisProject}
-                      </Button>
-                    </Link>
-                  )}
-
-                  <p className="text-xs text-center text-gray-400">
-                    {t.common.noAccountNeeded}
-                  </p>
-
-                  <div className="border-t border-caramel-100 mt-4 pt-4">
-                    <p className="text-xs text-gray-400 text-center mb-2">{t.detail.feesTitle}</p>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>{t.detail.backerFee}</span>
-                      <span className="font-semibold">{t.detail.backerFeeValue}</span>
-                    </div>
-                  </div>
-                </Card>
-              </AnimatedSection>
-
-              {/* 段階ゴール */}
-              {hasMilestones && (
+              {/* 支援状況・段階ゴール（スマホでは本文より前に出しているのでここでは隠す） */}
+              <div className="hidden lg:block space-y-4">
                 <AnimatedSection animation="slide-right">
-                  <MilestonesProgress
-                    milestones={milestones}
-                    currentAmount={project.current_amount}
-                  />
+                  {fundingSummary}
                 </AnimatedSection>
-              )}
+                {milestonesPanel && (
+                  <AnimatedSection animation="slide-right">
+                    {milestonesPanel}
+                  </AnimatedSection>
+                )}
+              </div>
 
               {/* 選択中のリターン */}
               {selectedReward && (

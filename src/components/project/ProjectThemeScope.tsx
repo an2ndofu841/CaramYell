@@ -34,13 +34,27 @@ export default function ProjectThemeScope({
   const fontHref = themeFontHref(theme);
   const dark = isDarkTheme(theme);
 
+  // 共通ヘッダーとモバイルタブバーはこのスコープの外にあるので、暗いテーマの間だけ
+  // 目印と最小限の色を html 側に置いて追従させる
+  const { surface, border, textMuted, accent } = theme;
   useEffect(() => {
     if (!pageLevel || !dark) return;
-    document.documentElement.dataset.projectTheme = "dark";
-    return () => {
-      delete document.documentElement.dataset.projectTheme;
+    const root = document.documentElement;
+    const chrome: Record<string, string> = {
+      "--pt-chrome-surface": surface,
+      "--pt-chrome-border": border,
+      "--pt-chrome-muted": textMuted,
+      "--pt-chrome-accent": accent,
     };
-  }, [pageLevel, dark]);
+    root.dataset.projectTheme = "dark";
+    for (const [key, value] of Object.entries(chrome)) {
+      root.style.setProperty(key, value);
+    }
+    return () => {
+      delete root.dataset.projectTheme;
+      for (const key of Object.keys(chrome)) root.style.removeProperty(key);
+    };
+  }, [pageLevel, dark, surface, border, textMuted, accent]);
 
   return (
     <>

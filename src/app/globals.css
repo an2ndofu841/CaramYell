@@ -361,3 +361,19 @@ html[data-project-theme="dark"] header.bg-transparent .text-caramel-600 {
 html[data-project-theme="dark"] .floating-particles > div {
   opacity: 0.1 !important;
 }
+
+/* スマホ下部のタブバーも明るいままだと暗いページから浮くので、テーマの面に合わせる */
+html[data-project-theme="dark"] nav[aria-label="モバイルナビゲーション"] {
+  background: var(--pt-chrome-surface);
+  border-top-color: var(--pt-chrome-border);
+}
+html[data-project-theme="dark"]
+  nav[aria-label="モバイルナビゲーション"]
+  .text-gray-400 {
+  color: var(--pt-chrome-muted);
+}
+html[data-project-theme="dark"]
+  nav[aria-label="モバイルナビゲーション"]
+  .text-caramel-500 {
+  color: var(--pt-chrome-accent);
+}
