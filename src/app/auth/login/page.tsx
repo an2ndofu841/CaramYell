@@ -11,6 +11,7 @@ import Card from "@/components/ui/Card";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/components/i18n/LocaleProvider";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 export default function LoginPage() {
   return (
@@ -24,7 +25,7 @@ function LoginForm() {
   const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const redirectTo = safeRedirectPath(searchParams.get("redirect"));
 
   const {
     user,
