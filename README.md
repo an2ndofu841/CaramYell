@@ -35,8 +35,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_pk
+# Stripe（決済は Stripe Checkout へのリダイレクト方式なので公開キーは使いません）
 STRIPE_SECRET_KEY=your_stripe_sk
 STRIPE_WEBHOOK_SECRET=your_webhook_secret
 
@@ -64,11 +63,35 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ### 3. Stripeのセットアップ
 
+テスト用と本番用の違いは API キーの接頭辞（`sk_test_` / `sk_live_`）だけで、
+コード側にモードの分岐はありません。同じ手順をテストモードと本番モードの
+それぞれで行い、環境ごとに対応するキーを設定します。
+
 1. [Stripe](https://stripe.com) でアカウント作成
 2. Apple Pay / Google Pay のドメイン登録に `caramyell.com` を追加
-3. Webhookエンドポイントを `https://caramyell.com/api/stripe/webhook` に設定
-   - `checkout.session.completed` イベントを選択
-   - `payment_intent.payment_failed` イベントを選択
+3. Webhookエンドポイントを `https://caramyell.com/api/stripe/webhook` に設定し、
+   以下のイベントを選択
+   - `checkout.session.completed`（決済完了）
+   - `checkout.session.async_payment_succeeded`（コンビニ払いなど後から入金される決済）
+   - `payment_intent.payment_failed`（決済失敗）
+   - `charge.refunded`（返金。これが無いと返金してもプロジェクトの集計金額が減らない）
+4. 作成したエンドポイントの署名シークレット（`whsec_...`）を `STRIPE_WEBHOOK_SECRET` に設定
+
+#### 本番決済に切り替えるとき
+
+本番モードの Webhook は署名シークレットが別物になるため、キーとセットで差し替えます。
+
+1. Stripe アカウントの本番利用申請（事業者情報・銀行口座・本人確認）を完了させる
+2. 本番モードで上記 3〜4 をやり直す
+3. Vercel の Production 環境変数を live の値に更新
+   - `STRIPE_SECRET_KEY` → `sk_live_...`（権限を絞った `rk_live_...` でも可）
+   - `STRIPE_WEBHOOK_SECRET` → 本番 Webhook の `whsec_...`
+4. 本番モードで決済手段（カード / Apple Pay / Google Pay / Link など）を有効化
+5. 再デプロイして、実カードで最小額の支援を1件通し、返金まで確認する
+
+Production 環境にテストキーが残っていると `/api/stripe/create-checkout` が
+503 を返して決済を止めます（`src/lib/stripe/mode.ts`）。支援者に決済が
+通ったように見えて入金が無い、という事態を防ぐためのガードです。
 
 ### 4. 開発サーバー起動
 

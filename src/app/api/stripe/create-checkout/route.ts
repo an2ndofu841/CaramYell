@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { missingAddressFields } from "@/lib/data/countries";
 import { SITE_URL } from "@/lib/config/site";
+import { checkStripeKey } from "@/lib/stripe/mode";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -14,11 +15,10 @@ const FEE_RATE = 0.1;
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.STRIPE_SECRET_KEY?.startsWith("sk_")) {
-      return NextResponse.json(
-        { error: "決済が未設定です。STRIPE_SECRET_KEY を設定してください。" },
-        { status: 503 }
-      );
+    const keyCheck = checkStripeKey();
+    if (!keyCheck.ok) {
+      console.error(`Stripe key rejected: ${keyCheck.reason}`);
+      return NextResponse.json({ error: keyCheck.reason }, { status: 503 });
     }
 
     const body = await req.json();
