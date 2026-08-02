@@ -15,6 +15,7 @@ import {
   User,
   Mail,
   CalendarDays,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
@@ -382,6 +383,24 @@ export default function ProfileSettingsClient() {
             <p className="text-xs text-gray-400 mt-4">
               メールアドレスとパスワードの変更は現在サポート窓口で承っています。
             </p>
+          </Card>
+        </AnimatedSection>
+
+        {/* 二段階認証 */}
+        <AnimatedSection animation="fade-up" delay={280}>
+          <Card variant="outlined">
+            <h2 className="font-bold text-gray-800 mb-4">二段階認証</h2>
+            <p className="text-sm text-gray-500 leading-relaxed mb-4">
+              認証アプリの6桁のコードをログイン時に求めます。パスワードが漏れても、
+              アプリを持っている人以外は入れなくなります。
+            </p>
+            <Link
+              href="/auth/mfa?next=/dashboard/settings"
+              className="inline-flex items-center gap-2 text-sm font-bold text-caramel-500 hover:text-caramel-600"
+            >
+              <ShieldCheck size={16} />
+              二段階認証を設定する
+            </Link>
           </Card>
         </AnimatedSection>
 

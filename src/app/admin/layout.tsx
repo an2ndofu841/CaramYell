@@ -34,5 +34,13 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
+  // 運営アカウントはプロジェクトの承認も権限の付け替えも通せてしまうので、
+  // パスワードだけでは入れないようにする。getClaims は JWT を検証したうえで
+  // claims を返すため、aal を信用して判定できる。
+  const { data: claims } = await supabase.auth.getClaims();
+  if (claims?.claims.aal !== "aal2") {
+    redirect("/auth/mfa?next=/admin");
+  }
+
   return <AdminShell>{children}</AdminShell>;
 }

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/components/i18n/LocaleProvider";
 import { safeRedirectPath } from "@/lib/safe-redirect";
+import { needsSecondFactor } from "@/lib/auth/mfa";
 
 export default function LoginPage() {
   return (
@@ -45,6 +46,8 @@ function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
   /** 登録直後の確認待ち。セットされている間はフォームではなく案内画面を出す */
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  /** 二段階認証へ送る直前。下のログイン済み判定に横取りされないようにする */
+  const [leavingForMfa, setLeavingForMfa] = useState(false);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -60,10 +63,10 @@ function LoginForm() {
   // ログイン済みの人をログイン画面に留めない。
   // メールのリンクや別タブでセッションが張られた場合もここで拾う
   useEffect(() => {
-    if (!authLoading && user && !pendingEmail) {
+    if (!authLoading && user && !pendingEmail && !leavingForMfa) {
       router.replace(redirectTo);
     }
-  }, [user, authLoading, pendingEmail, redirectTo, router]);
+  }, [user, authLoading, pendingEmail, leavingForMfa, redirectTo, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +84,11 @@ function LoginForm() {
                 ? "メールアドレスまたはパスワードが正しくありません"
                 : error.message
           );
+          return;
+        }
+        if (await needsSecondFactor()) {
+          setLeavingForMfa(true);
+          router.push(`/auth/mfa?next=${encodeURIComponent(redirectTo)}`);
           return;
         }
         toast.success("ログインしました！");
