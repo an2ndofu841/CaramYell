@@ -154,11 +154,22 @@ export async function POST(req: NextRequest) {
     // 既存の下書きを更新（本人のもののみ）
     const { data: existing } = await supabase
       .from("projects")
-      .select("id, creator_id")
+      .select("id, creator_id, status")
       .eq("id", projectId)
       .maybeSingle();
     if (!existing || existing.creator_id !== user.id) {
       return NextResponse.json({ error: "対象のプロジェクトが見つかりません" }, { status: 404 });
+    }
+    // この導線はリターンと段階ゴールを作り直すため、公開後に通すと
+    // 支援受付中のリターンが消えてしまう。公開後の編集はダッシュボードから。
+    if (!["draft", "reviewing", "cancelled"].includes(existing.status)) {
+      return NextResponse.json(
+        {
+          error:
+            "公開中のプロジェクトはこの画面から更新できません。ダッシュボードから編集してください",
+        },
+        { status: 409 }
+      );
     }
     const { data, error } = await supabase
       .from("projects")
