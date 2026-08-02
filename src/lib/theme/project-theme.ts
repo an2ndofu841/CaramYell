@@ -206,31 +206,78 @@ export function themeFromPreset(id: string): ProjectTheme {
 
 export const DEFAULT_THEME: ProjectTheme = themeFromPreset(DEFAULT_PRESET_ID);
 
+// テーマの値は最終的に CSS カスタムプロパティとして出力され、
+// var() で展開された先で宣言の一部になる。検査せずに通すと
+// "red; position: fixed; inset: 0" のような文字列で宣言を継ぎ足され、
+// 掲載者が自分のページに全画面オーバーレイや外部リクエストを仕込めてしまう。
+// そのため受け付ける構文をこの3種類に限定する。
+
+const COLOR_HEX = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+const COLOR_FN = /^(?:rgb|rgba|hsl|hsla)\([0-9.,%/\sdeg-]+\)$/i;
+const GRADIENT_FN = /^(?:linear|radial|conic)-gradient\(([\s\S]*)\)$/i;
+const LENGTH = /^\d+(?:\.\d+)?(?:px|rem|em|%)?$/;
+
+function isSafeColor(value: string): boolean {
+  return COLOR_HEX.test(value) || COLOR_FN.test(value);
+}
+
+function isSafePaint(value: string): boolean {
+  if (isSafeColor(value)) return true;
+
+  const inner = value.match(GRADIENT_FN)?.[1];
+  if (inner === undefined) return false;
+  // 宣言や関数を継ぎ足す文字が混ざっていたら弾く
+  if (/[;{}\\<>"']|url\(|@|expression|image-set/i.test(inner)) return false;
+
+  // 色関数のぶんの括弧しか許さない（対応が取れていなければ外に漏れている）
+  let depth = 0;
+  for (const ch of inner) {
+    if (ch === "(") depth++;
+    else if (ch === ")" && --depth < 0) return false;
+  }
+  return depth === 0;
+}
+
+function isSafeRadius(value: string): boolean {
+  const parts = value.split(/\s+/);
+  return parts.length <= 4 && parts.every((p) => LENGTH.test(p));
+}
+
 /**
  * DB から来た未検証の値を ProjectTheme に整える。
  * 欠けているキーは既定テーマで補うので、後からトークンを増やしても壊れない。
+ * 構文が怪しい値もここで既定値に落とす。
  */
 export function resolveTheme(raw: unknown): ProjectTheme {
   if (!raw || typeof raw !== "object") return DEFAULT_THEME;
   const value = raw as Partial<ProjectTheme>;
-  const base = value.preset ? themeFromPreset(value.preset) : DEFAULT_THEME;
+  const base =
+    typeof value.preset === "string" && getPreset(value.preset)
+      ? themeFromPreset(value.preset)
+      : DEFAULT_THEME;
 
-  const str = (v: unknown, fallback: string) =>
-    typeof v === "string" && v.trim() ? v.trim() : fallback;
+  const checked =
+    (ok: (v: string) => boolean) => (v: unknown, fallback: string) => {
+      const s = typeof v === "string" ? v.trim() : "";
+      return s && ok(s) ? s : fallback;
+    };
+  const color = checked(isSafeColor);
+  const paint = checked(isSafePaint);
+  const radius = checked(isSafeRadius);
 
   return {
-    preset: str(value.preset, base.preset),
-    bg: str(value.bg, base.bg),
-    surface: str(value.surface, base.surface),
-    surfaceSoft: str(value.surfaceSoft, base.surfaceSoft),
-    border: str(value.border, base.border),
-    text: str(value.text, base.text),
-    textMuted: str(value.textMuted, base.textMuted),
-    accent: str(value.accent, base.accent),
-    gradient: str(value.gradient, base.gradient),
-    glow: str(value.glow, base.glow),
+    preset: base.preset,
+    bg: paint(value.bg, base.bg),
+    surface: color(value.surface, base.surface),
+    surfaceSoft: color(value.surfaceSoft, base.surfaceSoft),
+    border: color(value.border, base.border),
+    text: color(value.text, base.text),
+    textMuted: color(value.textMuted, base.textMuted),
+    accent: color(value.accent, base.accent),
+    gradient: paint(value.gradient, base.gradient),
+    glow: color(value.glow, base.glow),
     font: value.font && value.font in THEME_FONTS ? value.font : base.font,
-    radius: str(value.radius, base.radius),
+    radius: radius(value.radius, base.radius),
   };
 }
 
