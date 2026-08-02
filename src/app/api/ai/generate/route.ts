@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { createClient } from "@/lib/supabase/server";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
+
+/** 1ユーザーあたりの生成回数（OpenAI の課金が青天井にならないようにする） */
+const LIMIT_PER_HOUR = 40;
+/** プロンプトとして送る文字数の上限 */
+const MAX_INPUT_LENGTH = 2000;
 
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -43,18 +50,38 @@ const systemPrompts: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
+    // 誰でも叩ける状態だと OpenAI の利用料をそのまま attacker に使わせてしまう
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    }
+
+    const limit = rateLimit(`ai:${user.id}`, LIMIT_PER_HOUR, 60 * 60 * 1000);
+    if (!limit.ok) {
+      return tooManyRequests(limit.retryAfter);
+    }
+
     const { type, input, context, targetLanguage } = await req.json();
 
-    if (!input || !type) {
+    if (!input || !type || typeof input !== "string") {
+      return NextResponse.json({ error: "入力が不正です" }, { status: 400 });
+    }
+    if (typeof type !== "string" || !(type in systemPrompts)) {
       return NextResponse.json({ error: "入力が不正です" }, { status: 400 });
     }
 
-    const systemPrompt = systemPrompts[type] || systemPrompts.description;
+    const systemPrompt = systemPrompts[type];
+    const text = input.slice(0, MAX_INPUT_LENGTH);
+    const category = String(context ?? "").slice(0, 100);
+    const language = String(targetLanguage ?? "").slice(0, 40) || "英語";
 
     const userMessage =
       type === "translate"
-        ? `以下の日本語を${targetLanguage || "英語"}に翻訳してください:\n\n${input}`
-        : `プロジェクト名: ${input}\nカテゴリー: ${context || "その他"}\n\n上記のプロジェクトに最適な内容を生成してください。`;
+        ? `以下の日本語を${language}に翻訳してください:\n\n${text}`
+        : `プロジェクト名: ${text}\nカテゴリー: ${category || "その他"}\n\n上記のプロジェクトに最適な内容を生成してください。`;
 
     const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
