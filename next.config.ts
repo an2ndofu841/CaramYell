@@ -38,16 +38,27 @@ const securityHeaders = [
     : []),
 ];
 
+// 最適化を通る画像はサーバー上の libvips がデコードするため、許可ホストは
+// 自分たちのストレージだけに絞る。*.supabase.co のままだと、掲載者が
+// main_image_url に自分で用意した Supabase プロジェクトの URL を入れて、
+// 細工画像をこちらのデコーダに食わせられる。
+const supabaseImageHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
+      ...(supabaseImageHost
+        ? [{ protocol: "https" as const, hostname: supabaseImageHost }]
+        : []),
       {
         protocol: "https",
         hostname: "images.unsplash.com",
