@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
 import { resolveTheme } from "@/lib/theme/project-theme";
@@ -125,7 +126,7 @@ export async function PUT(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ project: data });
@@ -184,7 +185,7 @@ export async function DELETE(
     .eq("creator_id", user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ success: true });

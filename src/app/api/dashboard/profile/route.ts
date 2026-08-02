@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
@@ -14,13 +15,24 @@ function emptyToNull(value: unknown): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/**
+ * 社内ネットワークや自ホストを指す宛先。アバターや外部リンクとして保存すると
+ * 閲覧者のブラウザや将来のサーバー側取得がここへ向かうので弾く。
+ */
+const BLOCKED_HOST =
+  /^(localhost|\[?::1\]?|0\.0\.0\.0|10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i;
+
 /** スキームを省略して入力されがちなのでその場合は https を補う */
 function normalizeUrl(raw: string): string | null {
   const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
   try {
     const url = new URL(withScheme);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    // http は混在コンテンツで画像が出ないうえ、経路上で差し替えられる
+    if (url.protocol !== "https:") return null;
     if (!url.hostname.includes(".")) return null;
+    if (BLOCKED_HOST.test(url.hostname)) return null;
+    if (url.username || url.password) return null;
+    if (url.href.length > 500) return null;
     return url.toString();
   } catch {
     return null;
@@ -56,7 +68,7 @@ export async function GET() {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError(error);
     }
     profile = created;
   }
@@ -189,7 +201,7 @@ export async function PUT(req: NextRequest) {
         { status: 409 }
       );
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ profile: data });

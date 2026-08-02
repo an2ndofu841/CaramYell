@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types";
 
@@ -48,7 +49,7 @@ export async function PATCH(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ profile: data });

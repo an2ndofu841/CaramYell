@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
@@ -48,7 +49,7 @@ export async function POST(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ update: data }, { status: 201 });

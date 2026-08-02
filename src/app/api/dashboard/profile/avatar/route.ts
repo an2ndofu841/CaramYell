@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     .upload(path, file, { contentType: file.type, upsert: true });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return dbError(uploadError);
   }
 
   const {
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
 
   if (updateError) {
     await admin.storage.from(BUCKET).remove([path]);
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return dbError(updateError);
   }
 
   await removeUserFiles(admin, user.id, path);
@@ -142,7 +143,7 @@ export async function DELETE() {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   const admin = getServiceClient();

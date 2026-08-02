@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 import { backerIdentity } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   const projectIds = (projects || []).map((p) => p.id);

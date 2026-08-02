@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
+
+/**
+ * or() は文字列で組み立てるため、値に , や ) が混ざると別の条件として
+ * 解釈されてしまう。フィルタ構文と LIKE のワイルドカードを落として長さも切る。
+ */
+function sanitizeSearch(raw: string | null): string {
+  if (!raw) return "";
+  return raw
+    .replace(/[,()"'\\%_*.:]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 100);
+}
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -26,8 +40,9 @@ export async function GET(req: NextRequest) {
     query = query.eq("categories.slug", category);
   }
 
-  if (search) {
-    query = query.or(`title.ilike.%${search}%,tagline.ilike.%${search}%`);
+  const term = sanitizeSearch(search);
+  if (term) {
+    query = query.or(`title.ilike.%${term}%,tagline.ilike.%${term}%`);
   }
 
   if (featured === "true") {
@@ -56,7 +71,7 @@ export async function GET(req: NextRequest) {
   const { data, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ projects: data, count });
@@ -178,7 +193,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError(error);
     }
     project = data;
     // 子レコードは作り直し
@@ -200,7 +215,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError(error);
     }
     project = data;
   }

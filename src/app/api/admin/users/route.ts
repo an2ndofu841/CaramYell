@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -22,7 +23,7 @@ export async function GET() {
 
   const { data, error } = await supabase.rpc("admin_list_users");
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError(error);
   }
 
   return NextResponse.json({ users: data || [], selfId: user.id });
