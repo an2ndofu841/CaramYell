@@ -4,7 +4,11 @@
  * 運営CMSや作成フォームは日本語のまま。
  */
 
+import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
+
 export type Locale = "ja" | "en";
+
+const FEE_EXAMPLE = feeExample(1000);
 
 export const dictionaries = {
   ja: {
@@ -79,7 +83,7 @@ export const dictionaries = {
       allGoalsBadge: "🎉 全目標達成！",
       feesTitle: "手数料について",
       backerFee: "出資者の手数料",
-      backerFeeValue: "+10%（決済時）",
+      backerFeeValue: `+${BACKER_FEE_PERCENT}%（決済時）`,
       paymentMethods: "対応決済方法",
       intlNote: "海外発行カードでの支援・海外へのお届けにも対応",
       previewDisabled: "プレビュー中は応援できません",
@@ -91,7 +95,7 @@ export const dictionaries = {
       faqItems: [
         {
           q: "手数料はいくらかかりますか？",
-          a: "プロジェクト掲載者の手数料は0%です。出資者側に10%のサービス手数料をご負担いただいています。1,000円のリターンであれば、お支払い総額は1,100円になります。",
+          a: `プロジェクト掲載者の手数料は0%です。出資者側に${BACKER_FEE_PERCENT}%のサービス手数料をご負担いただいています。${FEE_EXAMPLE.baseText}円のリターンであれば、お支払い総額は${FEE_EXAMPLE.totalText}円になります。`,
         },
         {
           q: "アカウントを作らなくても応援できますか？",
@@ -128,7 +132,7 @@ export const dictionaries = {
       freeAmountTitle: "自由な金額で応援（リターンなし）",
       freeAmountNote: "リターンに上乗せ、または単独での応援もできます",
       subtotal: "応援金額 小計",
-      fee: "手数料（10%）",
+      fee: `手数料（${BACKER_FEE_PERCENT}%）`,
       total: "お支払い合計",
       freeSupport: "自由応援",
       yourInfo: "あなたの情報",
@@ -274,7 +278,7 @@ export const dictionaries = {
       allGoalsBadge: "🎉 All goals reached!",
       feesTitle: "About fees",
       backerFee: "Backer fee",
-      backerFeeValue: "+10% (at checkout)",
+      backerFeeValue: `+${BACKER_FEE_PERCENT}% (at checkout)`,
       paymentMethods: "Payment methods",
       intlNote: "International cards and worldwide delivery supported",
       previewDisabled: "Backing is disabled in preview",
@@ -286,7 +290,7 @@ export const dictionaries = {
       faqItems: [
         {
           q: "What fees are charged?",
-          a: "Creators pay 0%. Backers cover a 10% service fee, so a ¥1,000 reward costs ¥1,100 at checkout.",
+          a: `Creators pay 0%. Backers cover a ${BACKER_FEE_PERCENT}% service fee, so a ¥${FEE_EXAMPLE.baseText} reward costs ¥${FEE_EXAMPLE.totalText} at checkout.`,
         },
         {
           q: "Can I back a project without an account?",
@@ -322,7 +326,7 @@ export const dictionaries = {
       freeAmountTitle: "Support with any amount (no reward)",
       freeAmountNote: "Add on top of a reward, or support on its own",
       subtotal: "Subtotal",
-      fee: "Service fee (10%)",
+      fee: `Service fee (${BACKER_FEE_PERCENT}%)`,
       total: "Total",
       freeSupport: "Free support",
       yourInfo: "Your details",

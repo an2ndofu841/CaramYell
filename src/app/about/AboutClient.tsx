@@ -16,6 +16,10 @@ import {
 } from "lucide-react";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import Button from "@/components/ui/Button";
+import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
+
+const FEE_FAQ_EXAMPLE = feeExample(1000);
+const FEE_TABLE_EXAMPLE = feeExample(5000);
 
 const values = [
   {
@@ -56,7 +60,7 @@ const features = [
   {
     icon: <CreditCard size={22} />,
     title: "掲載者の手数料 0%",
-    description: "出資者が10%の手数料を負担する仕組みで、クリエイターの取り分は100%",
+    description: `出資者が${BACKER_FEE_PERCENT}%の手数料を負担する仕組みで、クリエイターの取り分は100%`,
     color: "#F2807B",
   },
   {
@@ -94,7 +98,7 @@ const features = [
 const faqItems = [
   {
     q: "CaramYellの手数料はどうなっていますか？",
-    a: "プロジェクト掲載者の手数料は完全に0%です。出資者側に10%のサービス手数料をご負担いただいています。例えば1,000円のリターンに出資する場合、お支払い総額は1,100円になります。",
+    a: `プロジェクト掲載者の手数料は完全に0%です。出資者側に${BACKER_FEE_PERCENT}%のサービス手数料をご負担いただいています。例えば${FEE_FAQ_EXAMPLE.baseText}円のリターンに出資する場合、お支払い総額は${FEE_FAQ_EXAMPLE.totalText}円になります。`,
   },
   {
     q: "アカウントを作らなくても出資できますか？",
@@ -343,7 +347,7 @@ export default function AboutClient() {
                       <div>
                         <p className="text-sm font-semibold text-gray-800">CaramYell</p>
                         <p className="text-sm text-gray-600">
-                          掲載者の手数料は0%。出資者に10%のサービス手数料をご負担いただきます。
+                          掲載者の手数料は0%。出資者に{BACKER_FEE_PERCENT}%のサービス手数料をご負担いただきます。
                         </p>
                       </div>
                     </div>
@@ -353,23 +357,23 @@ export default function AboutClient() {
                   className="rounded-3xl p-6 text-center"
                   style={{ background: "rgba(255, 255, 255, 0.7)" }}
                 >
-                  <p className="text-sm text-gray-500 mb-2">例：5,000円のリターンに出資</p>
+                  <p className="text-sm text-gray-500 mb-2">例：{FEE_TABLE_EXAMPLE.baseText}円のリターンに出資</p>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">リターン金額</span>
-                      <span className="font-bold text-gray-800">¥5,000</span>
+                      <span className="font-bold text-gray-800">¥{FEE_TABLE_EXAMPLE.baseText}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">サービス手数料 (10%)</span>
-                      <span className="font-bold text-gray-800">¥500</span>
+                      <span className="text-gray-600">サービス手数料 ({BACKER_FEE_PERCENT}%)</span>
+                      <span className="font-bold text-gray-800">¥{FEE_TABLE_EXAMPLE.feeText}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                       <span className="text-sm font-semibold text-gray-600">お支払い総額</span>
-                      <span className="text-lg font-bold" style={{ color: "#F2807B" }}>¥5,500</span>
+                      <span className="text-lg font-bold" style={{ color: "#F2807B" }}>¥{FEE_TABLE_EXAMPLE.totalText}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-gray-600">クリエイターの受取額</span>
-                      <span className="text-lg font-bold" style={{ color: "#8FD4C4" }}>¥5,000</span>
+                      <span className="text-lg font-bold" style={{ color: "#8FD4C4" }}>¥{FEE_TABLE_EXAMPLE.baseText}</span>
                     </div>
                   </div>
                 </div>

@@ -30,6 +30,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import type { MilestoneInput } from "@/types";
+import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
+
+const FEE_EXAMPLE = feeExample(3000);
 
 const categories = [
   { slug: "music", name: "音楽", icon: "🎵" },
@@ -728,10 +731,10 @@ export default function CreateProjectClient() {
                         <p className="font-bold text-green-700 mb-1">掲載者の手数料は完全0円！</p>
                         <p className="text-sm text-green-600">
                           CaramYellは掲載者への手数料を一切いただきません。
-                          出資者側に10%の手数料が上乗せされる仕組みです。
+                          出資者側に{BACKER_FEE_PERCENT}%の手数料が上乗せされる仕組みです。
                         </p>
                         <p className="text-xs text-green-500 mt-1">
-                          例：¥3,000のリターンを選んだ出資者は ¥3,300 をお支払いいただきます
+                          例：¥{FEE_EXAMPLE.baseText}のリターンを選んだ出資者は ¥{FEE_EXAMPLE.totalText} をお支払いいただきます
                         </p>
                       </div>
                     </div>

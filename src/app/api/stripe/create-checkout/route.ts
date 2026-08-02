@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { missingAddressFields } from "@/lib/data/countries";
 import { SITE_URL } from "@/lib/config/site";
 import { checkStripeKey } from "@/lib/stripe/mode";
+import { BACKER_FEE_PERCENT, calcBackerFee } from "@/lib/config/fees";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -11,7 +12,6 @@ function getStripe() {
   });
 }
 
-const FEE_RATE = 0.1;
 
 export async function POST(req: NextRequest) {
   try {
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
       addressMeta.addr_line2 = String(a?.address_line2 || "").slice(0, 500);
     }
 
-    const feeAmount = Math.round(amount * FEE_RATE);
+    const feeAmount = calcBackerFee(amount);
     const totalAmount = amount + feeAmount;
 
     lineItems.push({
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
         currency: "jpy",
         product_data: {
           name: "サービス手数料",
-          description: "CaramYell サービス手数料 (10%)",
+          description: `CaramYell サービス手数料 (${BACKER_FEE_PERCENT}%)`,
         },
         unit_amount: feeAmount,
       },

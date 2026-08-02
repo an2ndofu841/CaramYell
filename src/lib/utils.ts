@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ProjectStats } from "@/types";
+import { calcBackerFee } from "@/lib/config/fees";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -74,7 +75,7 @@ export function calcFee(amount: number): {
   fee: number;
   total: number;
 } {
-  const fee = Math.round(amount * 0.1);
+  const fee = calcBackerFee(amount);
   return {
     base: amount,
     fee,

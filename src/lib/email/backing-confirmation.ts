@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { SITE_NAME, SITE_URL } from "@/lib/config/site";
 import { formatCurrency } from "@/lib/utils";
 import { getCountryFormat } from "@/lib/data/countries";
+import { BACKER_FEE_PERCENT } from "@/lib/config/fees";
 
 export type BackingConfirmationItem = {
   reward_title: string;
@@ -55,7 +56,7 @@ function buildLines(c: BackingConfirmation): [string, string][] {
   if (c.amount > itemsTotal) {
     lines.push(["応援金額", formatCurrency(c.amount - itemsTotal)]);
   }
-  lines.push(["手数料（10%）", formatCurrency(c.feeAmount)]);
+  lines.push([`手数料（${BACKER_FEE_PERCENT}%）`, formatCurrency(c.feeAmount)]);
   return lines;
 }
 
