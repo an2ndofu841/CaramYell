@@ -171,12 +171,19 @@ export async function sendBackingConfirmation(
     return;
   }
 
+  // 件名に入るのは掲載者が付けたタイトル。改行が混ざるとメールヘッダーを
+  // 継ぎ足せる実装があるため、1行に潰してから使う
+  const subjectTitle = confirmation.projectTitle
+    .replace(/[\r\n]+/g, " ")
+    .trim()
+    .slice(0, 120);
+
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send(
     {
       from: `${SITE_NAME} <no-reply@${domain}>`,
       to: [confirmation.to],
-      subject: `ご支援ありがとうございます — ${confirmation.projectTitle}`,
+      subject: `ご支援ありがとうございます — ${subjectTitle}`,
       html: renderHtml(confirmation),
       text: renderText(confirmation),
     },

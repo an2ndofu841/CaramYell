@@ -5,6 +5,7 @@ import { missingAddressFields } from "@/lib/data/countries";
 import { SITE_URL } from "@/lib/config/site";
 import { checkStripeKey } from "@/lib/stripe/mode";
 import { BACKER_FEE_PERCENT, calcBackerFee } from "@/lib/config/fees";
+import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -12,6 +13,42 @@ function getStripe() {
   });
 }
 
+/** 1リターンあたりの購入個数の上限 */
+const MAX_QUANTITY_PER_REWARD = 99;
+/** 1回の支援額の上限（桁の打ち間違いと、極端なセッションの作成を防ぐ） */
+const MAX_AMOUNT = 9_999_999;
+/** 同一IPからのセッション作成回数（10分あたり） */
+const CHECKOUT_LIMIT = 10;
+
+/**
+ * 決済後の戻り先。
+ *
+ * 以前は Origin / Host ヘッダーをそのまま使っていたが、これらは
+ * リクエスト元が自由に名乗れる。偽の Origin でセッションを作って
+ * その URL を支援者に踏ませると、決済完了後に攻撃者のドメインへ
+ * 誘導できてしまうため、こちらが知っている宛先だけを許可する。
+ */
+function resolveReturnOrigin(req: NextRequest): string {
+  const origin = req.headers.get("origin");
+  if (!origin || origin === SITE_URL) return SITE_URL;
+
+  if (
+    process.env.NODE_ENV !== "production" &&
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+  ) {
+    return origin;
+  }
+  // Vercel のプレビュー環境は毎回ドメインが変わる
+  if (
+    process.env.VERCEL_ENV &&
+    process.env.VERCEL_ENV !== "production" &&
+    /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)
+  ) {
+    return origin;
+  }
+
+  return SITE_URL;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +56,17 @@ export async function POST(req: NextRequest) {
     if (!keyCheck.ok) {
       console.error(`Stripe key rejected: ${keyCheck.reason}`);
       return NextResponse.json({ error: keyCheck.reason }, { status: 503 });
+    }
+
+    // 未認証でも支援できる導線なので、連打で Stripe セッションを
+    // 大量生成されないよう IP 単位で頭を押さえる
+    const limit = rateLimit(
+      clientKey(req, "checkout"),
+      CHECKOUT_LIMIT,
+      10 * 60 * 1000
+    );
+    if (!limit.ok) {
+      return tooManyRequests(limit.retryAfter);
     }
 
     const body = await req.json();
@@ -64,10 +112,10 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // プロジェクトは掲載中(active)のみ支援可能
+    // プロジェクトは掲載中(active)かつ募集期間内のみ支援可能
     const { data: project } = await supabase
       .from("projects")
-      .select("id, title, status, allow_free_amount")
+      .select("id, title, status, allow_free_amount, end_date")
       .eq("id", projectId)
       .maybeSingle();
 
@@ -83,10 +131,29 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    // status の切り替えが遅れても、締切を過ぎた決済は受け付けない
+    if (project.end_date && new Date(project.end_date).getTime() < Date.now()) {
+      return NextResponse.json(
+        { error: "このプロジェクトの募集期間は終了しています" },
+        { status: 400 }
+      );
+    }
 
     // 金額はサーバー側でDBのリターン価格から再計算（クライアントの申告額は信用しない）
-    const cart = Array.isArray(items) ? items : [];
-    const rewardIds = cart.map((c) => c.rewardId).filter(Boolean);
+    // 同じリターンが複数行で届くと在庫チェックを行ごとにすり抜けられるため、
+    // ここで rewardId 単位に合算してから数える。
+    const mergedCart = new Map<string, number>();
+    for (const c of Array.isArray(items) ? items : []) {
+      if (!c?.rewardId || typeof c.rewardId !== "string") continue;
+      const qty = Math.floor(Number(c.quantity));
+      if (!Number.isFinite(qty) || qty <= 0) continue;
+      mergedCart.set(c.rewardId, (mergedCart.get(c.rewardId) || 0) + qty);
+    }
+    const cart = [...mergedCart].map(([rewardId, quantity]) => ({
+      rewardId,
+      quantity,
+    }));
+    const rewardIds = cart.map((c) => c.rewardId);
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     let rewardsTotal = 0;
@@ -106,9 +173,19 @@ export async function POST(req: NextRequest) {
 
       for (const c of cart) {
         const r = rewardMap.get(c.rewardId);
-        if (!r) continue;
-        const qty = Math.max(1, Math.floor(Number(c.quantity) || 0));
-        if (qty <= 0) continue;
+        if (!r) {
+          return NextResponse.json(
+            { error: "選択されたリターンが見つかりません" },
+            { status: 400 }
+          );
+        }
+        const qty = c.quantity;
+        if (qty > MAX_QUANTITY_PER_REWARD) {
+          return NextResponse.json(
+            { error: `「${r.title}」は一度に${MAX_QUANTITY_PER_REWARD}個まで購入できます` },
+            { status: 400 }
+          );
+        }
         // 在庫チェック
         if (r.quantity_total != null) {
           const remaining = r.quantity_total - (r.quantity_claimed || 0);
@@ -137,9 +214,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 自由応援額（掲載者が許可している場合のみ）
+    const requestedFree = Math.floor(Number(freeAmount));
     const free =
-      project.allow_free_amount !== false && Number(freeAmount) > 0
-        ? Math.floor(Number(freeAmount))
+      project.allow_free_amount !== false && Number.isFinite(requestedFree) && requestedFree > 0
+        ? requestedFree
         : 0;
     if (free > 0) {
       singleRewardId = ""; // リターン単体ではない
@@ -157,6 +235,12 @@ export async function POST(req: NextRequest) {
     if (amount < 100) {
       return NextResponse.json(
         { error: "応援金額は100円以上で指定してください" },
+        { status: 400 }
+      );
+    }
+    if (amount > MAX_AMOUNT) {
+      return NextResponse.json(
+        { error: `1回の支援は${MAX_AMOUNT.toLocaleString("ja-JP")}円までです` },
         { status: 400 }
       );
     }
@@ -205,15 +289,7 @@ export async function POST(req: NextRequest) {
     });
 
     const stripe = getStripe();
-    // 決済後の戻り先は「実際にアクセスされているURL」を優先する。
-    // 環境変数固定だと、dev サーバーのポートが変わったときや複数ドメインで
-    // 運用したときに存在しないURLへ戻ってしまうため。
-    const origin =
-      req.headers.get("origin") ||
-      (req.headers.get("host")
-        ? `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
-        : null);
-    const appUrl = origin || SITE_URL;
+    const appUrl = resolveReturnOrigin(req);
 
     const session = await stripe.checkout.sessions.create({
       // payment_method_types は指定しない：Stripe ダッシュボードで有効化した
@@ -250,9 +326,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error: unknown) {
+    // 内部エラーの文面をそのまま返すと構成の手掛かりを与えるのでログだけに残す
     console.error("Stripe checkout error:", error);
-    const message =
-      error instanceof Error ? error.message : "決済の作成に失敗しました";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "決済の作成に失敗しました。時間をおいて再度お試しください" },
+      { status: 500 }
+    );
   }
 }

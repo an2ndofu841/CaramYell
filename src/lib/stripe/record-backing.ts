@@ -83,9 +83,9 @@ export async function recordBackingFromSession(
 
   const metadata = session.metadata || {};
   const projectId = metadata.project_id;
-  const amount = parseAmount(metadata.amount);
-  const feeAmount = parseAmount(metadata.fee_amount);
-  const totalAmount = parseAmount(metadata.total_amount) ?? session.amount_total;
+  let amount = parseAmount(metadata.amount);
+  let feeAmount = parseAmount(metadata.fee_amount);
+  let totalAmount = parseAmount(metadata.total_amount) ?? session.amount_total;
   const guestEmail =
     metadata.guest_email ||
     session.customer_details?.email ||
@@ -96,6 +96,19 @@ export async function recordBackingFromSession(
       status: "error",
       message: `セッション ${session.id} の metadata が不足しています`,
     };
+  }
+
+  // metadata は自前のサーバーが書いた値なので通常は一致するが、
+  // 万一ずれていたら Stripe が実際に受け取った額を正とする。
+  // ここを信じ切ると、実入金より多い支援額がプロジェクトの集計に載ってしまう。
+  const collected = session.amount_total;
+  if (collected != null && collected !== totalAmount) {
+    console.error(
+      `セッション ${session.id}: metadata の合計 ${totalAmount} 円が Stripe の徴収額 ${collected} 円と一致しません`
+    );
+    totalAmount = collected;
+    feeAmount = Math.min(feeAmount, collected);
+    amount = collected - feeAmount;
   }
 
   const supabase = getServiceSupabase();

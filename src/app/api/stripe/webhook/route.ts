@@ -60,6 +60,14 @@ export async function POST(req: NextRequest) {
         await handleChargeRefunded(charge);
         break;
       }
+      // チャージバック。資金は Stripe に引き上げられるので、
+      // 集計と発送リストから外すために返金と同じ扱いにする
+      case "charge.dispute.created":
+      case "charge.dispute.closed": {
+        const dispute = event.data.object as Stripe.Dispute;
+        await handleDispute(dispute);
+        break;
+      }
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -119,4 +127,36 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     console.error("Error marking backing refunded:", error);
     throw new Error(error.message);
   }
+}
+
+/**
+ * チャージバック（不服申立）。
+ *
+ * 申立が起きた時点で入金は保留・引き上げになるため、集計に載せたままだと
+ * 掲載者が実際には受け取れない金額を見て発送してしまう。
+ * 掲載者に有利な裁定で終わった場合だけ paid に戻す。
+ */
+async function handleDispute(dispute: Stripe.Dispute) {
+  const paymentIntentId =
+    typeof dispute.payment_intent === "string"
+      ? dispute.payment_intent
+      : dispute.payment_intent?.id;
+  if (!paymentIntentId) return;
+
+  const won = dispute.status === "won";
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("backers")
+    .update({ status: won ? "paid" : "refunded" })
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .eq("status", won ? "refunded" : "paid");
+
+  if (error) {
+    console.error("Error updating disputed backing:", error);
+    throw new Error(error.message);
+  }
+
+  console.warn(
+    `Dispute ${dispute.id} (${dispute.status}) on ${paymentIntentId}: marked as ${won ? "paid" : "refunded"}`
+  );
 }
