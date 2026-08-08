@@ -16,6 +16,7 @@ import {
   Loader2,
   Trash2,
   AlertTriangle,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
@@ -238,6 +239,9 @@ export default function CreatorDashboardClient() {
                       )
                     )
                   : 0;
+                const isEditable = ["draft", "reviewing", "cancelled"].includes(
+                  project.status
+                );
 
                 return (
                   <motion.div
@@ -304,10 +308,24 @@ export default function CreatorDashboardClient() {
                             <ChevronRight size={14} />
                           </button>
                         </Link>
-                        <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors">
-                          <Share2 size={14} />
-                          シェア
-                        </button>
+                        {isEditable ? (
+                          // 未公開のうちは画像・目標金額・リターンまで作成画面で直せる。
+                          // シェアはまだ意味がないので入れ替える。
+                          <Link
+                            href={`/projects/create?id=${project.id}`}
+                            className="flex-1"
+                          >
+                            <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors">
+                              <Pencil size={14} />
+                              編集を続ける
+                            </button>
+                          </Link>
+                        ) : (
+                          <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors">
+                            <Share2 size={14} />
+                            シェア
+                          </button>
+                        )}
                         <button
                           onClick={() => setDeleteTarget(project)}
                           aria-label="削除"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -65,6 +65,23 @@ export default function ProjectDetailClient({
   const [activeTab, setActiveTab] = useState("story");
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [liked, setLiked] = useState(false);
+
+  // メイン画像を先頭にしたひとつながりの並び。同じURLが両方に入っていても1枚に見せる
+  const gallery = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [project.main_image_url, ...(project.images ?? [])].filter(
+            (url): url is string => Boolean(url)
+          )
+        )
+      ),
+    [project.main_image_url, project.images]
+  );
+  const [activeImage, setActiveImage] = useState<string | null>(
+    gallery[0] ?? null
+  );
+
   const stats = calcProjectStats(project);
   const milestones = project.project_milestones ?? [];
   // ネストした select は並び順を保証しないので新着順に並べ直す
@@ -307,10 +324,10 @@ export default function ProjectDetailClient({
           <div className="lg:col-span-2">
             {/* ヒーロー画像 */}
             <AnimatedSection animation="fade-up">
-              <div className="relative aspect-video rounded-4xl overflow-hidden bg-caramel-100 mb-6 shadow-soft-lg">
-                {project.main_image_url ? (
+              <div className="relative aspect-video rounded-4xl overflow-hidden bg-caramel-100 shadow-soft-lg">
+                {activeImage ? (
                   <Image
-                    src={project.main_image_url}
+                    src={activeImage}
                     alt={project.title}
                     fill
                     className="object-cover"
@@ -332,6 +349,33 @@ export default function ProjectDetailClient({
                   </div>
                 )}
               </div>
+
+              {gallery.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-1 mt-3">
+                  {gallery.map((url) => (
+                    <button
+                      key={url}
+                      onClick={() => setActiveImage(url)}
+                      aria-label="画像を表示"
+                      className={cn(
+                        "relative w-20 h-16 flex-shrink-0 rounded-xl overflow-hidden transition-all",
+                        activeImage === url
+                          ? "ring-2 ring-offset-2 ring-caramel-400"
+                          : "opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      <Image
+                        src={url}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="mb-6" />
             </AnimatedSection>
 
             {/* タイトル・メタ情報 */}

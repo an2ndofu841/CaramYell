@@ -77,6 +77,23 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ projects: data, count });
 }
 
+const MAX_GALLERY_IMAGES = 8;
+
+/**
+ * 画像は自分たちのストレージに上げたものだけ受ける。任意の URL を通すと
+ * next/image の許可ホストから外れて表示できないうえ、掲載者が選んだ
+ * 外部サーバーへ閲覧者を取りにいかせることになる。
+ */
+// 末尾スラッシュの有無で判定がずれると、画像が黙って捨てられる
+const STORAGE_PREFIX = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/+$/, "")}/storage/v1/object/public/project-images/`
+  : null;
+
+function ownStorageUrl(value: unknown): string | null {
+  if (!STORAGE_PREFIX || typeof value !== "string") return null;
+  return value.startsWith(STORAGE_PREFIX) ? value : null;
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
 
@@ -113,6 +130,8 @@ export async function POST(req: NextRequest) {
     rewards,
     allowFreeAmount,
     allowComments,
+    mainImageUrl,
+    images,
     mode,
     projectId,
   } = body;
@@ -148,7 +167,7 @@ export async function POST(req: NextRequest) {
     categoryUuid = cat?.id ?? null;
   }
 
-  const fields = {
+  const fields: Record<string, unknown> = {
     title: title || "",
     tagline: tagline || title || "",
     description: description || "",
@@ -162,6 +181,19 @@ export async function POST(req: NextRequest) {
     status,
     submitted_at: isDraft ? null : new Date().toISOString(),
   };
+
+  // 送ってきたときだけ触る。省略された画像を消してしまわないように
+  if (mainImageUrl !== undefined) {
+    fields.main_image_url = ownStorageUrl(mainImageUrl);
+  }
+  if (images !== undefined) {
+    fields.images = Array.isArray(images)
+      ? images
+          .map(ownStorageUrl)
+          .filter((url): url is string => url !== null)
+          .slice(0, MAX_GALLERY_IMAGES)
+      : [];
+  }
 
   let project;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -26,6 +26,7 @@ import {
 import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
+import ProjectImagePicker from "@/components/project/ProjectImagePicker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -66,7 +67,10 @@ type RewardInput = {
 
 export default function CreateProjectClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const draftId = searchParams.get("id");
   const { user, isCreator, loading: authLoading } = useAuth();
+  const [loadingDraft, setLoadingDraft] = useState(Boolean(draftId));
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
@@ -80,6 +84,8 @@ export default function CreateProjectClient() {
     description: "",
     story: "",
     endDate: "",
+    mainImageUrl: null as string | null,
+    images: [] as string[],
     milestones: [
       { amount: 50000, title: "", description: "" },
     ] as MilestoneInput[],
@@ -92,6 +98,76 @@ export default function CreateProjectClient() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
+
+  // ?id= 付きで来たら下書きを読み戻す。これが無いと、画面を離れた時点で
+  // savedProjectId が消え、続きから直せずに作り直しになる。
+  useEffect(() => {
+    if (!draftId || !user) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/dashboard/projects/${draftId}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "下書きを読み込めませんでした");
+        if (cancelled) return;
+
+        const p = data.project;
+        if (!["draft", "reviewing", "cancelled"].includes(p.status)) {
+          // 公開後にこの導線を通すとリターンが作り直しになる
+          toast.error("公開中のプロジェクトは管理画面から編集してください");
+          router.replace(`/dashboard/projects/${p.id}`);
+          return;
+        }
+
+        const milestones = [...(p.project_milestones || [])]
+          .sort((a, b) => a.amount - b.amount)
+          .map((m) => ({
+            amount: m.amount,
+            title: m.title || "",
+            description: m.description || "",
+          }));
+
+        setFormData({
+          title: p.title || "",
+          tagline: p.tagline || "",
+          category: p.categories?.slug || "",
+          description: p.description || "",
+          story: p.story || "",
+          endDate: p.end_date ? p.end_date.slice(0, 10) : "",
+          mainImageUrl: p.main_image_url || null,
+          images: Array.isArray(p.images) ? p.images : [],
+          milestones: milestones.length
+            ? milestones
+            : [{ amount: p.goal_amount || 50000, title: "", description: "" }],
+          allowFreeAmount: p.allow_free_amount !== false,
+          allowComments: p.allow_comments !== false,
+          rewards: (p.rewards || []).map((r: Record<string, unknown>) => ({
+            title: (r.title as string) || "",
+            description: (r.description as string) || "",
+            amount: r.amount as number,
+            rewardType: r.reward_type as RewardInput["rewardType"],
+            needsAddress: r.needs_address !== false,
+            quantityTotal: (r.quantity_total as number) ?? undefined,
+          })),
+        });
+        setSavedProjectId(p.id);
+        setPreviewToken(p.preview_token || null);
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(
+            err instanceof Error ? err.message : "下書きを読み込めませんでした"
+          );
+        }
+      } finally {
+        if (!cancelled) setLoadingDraft(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [draftId, user, router]);
 
   const updateField = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -218,6 +294,8 @@ export default function CreateProjectClient() {
     goalAmount: validMilestones()[0]?.amount ?? 0,
     milestones: validMilestones(),
     endDate: formData.endDate,
+    mainImageUrl: formData.mainImageUrl,
+    images: formData.images,
     allowFreeAmount: formData.allowFreeAmount,
     allowComments: formData.allowComments,
     rewards: formData.rewards,
@@ -402,6 +480,17 @@ export default function CreateProjectClient() {
     );
   }
 
+  if (loadingDraft) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-caramel-200 border-t-candy-pink animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 font-semibold">下書きを読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pt-20 pb-20" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
@@ -560,6 +649,20 @@ export default function CreateProjectClient() {
                 </h2>
 
                 <div className="space-y-6">
+                  <ProjectImagePicker
+                    mainImageUrl={formData.mainImageUrl}
+                    images={formData.images}
+                    onChange={(next) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        mainImageUrl: next.mainImageUrl,
+                        images: next.images,
+                      }))
+                    }
+                  />
+
+                  <div className="h-px bg-caramel-100" />
+
                   {/* AI生成バナー */}
                   <div className="p-4 rounded-2xl flex items-start gap-3"
                     style={{ background: "linear-gradient(135deg, rgba(201, 168, 124, 0.1), rgba(143, 212, 196, 0.1))", border: "1px solid rgba(201, 168, 124, 0.3)" }}>
