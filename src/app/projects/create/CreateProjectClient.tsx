@@ -35,6 +35,9 @@ import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
 
 const FEE_EXAMPLE = feeExample(3000);
 
+/** 第1目標の下限。支援の最低額（¥100）に合わせている */
+const MIN_GOAL_AMOUNT = 100;
+
 const categories = [
   { slug: "music", name: "音楽", icon: "🎵" },
   { slug: "art", name: "アート", icon: "🎨" },
@@ -269,18 +272,42 @@ export default function CreateProjectClient() {
       .filter((m) => Number(m.amount) > 0 && m.title.trim())
       .sort((a, b) => a.amount - b.amount);
 
-  const canGoNext = () => {
+  /**
+   * 「次へ」を押せない理由。押せるときは null。
+   * 無効にするだけだと、金額なのか達成内容なのか分からず手が止まる。
+   */
+  const nextBlockedReason = (): string | null => {
     switch (currentStep) {
-      case 1: return formData.title.length >= 5 && formData.category;
-      case 2: return formData.description.length >= 50;
+      case 1:
+        if (formData.title.trim().length < 5)
+          return "タイトルを5文字以上で入力してください";
+        if (!formData.category) return "カテゴリーを選んでください";
+        return null;
+      case 2:
+        if (formData.description.length < 50)
+          return `プロジェクト概要をあと${
+            50 - formData.description.length
+          }文字入力してください`;
+        return null;
       case 3: {
         const valid = validMilestones();
-        return valid.length >= 1 && valid[0].amount >= 10000 && !!formData.endDate;
+        if (valid.length === 0) {
+          // 金額だけ入れて達成内容が空、というのがいちばん多い
+          return formData.milestones.some((m) => Number(m.amount) > 0)
+            ? "段階ゴールの達成内容を入力してください"
+            : "第1目標の金額と達成内容を入力してください";
+        }
+        if (valid[0].amount < MIN_GOAL_AMOUNT)
+          return `第1目標は¥${MIN_GOAL_AMOUNT.toLocaleString()}以上で設定してください`;
+        if (!formData.endDate) return "掲載終了日を選んでください";
+        return null;
       }
-      case 4: return true;
-      default: return true;
+      default:
+        return null;
     }
   };
+
+  const canGoNext = () => nextBlockedReason() === null;
 
   const buildPayload = (mode: "draft" | "submit") => ({
     mode,
@@ -812,7 +839,8 @@ export default function CreateProjectClient() {
                       段階を追加する
                     </button>
                     <p className="text-xs text-gray-400 mt-2">
-                      第1目標は¥10,000以上で設定してください。
+                      第1目標は¥{MIN_GOAL_AMOUNT.toLocaleString()}
+                      以上。各段階は金額と達成内容の両方が必要です。
                     </p>
                   </div>
 
@@ -1094,6 +1122,15 @@ export default function CreateProjectClient() {
         </AnimatePresence>
 
         {/* ナビゲーションボタン */}
+        {currentStep < steps.length && nextBlockedReason() && (
+          <div className="flex items-start gap-2 mt-6 p-3 rounded-2xl bg-amber-50 border-2 border-amber-100">
+            <Info size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-semibold text-amber-700">
+              {nextBlockedReason()}
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between gap-2 mt-6">
           <Button
             variant="ghost"
