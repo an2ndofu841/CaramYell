@@ -233,6 +233,23 @@ img {
   }
 }
 
+/* 追従サイドバー用の控えめなスクロールバー。既定のままだと
+   ページ本体のスクロールバーと二本並んで目立つ。 */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pt-border, #FFEFD6) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--pt-border, #FFEFD6);
+  border-radius: 9999px;
+}
+
 /* プロジェクト詳細の固定支援バー（本体 72px + 安全域）を避けるための余白。
    layout の main が md 未満で pb-14（56px）を持っているぶんは差し引いてある。 */
 .pb-support-bar {

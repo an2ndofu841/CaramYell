@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 export interface ProgressMarker {
   /** バー上の位置（0〜100%） */
   position: number;
-  /** 目標名などのラベル（バー下に表示） */
-  label?: string;
   /** 達成済みかどうか */
   reached?: boolean;
+  /** 最終目標。ゴールだと分かるように他の段階より強く出す */
+  final?: boolean;
 }
 
 interface ProgressBarProps {
@@ -51,8 +51,6 @@ export default function ProgressBar({
   const clamp = (n: number, min = 0, max = 100) =>
     Math.min(Math.max(n, min), max);
 
-  const hasLabels = !!markers?.some((m) => m.label);
-
   return (
     <div className={cn("relative", className)}>
       <div className="relative">
@@ -67,7 +65,7 @@ export default function ProgressBar({
           />
         </div>
 
-        {/* 段階目標の位置マーカー（縦線） */}
+        {/* 段階目標の位置マーカー（縦線）。最終目標はゴール線として長く太くする */}
         {markers?.map((m, i) => (
           <div
             key={i}
@@ -77,33 +75,16 @@ export default function ProgressBar({
           >
             <div
               className={cn(
-                "w-[3px] h-3.5 rounded-full ring-2 ring-white shadow-sm",
+                // 色はテーマで読み替わる bg-caramel-400 に揃えてあるので、
+                // 最終目標であることは線の太さと高さで示す
+                "rounded-full ring-2 ring-white shadow-sm",
+                m.final ? "w-1 h-5" : "w-[3px] h-3.5",
                 m.reached ? "bg-green-500" : "bg-caramel-400"
               )}
             />
           </div>
         ))}
       </div>
-
-      {/* マーカーのラベル */}
-      {hasLabels && (
-        <div className="relative h-4 mt-1">
-          {markers?.map((m, i) =>
-            m.label ? (
-              <span
-                key={i}
-                className={cn(
-                  "absolute -translate-x-1/2 whitespace-nowrap text-[10px] font-bold",
-                  m.reached ? "text-green-600" : "text-gray-400"
-                )}
-                style={{ left: `${clamp(m.position, 6, 94)}%` }}
-              >
-                {m.label}
-              </span>
-            ) : null
-          )}
-        </div>
-      )}
 
       {showLabel && (
         <div className="flex justify-between mt-1">

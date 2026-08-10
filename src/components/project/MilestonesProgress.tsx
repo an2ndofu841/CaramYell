@@ -49,12 +49,11 @@ export default function MilestonesProgress({
 
       <ProgressBar
         percentage={overallPct}
-        markers={sorted
-          .filter((m) => m.amount < topAmount)
-          .map((m) => ({
-            position: (m.amount / topAmount) * 100,
-            reached: currentAmount >= m.amount,
-          }))}
+        markers={sorted.map((m) => ({
+          position: (m.amount / topAmount) * 100,
+          reached: currentAmount >= m.amount,
+          final: m.amount >= topAmount,
+        }))}
         className="mb-1"
       />
       <div className="flex justify-between text-xs text-gray-400 mb-4">
@@ -63,7 +62,12 @@ export default function MilestonesProgress({
             {formatCurrency(currentAmount)}
           </span>
         </span>
-        <span>{t.common.finalGoal} {formatCurrency(topAmount)}</span>
+        <span>
+          {t.common.finalGoal}{" "}
+          <span className="font-bold text-gray-600">
+            {formatCurrency(topAmount)}
+          </span>
+        </span>
       </div>
 
       <ol className="space-y-2.5">

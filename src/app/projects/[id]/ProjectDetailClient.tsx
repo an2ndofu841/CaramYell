@@ -104,15 +104,14 @@ export default function ProjectDetailClient({
     100
   );
   const allMilestonesAchieved = hasMilestones && !nextMilestone;
-  // 進捗バー上の各段階目標マーカー（最終目標＝バー端は除く）
+  // 進捗バー上の段階目標マーカー。名前はバーの下に並べると隣と重なって
+  // 読めなくなるので出さず、下の段階ゴール一覧に任せている。
   const milestoneMarkers = hasMilestones
-    ? sortedMilestones
-        .filter((m) => m.amount < finalGoal)
-        .map((m) => ({
-          position: (m.amount / finalGoal) * 100,
-          label: m.title,
-          reached: project.current_amount >= m.amount,
-        }))
+    ? sortedMilestones.map((m) => ({
+        position: (m.amount / finalGoal) * 100,
+        reached: project.current_amount >= m.amount,
+        final: m.amount >= finalGoal,
+      }))
     : undefined;
 
   const handleShare = async () => {
@@ -593,7 +592,9 @@ export default function ProjectDetailClient({
 
           {/* サイドバー */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-4">
+            {/* 中身が画面より高いと下端に手が届かなくなるので、
+                サイドバーの上にカーソルがあるときはここだけスクロールさせる */}
+            <div className="sticky top-24 space-y-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto sidebar-scroll lg:pr-2 lg:-mr-2">
               {/* 支援状況・段階ゴール（スマホでは本文より前に出しているのでここでは隠す） */}
               <div className="hidden lg:block space-y-4">
                 <AnimatedSection animation="slide-right">
