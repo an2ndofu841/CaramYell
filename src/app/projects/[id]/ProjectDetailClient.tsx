@@ -220,7 +220,7 @@ export default function ProjectDetailClient({
       {canBack ? (
         <Link href={`/back/${project.slug}`}>
           <Button fullWidth size="lg" className="mb-3">
-            💝 {t.common.backThisProject}
+            {t.common.backThisProject}
           </Button>
         </Link>
       ) : (
@@ -672,7 +672,7 @@ export default function ProjectDetailClient({
               }
             >
               <Button fullWidth size="lg">
-                💝 {t.common.backThisProject}
+                {t.common.backThisProject}
               </Button>
             </Link>
           ) : (

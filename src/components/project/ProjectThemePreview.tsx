@@ -140,7 +140,7 @@ export default function ProjectThemePreview({
                 boxShadow: "0 4px 20px var(--pt-glow)",
               }}
             >
-              💝 このプロジェクトを応援する
+              このプロジェクトを応援する
             </span>
 
             <div className="border-t border-caramel-100 mt-4 pt-3">
