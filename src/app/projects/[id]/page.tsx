@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import ProjectDetailClient from "./ProjectDetailClient";
 import { createClient } from "@/lib/supabase/server";
 import { getMockProjectBySlug } from "@/lib/data/mockProjects";
+import { PUBLIC_PROJECT_COLUMNS } from "@/lib/project/public-columns";
 import { Project } from "@/types";
 
 async function getProject(slugOrId: string): Promise<Project | null> {
@@ -17,7 +18,7 @@ async function getProject(slugOrId: string): Promise<Project | null> {
       .from("projects")
       .select(
         `
-        *,
+        ${PUBLIC_PROJECT_COLUMNS},
         profiles!projects_creator_id_fkey(*),
         categories(*),
         rewards(*),

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveTheme } from "@/lib/theme/project-theme";
 import { resolveFaqs } from "@/lib/project/faqs";
 import { autoSlug, normalizeSlug, slugError } from "@/lib/project/slug";
+import { PUBLIC_PROJECT_COLUMNS } from "@/lib/project/public-columns";
 
 /** slug の UNIQUE 制約に当たったとき Postgres が返すコード */
 const SLUG_TAKEN = "23505";
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
   let query = supabase
     .from("projects")
     .select(`
-      *,
+      ${PUBLIC_PROJECT_COLUMNS},
       profiles!projects_creator_id_fkey(id, display_name, avatar_url),
       categories(id, slug, name_ja, name_en, icon, color),
       project_milestones(id, amount, title, sort_order)

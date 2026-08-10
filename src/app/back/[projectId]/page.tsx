@@ -2,6 +2,7 @@ import BackingClient from "./BackingClient";
 import CampaignEndedNotice from "./CampaignEndedNotice";
 import { createClient } from "@/lib/supabase/server";
 import { isCampaignOver } from "@/lib/date/campaign-end";
+import { PUBLIC_PROJECT_COLUMNS } from "@/lib/project/public-columns";
 import type { Project } from "@/types";
 
 // 掲載中(active)の実プロジェクト＋リターンを取得（見つからなければ null → デモ扱い）
@@ -16,7 +17,7 @@ async function getRealProject(slugOrId: string): Promise<Project | null> {
       .from("projects")
       .select(
         `
-        *,
+        ${PUBLIC_PROJECT_COLUMNS},
         rewards(*),
         categories(*)
       `
