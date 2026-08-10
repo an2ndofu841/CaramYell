@@ -182,17 +182,20 @@ export default function Header() {
             </CreatorOnly>
           </div>
 
-          <button
-            className="md:hidden p-2 rounded-xl hover:bg-caramel-50 transition-colors"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="メニュー"
-          >
-            {isMenuOpen ? (
-              <X size={24} className="text-caramel-600" />
-            ) : (
-              <Menu size={24} className="text-caramel-600" />
-            )}
-          </button>
+          <div className="md:hidden flex items-center gap-1">
+            <LocaleSwitcher compact />
+            <button
+              className="p-2 rounded-xl hover:bg-caramel-50 transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="メニュー"
+            >
+              {isMenuOpen ? (
+                <X size={24} className="text-caramel-600" />
+              ) : (
+                <Menu size={24} className="text-caramel-600" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -4,8 +4,17 @@ import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "./LocaleProvider";
 
-/** 日本語 / English の切り替えボタン */
-export default function LocaleSwitcher({ className }: { className?: string }) {
+/**
+ * 日本語 / English の切り替えボタン。
+ * compact はスマホのヘッダー用で、地球アイコンを省いて幅を詰める。
+ */
+export default function LocaleSwitcher({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const { locale, setLocale } = useLocale();
 
   return (
@@ -17,14 +26,17 @@ export default function LocaleSwitcher({ className }: { className?: string }) {
       role="group"
       aria-label="言語 / Language"
     >
-      <Globe size={13} className="text-gray-400 ml-1.5 flex-shrink-0" />
+      {!compact && (
+        <Globe size={13} className="text-gray-400 ml-1.5 flex-shrink-0" />
+      )}
       {(["ja", "en"] as const).map((l) => (
         <button
           key={l}
           onClick={() => setLocale(l)}
           aria-pressed={locale === l}
           className={cn(
-            "px-2 py-1 rounded-full text-xs font-bold transition-colors",
+            "rounded-full text-xs font-bold transition-colors",
+            compact ? "px-2 py-1.5" : "px-2 py-1",
             locale === l
               ? "text-white"
               : "text-gray-500 hover:text-caramel-600"
