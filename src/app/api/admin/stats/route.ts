@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/api/admin-guard";
 
 export async function GET() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "権限がありません" }, { status: 403 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
+  const { supabase } = guard;
 
   const countBy = async (status: string) => {
     const { count } = await supabase
