@@ -420,6 +420,22 @@ export default function BackingClient({
                             <p className="text-sm font-bold text-gray-800">
                               {pick(reward.title, reward.title_en)}
                             </p>
+                            {pick(reward.description, reward.description_en) && (
+                              <p className="text-xs text-gray-500 leading-relaxed mt-1.5 whitespace-pre-line">
+                                {pick(reward.description, reward.description_en)}
+                              </p>
+                            )}
+                            {reward.estimated_delivery_date && (
+                              <p className="text-xs text-gray-400 mt-2">
+                                📅 {t.backing.estimatedDelivery}:{" "}
+                                {new Date(
+                                  reward.estimated_delivery_date
+                                ).toLocaleDateString(
+                                  locale === "en" ? "en-US" : "ja-JP",
+                                  { year: "numeric", month: "long" }
+                                )}
+                              </p>
+                            )}
                           </div>
 
                           {/* 数量ステッパー */}
