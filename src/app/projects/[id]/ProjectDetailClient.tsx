@@ -436,6 +436,36 @@ export default function ProjectDetailClient({
               )}
             </div>
 
+            {/* リターンは支援導線そのものなので、読み物より先に、
+                かつタブ切り替えに関係なく出す */}
+            {(project.rewards?.length ?? 0) > 0 && (
+              <AnimatedSection animation="fade-up" delay={140}>
+                <section id="rewards" className="mb-10">
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">
+                    {t.detail.tabRewards}
+                  </h2>
+                  <p className="text-sm text-gray-400 font-medium mb-4">
+                    {t.detail.rewardsLead}
+                  </p>
+                  <div className="space-y-4">
+                    {(project.rewards || []).map((reward, i) => (
+                      <RewardCard
+                        key={reward.id}
+                        reward={reward}
+                        selected={selectedReward?.id === reward.id}
+                        onSelect={() =>
+                          setSelectedReward(
+                            selectedReward?.id === reward.id ? null : reward
+                          )
+                        }
+                        index={i}
+                      />
+                    ))}
+                  </div>
+                </section>
+              </AnimatedSection>
+            )}
+
             {/* タブナビ */}
             <AnimatedSection animation="fade-up" delay={150}>
               <div className="flex gap-1 p-1 bg-white rounded-2xl shadow-soft mb-6 overflow-x-auto">
@@ -526,35 +556,6 @@ export default function ProjectDetailClient({
                 </Card>
               )}
             </AnimatedSection>
-
-            {/* リターンは支援導線そのものなので、タブ切り替えに関係なく本文の下に出す */}
-            {(project.rewards?.length ?? 0) > 0 && (
-              <AnimatedSection animation="fade-up" delay={80}>
-                <section id="rewards" className="mt-10">
-                  <h2 className="text-xl font-bold text-gray-800 mb-1">
-                    {t.detail.tabRewards}
-                  </h2>
-                  <p className="text-sm text-gray-400 font-medium mb-4">
-                    {t.detail.rewardsLead}
-                  </p>
-                  <div className="space-y-4">
-                    {(project.rewards || []).map((reward, i) => (
-                      <RewardCard
-                        key={reward.id}
-                        reward={reward}
-                        selected={selectedReward?.id === reward.id}
-                        onSelect={() =>
-                          setSelectedReward(
-                            selectedReward?.id === reward.id ? null : reward
-                          )
-                        }
-                        index={i}
-                      />
-                    ))}
-                  </div>
-                </section>
-              </AnimatedSection>
-            )}
 
             <AnimatedSection animation="fade-up" delay={80}>
               <section className="mt-10">

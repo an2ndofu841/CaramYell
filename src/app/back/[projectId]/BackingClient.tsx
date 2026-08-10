@@ -41,6 +41,9 @@ import {
   missingAddressFields,
 } from "@/lib/data/countries";
 
+/** 1回の応援の下限。決済側（create-checkout）と同じ値にしておく */
+const MIN_AMOUNT = 100;
+
 const steps = [
   { id: 1, key: "stepReward" as const, icon: "🎁" },
   { id: 2, key: "stepInfo" as const, icon: "👤" },
@@ -143,7 +146,7 @@ export default function BackingClient({
   };
 
   const canProceed = () => {
-    if (step === 1) return amount >= 100;
+    if (step === 1) return amount >= MIN_AMOUNT;
     if (step === 2) {
       if (!guestInfo.email) return false;
       if (needsAddress) {
@@ -395,11 +398,19 @@ export default function BackingClient({
                           type="number"
                           value={freeAmount || ""}
                           onChange={(e) => setFreeAmount(parseInt(e.target.value) || 0)}
-                          placeholder="0"
+                          placeholder={String(MIN_AMOUNT)}
                           className="flex-1 min-w-0 py-2 px-3 rounded-xl border-2 border-caramel-200 font-bold text-lg outline-none focus:border-candy-pink"
-                          min={0}
+                          min={MIN_AMOUNT}
                         />
                       </div>
+                      {/* 下限を割っていると「次へ」が押せないので、理由をその場に出す */}
+                      {rewardsTotal === 0 &&
+                        effectiveFree > 0 &&
+                        effectiveFree < MIN_AMOUNT && (
+                          <p className="text-xs font-semibold text-candy-pink mt-2">
+                            {t.backing.freeAmountMin}
+                          </p>
+                        )}
                     </div>
                   )}
                 </Card>
