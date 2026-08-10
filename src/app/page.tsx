@@ -2,7 +2,6 @@ import HeroSection from "@/components/home/HeroSection";
 import FeaturedProjectsSection from "@/components/home/FeaturedProjectsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import StatsSection from "@/components/home/StatsSection";
 
 export default function HomePage() {
   return (
@@ -11,7 +10,6 @@ export default function HomePage() {
       <FeaturedProjectsSection />
       <HowItWorksSection />
       <FeaturesSection />
-      <StatsSection />
     </div>
   );
 }
