@@ -12,7 +12,9 @@ const csp = [
   "font-src 'self' https://fonts.gstatic.com data:",
   // アイコンは掲載者が任意の URL を指定できる
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+  // ブラウザから直接叩く外部 API はここに書かないと本番だけ黙って失敗する。
+  // zipcloud は住所欄の郵便番号検索。
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://zipcloud.ibsnet.co.jp",
   "frame-src https://js.stripe.com https://hooks.stripe.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
