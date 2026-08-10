@@ -234,7 +234,7 @@ export default function BackingClient({
   };
 
   return (
-    <div className="min-h-screen pt-20 pb-20" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
+    <div className="min-h-screen pt-20 pb-tabbar" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* 戻るリンク */}
         <Link
@@ -387,6 +387,8 @@ export default function BackingClient({
                           </p>
                         </div>
                       </div>
+                      {/* number 入力は既定の幅を持ち、flex の min-width:auto では
+                          縮まないので min-w-0 が無いとカードの外へはみ出す */}
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-gray-500">¥</span>
                         <input
@@ -394,7 +396,7 @@ export default function BackingClient({
                           value={freeAmount || ""}
                           onChange={(e) => setFreeAmount(parseInt(e.target.value) || 0)}
                           placeholder="0"
-                          className="flex-1 py-2 px-3 rounded-xl border-2 border-caramel-200 font-bold text-lg outline-none focus:border-candy-pink"
+                          className="flex-1 min-w-0 py-2 px-3 rounded-xl border-2 border-caramel-200 font-bold text-lg outline-none focus:border-candy-pink"
                           min={0}
                         />
                       </div>

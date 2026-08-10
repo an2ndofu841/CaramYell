@@ -324,12 +324,13 @@ export default function ProjectDetailClient({
           <div className="lg:col-span-2">
             {/* ヒーロー画像 */}
             <AnimatedSection animation="fade-up">
-              <div className="relative aspect-video rounded-4xl overflow-hidden bg-caramel-100 shadow-soft-lg">
+              <div className="relative aspect-square rounded-4xl overflow-hidden bg-caramel-100 shadow-soft-lg">
                 {activeImage ? (
                   <Image
                     src={activeImage}
                     alt={project.title}
                     fill
+                    sizes="(max-width: 1024px) 100vw, 800px"
                     className="object-cover"
                     priority
                   />
@@ -358,7 +359,7 @@ export default function ProjectDetailClient({
                       onClick={() => setActiveImage(url)}
                       aria-label="画像を表示"
                       className={cn(
-                        "relative w-20 h-16 flex-shrink-0 rounded-xl overflow-hidden transition-all",
+                        "relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden transition-all",
                         activeImage === url
                           ? "ring-2 ring-offset-2 ring-caramel-400"
                           : "opacity-60 hover:opacity-100"

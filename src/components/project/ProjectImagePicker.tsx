@@ -135,7 +135,7 @@ export default function ProjectImagePicker({
         <p className="text-sm font-semibold text-gray-700 mb-2">
           メイン画像
           <span className="text-xs text-gray-400 font-normal ml-1">
-            （一覧やSNSでいちばん目に入る1枚）
+            （正方形で表示されます）
           </span>
         </p>
 
@@ -148,7 +148,7 @@ export default function ProjectImagePicker({
         />
 
         {mainImageUrl ? (
-          <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border-2 border-caramel-100 group">
+          <div className="relative aspect-square rounded-2xl overflow-hidden border-2 border-caramel-100 group">
             <Image
               src={mainImageUrl}
               alt="メイン画像"
@@ -178,7 +178,7 @@ export default function ProjectImagePicker({
             type="button"
             onClick={() => mainInput.current?.click()}
             disabled={busy === "main"}
-            className="w-full aspect-[16/9] rounded-2xl border-2 border-dashed border-caramel-200 hover:border-candy-pink hover:bg-caramel-50/50 transition-colors flex flex-col items-center justify-center gap-2 text-gray-400 disabled:opacity-60"
+            className="w-full aspect-square rounded-2xl border-2 border-dashed border-caramel-200 hover:border-candy-pink hover:bg-caramel-50/50 transition-colors flex flex-col items-center justify-center gap-2 text-gray-400 disabled:opacity-60"
           >
             {busy === "main" ? (
               <Loader2 size={28} className="animate-spin" />

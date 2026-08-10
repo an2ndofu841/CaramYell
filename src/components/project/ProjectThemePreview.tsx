@@ -37,7 +37,7 @@ export default function ProjectThemePreview({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 space-y-4">
           <div
-            className="relative aspect-video rounded-4xl overflow-hidden bg-caramel-100 shadow-soft-lg"
+            className="relative aspect-square rounded-4xl overflow-hidden bg-caramel-100 shadow-soft-lg"
             style={
               imageUrl
                 ? {
