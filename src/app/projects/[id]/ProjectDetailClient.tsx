@@ -318,7 +318,7 @@ export default function ProjectDetailClient({
         </Link>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-support-bar">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* メインコンテンツ */}
           <div className="lg:col-span-2">
@@ -646,6 +646,30 @@ export default function ProjectDetailClient({
               </AnimatedSection>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 支援バー。md 未満ではグローバルのタブバーを引っ込めてここに差し替えている
+          （MobileTabBar 側で詳細ページを除外）。読み進めた先でも支援に入れるように。 */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-caramel-100 tabbar-safe">
+        <div className="px-4 py-3">
+          {isPreview ? (
+            <Button fullWidth size="lg" disabled>
+              {t.detail.previewDisabled}
+            </Button>
+          ) : (
+            <Link
+              href={
+                selectedReward
+                  ? `/back/${project.slug}?reward=${selectedReward.id}`
+                  : `/back/${project.slug}`
+              }
+            >
+              <Button fullWidth size="lg">
+                💝 {t.common.backThisProject}
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </ProjectThemeScope>

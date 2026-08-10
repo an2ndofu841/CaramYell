@@ -26,6 +26,13 @@ export default function MobileTabBar() {
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href) && pathname !== "/projects/create";
 
+  // プロジェクト詳細では、この位置を支援ボタンに明け渡す。2段になると
+  // 画面をかなり食うので、いちばん取ってほしい行動だけを残す。
+  // /projects（一覧）と /projects/create は対象外。
+  const isProjectDetail =
+    /^\/projects\/[^/]+/.test(pathname) && pathname !== "/projects/create";
+  if (isProjectDetail) return null;
+
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-caramel-100 tabbar-safe"

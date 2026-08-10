@@ -233,6 +233,17 @@ img {
   }
 }
 
+/* プロジェクト詳細の固定支援バー（本体 72px + 安全域）を避けるための余白。
+   layout の main が md 未満で pb-14（56px）を持っているぶんは差し引いてある。 */
+.pb-support-bar {
+  padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .pb-support-bar {
+    padding-bottom: 5rem;
+  }
+}
+
 /* ============ プロジェクトページのデザインテーマ ============
    掲載者が選んだテーマは --pt-* としてラッパーに流し込まれる。
    ページ本体は既存のブランド色クラスで書かれているので、この
