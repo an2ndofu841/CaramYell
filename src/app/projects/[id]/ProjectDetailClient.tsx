@@ -121,6 +121,16 @@ export default function ProjectDetailClient({
       }))
     : undefined;
 
+  // 掲載者が書いた質問を先に出す。手数料や決済方法といった共通の説明は
+  // 掲載者側で消せると支援者が困るので、その下に必ず残す。
+  const faqItems = [
+    ...(project.faqs ?? []).map((f) => ({
+      q: pick(f.q, f.q_en),
+      a: pick(f.a, f.a_en),
+    })),
+    ...t.detail.faqItems,
+  ];
+
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
@@ -574,9 +584,9 @@ export default function ProjectDetailClient({
                   {t.detail.faqTitle}
                 </h2>
                 <div className="space-y-2">
-                  {t.detail.faqItems.map((item) => (
+                  {faqItems.map((item, i) => (
                     <details
-                      key={item.q}
+                      key={`${i}-${item.q}`}
                       className="group rounded-2xl bg-white shadow-soft"
                     >
                       <summary className="flex items-center justify-between gap-3 p-4 cursor-pointer list-none text-sm font-semibold text-gray-800">
@@ -586,7 +596,7 @@ export default function ProjectDetailClient({
                           className="flex-shrink-0 text-gray-400 transition-transform duration-200 group-open:rotate-180"
                         />
                       </summary>
-                      <p className="px-4 pb-4 text-sm text-gray-500 leading-relaxed">
+                      <p className="px-4 pb-4 text-sm text-gray-500 leading-relaxed whitespace-pre-wrap">
                         {item.a}
                       </p>
                     </details>

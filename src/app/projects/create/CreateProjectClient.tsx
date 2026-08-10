@@ -29,13 +29,14 @@ import Card from "@/components/ui/Card";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProjectImagePicker from "@/components/project/ProjectImagePicker";
 import EnglishPanel from "@/components/project/EnglishPanel";
+import FaqEditor from "@/components/project/FaqEditor";
 import ThemeEditor from "@/components/project/ThemeEditor";
 import { DEFAULT_THEME, resolveTheme } from "@/lib/theme/project-theme";
 import { jstDateAfterDays } from "@/lib/date/campaign-end";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import type { MilestoneInput } from "@/types";
+import type { MilestoneInput, ProjectFaq } from "@/types";
 import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
 
 const FEE_EXAMPLE = feeExample(3000);
@@ -109,6 +110,7 @@ export default function CreateProjectClient() {
     allowFreeAmount: true,
     allowComments: true,
     rewards: [] as RewardInput[],
+    faqs: [] as ProjectFaq[],
     theme: { ...DEFAULT_THEME },
   });
 
@@ -164,6 +166,7 @@ export default function CreateProjectClient() {
             : [{ amount: p.goal_amount || 50000, title: "", description: "" }],
           allowFreeAmount: p.allow_free_amount !== false,
           allowComments: p.allow_comments !== false,
+          faqs: Array.isArray(p.faqs) ? p.faqs : [],
           theme: resolveTheme(p.theme),
           rewards: (p.rewards || []).map((r: Record<string, unknown>) => ({
             title: (r.title as string) || "",
@@ -354,6 +357,7 @@ export default function CreateProjectClient() {
     allowFreeAmount: formData.allowFreeAmount,
     allowComments: formData.allowComments,
     rewards: formData.rewards,
+    faqs: formData.faqs,
     theme: formData.theme,
   });
 
@@ -817,6 +821,13 @@ export default function CreateProjectClient() {
                       allowImages
                     />
                   </EnglishPanel>
+
+                  <div className="pt-2 border-t border-caramel-100">
+                    <FaqEditor
+                      items={formData.faqs}
+                      onChange={(faqs) => updateField("faqs", faqs)}
+                    />
+                  </div>
                 </div>
               </Card>
             )}

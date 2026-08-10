@@ -4,6 +4,7 @@ import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme } from "@/lib/theme/project-theme";
+import { resolveFaqs } from "@/lib/project/faqs";
 
 /**
  * or() は文字列で組み立てるため、値に , や ) が混ざると別の条件として
@@ -154,6 +155,7 @@ export async function POST(req: NextRequest) {
     endDate,
     milestones,
     rewards,
+    faqs,
     allowFreeAmount,
     allowComments,
     mainImageUrl,
@@ -207,6 +209,7 @@ export async function POST(req: NextRequest) {
     tagline_en: blankToNull(taglineEn),
     description_en: blankToNull(descriptionEn),
     story_en: blankToNull(storyEn),
+    faqs: resolveFaqs(faqs),
     end_date: campaignEndFromInput(endDate),
     allow_free_amount: allowFreeAmount !== false,
     allow_comments: allowComments !== false,

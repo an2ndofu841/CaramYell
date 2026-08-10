@@ -4,6 +4,7 @@ import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
+import { resolveFaqs } from "@/lib/project/faqs";
 import { resolveTheme } from "@/lib/theme/project-theme";
 
 export async function GET(
@@ -117,6 +118,7 @@ export async function PUT(
     storyEn,
     goalAmount,
     endDate,
+    faqs,
     theme,
   } = body;
 
@@ -151,6 +153,7 @@ export async function PUT(
   if (storyEn !== undefined) updateData.story_en = blankToNull(storyEn);
   if (goalAmount !== undefined) updateData.goal_amount = goalAmount;
   if (endDate !== undefined) updateData.end_date = campaignEndFromInput(endDate);
+  if (faqs !== undefined) updateData.faqs = resolveFaqs(faqs);
   // null は「既定テーマに戻す」の意味なのでそのまま通す
   if (theme !== undefined) {
     updateData.theme = theme === null ? null : resolveTheme(theme);

@@ -41,6 +41,7 @@ import Markdown from "@/components/ui/Markdown";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProgressBar from "@/components/ui/ProgressBar";
 import EnglishPanel from "@/components/project/EnglishPanel";
+import FaqEditor from "@/components/project/FaqEditor";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import {
   formatCurrency,
@@ -418,6 +419,7 @@ function EditTab({
     taglineEn: project.tagline_en || "",
     descriptionEn: project.description_en || "",
     storyEn: project.story_en || "",
+    faqs: Array.isArray(project.faqs) ? project.faqs : [],
   });
   const [saving, setSaving] = useState(false);
 
@@ -521,6 +523,13 @@ function EditTab({
                 allowImages
               />
             </EnglishPanel>
+
+            <div className="pt-2 border-t border-caramel-100">
+              <FaqEditor
+                items={form.faqs}
+                onChange={(faqs) => setForm((p) => ({ ...p, faqs }))}
+              />
+            </div>
 
             <Button
               onClick={handleSave}

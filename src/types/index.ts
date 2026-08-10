@@ -49,6 +49,14 @@ export interface Category {
   sort_order: number;
 }
 
+/** 掲載者が書くよくある質問の1件。英語は任意で、空なら日本語を出す */
+export interface ProjectFaq {
+  q: string;
+  a: string;
+  q_en?: string;
+  a_en?: string;
+}
+
 export interface Project {
   id: string;
   creator_id?: string;
@@ -82,6 +90,8 @@ export interface Project {
   preview_token?: string;
   /** ページの配色・フォント設定。未設定なら既定テーマ */
   theme?: ProjectTheme | null;
+  /** 掲載者が書いたよくある質問。共通FAQの上に並ぶ */
+  faqs?: ProjectFaq[] | null;
   share_count: number;
   created_at: string;
   updated_at: string;

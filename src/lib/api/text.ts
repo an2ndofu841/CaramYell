@@ -14,7 +14,6 @@ export const TEXT_LIMITS = {
   updateContent: 20000,
 } as const;
 
-/** 上限を超えている項目があれば、そのまま返せる日本語のメッセージを返す */
 /** 任意入力の空欄は "" ではなく null で保存する（未入力と空文字を分けない） */
 export function blankToNull(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -22,6 +21,7 @@ export function blankToNull(value: unknown): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/** 上限を超えている項目があれば、そのまま返せる日本語のメッセージを返す */
 export function lengthError(
   fields: { label: string; value: unknown; max: number }[]
 ): string | null {
