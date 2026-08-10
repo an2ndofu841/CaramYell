@@ -140,7 +140,7 @@ export const dictionaries = {
       total: "お支払い合計",
       freeSupport: "自由応援",
       yourInfo: "あなたの情報",
-      yourInfoNote: "アカウント登録は不要です。メールアドレスだけでOK ✨",
+      yourInfoNote: "アカウント登録は任意です。メールアドレスだけでも支援できます ✨",
       nickname: "ニックネーム（任意）",
       nicknameHint: "リターンに名前を使用する場合に記入してください",
       email: "メールアドレス ※必須",
@@ -148,6 +148,17 @@ export const dictionaries = {
       messageLabel: "応援メッセージ（任意）",
       messagePlaceholder: "クリエイターへの応援メッセージを書いてください",
       anonymous: "匿名で応援する（支援者一覧に名前を表示しない）",
+      createAccount: "このメールアドレスでアカウントも作成する（任意）",
+      createAccountNote:
+        "支援履歴の確認や、支援者限定の活動報告が見られるようになります。作らなくても支援はできます。",
+      passwordHint: "8文字以上。ログインに使います",
+      accountCreated: "アカウントを作成しました",
+      accountConfirmSent:
+        "アカウントを作成しました。確認メールを送ったのでご確認ください",
+      accountExists:
+        "このメールアドレスは登録済みです。支援はこのまま進められます",
+      accountEmailChanged:
+        "アカウントは {email} で作成済みです。支援の連絡先を変えるとログイン用のアドレスとは別になります",
       shippingTitle: "配送先住所（物品リターンのため必須）",
       country: "お届け先の国・地域",
       recipientName: "お届け先氏名",
@@ -335,7 +346,7 @@ export const dictionaries = {
       total: "Total",
       freeSupport: "Free support",
       yourInfo: "Your details",
-      yourInfoNote: "No account needed — just your email ✨",
+      yourInfoNote: "An account is optional — your email alone is enough ✨",
       nickname: "Nickname (optional)",
       nicknameHint: "Used if your name appears with the reward",
       email: "Email (required)",
@@ -343,6 +354,17 @@ export const dictionaries = {
       messageLabel: "Message (optional)",
       messagePlaceholder: "Write a message to the creator",
       anonymous: "Support anonymously (hide my name from the backer list)",
+      createAccount: "Also create an account with this email (optional)",
+      createAccountNote:
+        "Lets you view your backing history and backers-only updates. You can back this project without one.",
+      passwordHint: "8+ characters. Used to log in",
+      accountCreated: "Your account is ready",
+      accountConfirmSent:
+        "Account created. Check your inbox for the confirmation email",
+      accountExists:
+        "This email is already registered. You can continue backing as usual",
+      accountEmailChanged:
+        "Your account was created with {email}. Changing the contact email here means it differs from your login address",
       shippingTitle: "Shipping address (required for physical rewards)",
       country: "Country / region",
       recipientName: "Recipient name",

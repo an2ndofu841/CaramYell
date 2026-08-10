@@ -22,6 +22,8 @@ import {
   CreditCard,
   Smartphone as ApplePay,
   Globe,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
@@ -33,6 +35,7 @@ import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Reward, Project } from "@/types";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useAuth } from "@/hooks/useAuth";
 import {
   COUNTRIES,
   DEFAULT_COUNTRY,
@@ -43,6 +46,9 @@ import {
 
 /** 1回の応援の下限。決済側（create-checkout）と同じ値にしておく */
 const MIN_AMOUNT = 100;
+
+/** 会員登録のパスワード下限。ログイン画面と同じ値にしておく */
+const MIN_PASSWORD = 8;
 
 const steps = [
   { id: 1, key: "stepReward" as const, icon: "🎁" },
@@ -71,6 +77,7 @@ export default function BackingClient({
 }) {
   // 実プロジェクトがあれば実データ＋実決済、なければモック＋デモ決済
   const { t, locale, pick } = useLocale();
+  const { user, signUpWithEmail } = useAuth();
   const isReal = !!realProject;
   const project =
     realProject || getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
@@ -86,6 +93,14 @@ export default function BackingClient({
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
+
+  // ついでの会員登録（任意）。支援履歴や支援者限定の活動報告を見るのに使う
+  const [wantsAccount, setWantsAccount] = useState(false);
+  const [accountPassword, setAccountPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signingUp, setSigningUp] = useState(false);
+  /** 登録が完了したメールアドレス。同じ内容で二重に登録しにいかないための印 */
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const [guestInfo, setGuestInfo] = useState({
     nickname: "",
@@ -108,6 +123,13 @@ export default function BackingClient({
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
+
+  // ログイン中ならメールアドレスは入れ直させない。
+  // このアドレスで支援が記録されると履歴にも自動で載る。
+  useEffect(() => {
+    if (!user?.email) return;
+    setGuestInfo((p) => (p.email ? p : { ...p, email: user.email as string }));
+  }, [user?.email]);
 
   // 在庫上限（設定があれば残数まで）
   const remainingStock = (r: Reward) =>
@@ -145,10 +167,58 @@ export default function BackingClient({
       : 0,
   };
 
+  /** 会員登録を選んでいるのにパスワードが足りていない状態 */
+  const needsAccountPassword =
+    wantsAccount &&
+    registeredEmail !== guestInfo.email &&
+    accountPassword.length < MIN_PASSWORD;
+
+  /**
+   * 「次へ」を押した時点でアカウントを作る。決済の直前だと確認メールの案内が
+   * Stripe への遷移で流れてしまうので、まだ画面に留まるここで済ませる。
+   * 登録に失敗しても支援自体は続けられるようにしておく。
+   */
+  const handleNext = async () => {
+    if (step !== 2 || !wantsAccount || registeredEmail === guestInfo.email) {
+      setStep((s) => s + 1);
+      return;
+    }
+
+    setSigningUp(true);
+    try {
+      const outcome = await signUpWithEmail(guestInfo.email, accountPassword);
+      switch (outcome.result) {
+        case "signed_in":
+        case "confirm_email":
+          setRegisteredEmail(guestInfo.email);
+          setAccountPassword("");
+          toast.success(
+            outcome.result === "signed_in"
+              ? t.backing.accountCreated
+              : t.backing.accountConfirmSent
+          );
+          break;
+        case "already_registered":
+          // 登録済みでも支援は止めない。ログインすれば履歴に並ぶ
+          setWantsAccount(false);
+          setAccountPassword("");
+          toast.error(t.backing.accountExists);
+          break;
+        case "error":
+          toast.error(outcome.message);
+          return;
+      }
+      setStep((s) => s + 1);
+    } finally {
+      setSigningUp(false);
+    }
+  };
+
   const canProceed = () => {
     if (step === 1) return amount >= MIN_AMOUNT;
     if (step === 2) {
       if (!guestInfo.email) return false;
+      if (needsAccountPassword) return false;
       if (needsAddress) {
         if (!guestInfo.address.recipient_name?.trim()) return false;
         return (
@@ -509,6 +579,83 @@ export default function BackingClient({
                     </span>
                   </label>
 
+                  {/* ついでの会員登録。支援自体はゲストのままでもできる */}
+                  {!user && (
+                    <div className="pt-3 border-t border-caramel-100">
+                      {registeredEmail ? (
+                        <div className="flex items-start gap-2 rounded-2xl bg-green-50 border-2 border-green-100 px-4 py-3">
+                          <Check
+                            size={16}
+                            className="text-green-500 flex-shrink-0 mt-0.5"
+                          />
+                          <div>
+                            <p className="text-sm font-bold text-gray-700">
+                              {t.backing.accountConfirmSent}
+                            </p>
+                            {registeredEmail !== guestInfo.email && (
+                              <p className="text-xs text-candy-pink font-semibold mt-1">
+                                {t.backing.accountEmailChanged.replace(
+                                  "{email}",
+                                  registeredEmail
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <label className="flex items-start gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={wantsAccount}
+                              onChange={(e) =>
+                                setWantsAccount(e.target.checked)
+                              }
+                              className="rounded mt-0.5"
+                            />
+                            <span>
+                              <span className="block text-sm text-gray-700 font-bold">
+                                {t.backing.createAccount}
+                              </span>
+                              <span className="block text-xs text-gray-500 mt-0.5 leading-relaxed">
+                                {t.backing.createAccountNote}
+                              </span>
+                            </span>
+                          </label>
+
+                          {wantsAccount && (
+                            <div className="mt-3 relative">
+                              <Input
+                                label={t.auth.password}
+                                type={showPassword ? "text" : "password"}
+                                placeholder={t.auth.passwordPlaceholder}
+                                value={accountPassword}
+                                onChange={(e) =>
+                                  setAccountPassword(e.target.value)
+                                }
+                                icon={<Lock size={16} />}
+                                fullWidth
+                                hint={t.backing.passwordHint}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword((v) => !v)}
+                                aria-label={t.auth.password}
+                                className="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600"
+                              >
+                                {showPassword ? (
+                                  <EyeOff size={16} />
+                                ) : (
+                                  <Eye size={16} />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   {/* 住所入力（物品リターンを含む場合） */}
                   {needsAddress && (
                     <div className="space-y-3 pt-2 border-t border-caramel-100">
@@ -813,8 +960,9 @@ export default function BackingClient({
               <Button
                 icon={<ChevronRight size={18} />}
                 iconPosition="right"
-                onClick={() => setStep(s => s + 1)}
+                onClick={handleNext}
                 disabled={!canProceed()}
+                loading={signingUp}
               >
                 {t.common.next}
               </Button>
