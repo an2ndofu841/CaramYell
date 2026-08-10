@@ -85,7 +85,6 @@ export default function Footer() {
                 <FooterLink href="/faq">{t.footer.faq}</FooterLink>
                 <FooterLink href="/guide">{t.footer.guide}</FooterLink>
                 <FooterLink href="/contact">{t.footer.contact}</FooterLink>
-                <FooterLink href="/security">{t.footer.security}</FooterLink>
               </ul>
             </div>
 

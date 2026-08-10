@@ -10,7 +10,6 @@ const staticPaths = [
   { path: "/guide", priority: 0.6 },
   { path: "/faq", priority: 0.6 },
   { path: "/contact", priority: 0.5 },
-  { path: "/security", priority: 0.4 },
   { path: "/terms", priority: 0.3 },
   { path: "/privacy", priority: 0.3 },
   { path: "/commercial", priority: 0.3 },

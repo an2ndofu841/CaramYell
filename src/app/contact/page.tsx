@@ -122,14 +122,8 @@ export default function ContactPage() {
               脆弱性を見つけた方へ
             </h2>
             <p className="text-xs text-gray-500 leading-relaxed">
-              {"セキュリティ上の問題を発見された場合は、種別で「脆弱性の報告」を選んでご連絡ください。報告にあたってのお願いは、セキュリティのページに記載しています。"}
+              {"セキュリティ上の問題を発見された場合は、種別で「脆弱性の報告」を選んでご連絡ください。詳細が公開されると悪用のおそれがあるため、修正が完了するまで内容の公表はお控えいただけますと助かります。"}
             </p>
-            <Link
-              href="/security"
-              className="inline-block text-xs font-bold text-caramel-600 hover:underline mt-2"
-            >
-              セキュリティ →
-            </Link>
           </div>
 
           <div className="rounded-3xl border-2 border-caramel-100 bg-white p-6">

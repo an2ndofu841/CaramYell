@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import LegalPageLayout, {
   Article,
@@ -240,13 +239,6 @@ export default function PrivacyPage() {
         <Article no="9" title="安全管理措置">
           <p>
             {"当社は、個人情報の漏えい、滅失またはき損の防止のため、通信の暗号化、アクセス権限の限定、運営アカウントへの二段階認証の必須化、データベースへのアクセス制御などの措置を講じています。"}
-          </p>
-          <p>
-            {"具体的な取り組みは"}
-            <Link href="/security" className="font-bold text-caramel-600 hover:underline">
-              セキュリティ
-            </Link>
-            {"のページで説明しています。"}
           </p>
         </Article>
 

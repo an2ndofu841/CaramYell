@@ -87,7 +87,6 @@ const GROUPS: FaqGroup[] = [
       {
         q: "クレジットカードの情報は保存されますか？",
         a: "カード番号などの決済情報は Stripe の決済画面で直接入力していただくもので、CaramYell のサーバーには送信も保存もされません。",
-        link: { href: "/security", label: "セキュリティへの取り組み" },
       },
     ],
   },
