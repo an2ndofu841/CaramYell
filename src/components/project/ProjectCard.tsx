@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Users } from "lucide-react";
 import { Project } from "@/types";
-import { calcProjectStats, formatCurrency, formatNumber } from "@/lib/utils";
+import { calcProjectStats, cn, formatCurrency, formatNumber } from "@/lib/utils";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Badge from "@/components/ui/Badge";
 import Confetti from "@/components/animations/Confetti";
@@ -58,12 +58,13 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
 
         {/* 画像 */}
         <div className="relative overflow-hidden bg-gradient-to-br from-caramel-100 to-apricot/40">
-          <div className={featured ? "aspect-[16/9]" : "aspect-[4/3]"}>
+          <div className={cn("relative", featured ? "aspect-[16/9]" : "aspect-[4/3]")}>
             {project.main_image_url ? (
               <Image
                 src={project.main_image_url}
                 alt={project.title}
                 fill
+                sizes={featured ? "(max-width: 1024px) 100vw, 800px" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             ) : (
