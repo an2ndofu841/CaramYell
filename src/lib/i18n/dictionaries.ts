@@ -5,6 +5,7 @@
  */
 
 import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
+import { paymentMethodList } from "@/lib/config/payment-methods";
 
 export type Locale = "ja" | "en";
 
@@ -110,7 +111,7 @@ export const dictionaries = {
         },
         {
           q: "どんな決済方法が使えますか？",
-          a: "クレジットカード・Apple Pay・Link に対応しています。海外発行カードでの支援、海外へのお届けにも対応しています。",
+          a: `${paymentMethodList("ja")} に対応しています。海外発行カードでの支援、海外へのお届けにも対応しています。`,
         },
         {
           q: "リターンはいつ届きますか？",
@@ -164,7 +165,7 @@ export const dictionaries = {
       recipientName: "お届け先氏名",
       paymentTitle: "お支払い方法",
       paymentNote: "次の画面（Stripe）でお支払い方法を選べます",
-      paymentNote2: "クレジットカード・Apple Pay・Link などがご利用いただけます。",
+      paymentNote2: `${paymentMethodList("ja")} などがご利用いただけます。`,
       secureNote:
         "Stripeによる安全な決済。カード情報はCaramYellには保存されません。",
       confirmTitle: "お支払い内容の確認",
@@ -317,7 +318,7 @@ export const dictionaries = {
         },
         {
           q: "Which payment methods are supported?",
-          a: "Credit cards, Apple Pay and Link. Internationally issued cards and worldwide delivery are supported.",
+          a: `${paymentMethodList("en")}. Internationally issued cards and worldwide delivery are supported.`,
         },
         {
           q: "When will rewards be delivered?",
@@ -370,7 +371,7 @@ export const dictionaries = {
       recipientName: "Recipient name",
       paymentTitle: "Payment method",
       paymentNote: "You'll choose your payment method on the next screen (Stripe)",
-      paymentNote2: "Credit card, Apple Pay and Link are available.",
+      paymentNote2: `${paymentMethodList("en")} are available.`,
       secureNote:
         "Secure payment by Stripe. CaramYell never stores your card details.",
       confirmTitle: "Order summary",

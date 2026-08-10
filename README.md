@@ -9,7 +9,7 @@
 - 🎁 **アカウント不要で出資** - メールアドレスのみでOK（デジタルリターンは住所も不要）
 - 🤖 **AIがプロジェクト作りをサポート** - 説明文・タグラインをAI生成
 - 📱 **デジタルリターン対応** - 限定ボイス・デジタルチェキ・限定動画URLなど
-- 🌍 **海外決済対応** - Apple Pay / Google Pay / PayPal / クレジットカード
+- 🌍 **多様な決済手段** - クレジットカード / Apple Pay / Google Pay / Link
 - 🔤 **AI自動翻訳** - OpenAIによる多言語対応
 
 ## 🛠️ 技術スタック
@@ -19,7 +19,7 @@
 | フロントエンド | Next.js 15 (App Router) |
 | スタイリング | Tailwind CSS + Framer Motion |
 | バックエンド | Supabase (PostgreSQL + Auth + Storage) |
-| 決済 | Stripe (Apple Pay / Google Pay / PayPal) |
+| 決済 | Stripe Checkout (カード / Apple Pay / Google Pay / Link) |
 | AI | OpenAI API (GPT-4o-mini) |
 | デプロイ | Vercel |
 
@@ -76,6 +76,33 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
    - `payment_intent.payment_failed`（決済失敗）
    - `charge.refunded`（返金。これが無いと返金してもプロジェクトの集計金額が減らない）
 4. 作成したエンドポイントの署名シークレット（`whsec_...`）を `STRIPE_WEBHOOK_SECRET` に設定
+
+#### 決済手段を増やすとき
+
+`create-checkout` は `payment_method_types` を指定していないため、
+[ダッシュボードの決済手段設定](https://dashboard.stripe.com/settings/payment_methods)で
+有効にしたものがそのままチェックアウト画面に並びます。決済を通すだけならコードの
+変更は不要です。
+
+ただし支援画面・プロジェクト詳細・特商法ページ・FAQ に出る「使える決済手段」の
+文言は `src/lib/config/payment-methods.ts` の `enabled` から生成しています。
+**ダッシュボードで切り替えたら、必ずこのファイルも合わせて更新してください。**
+片方だけ変えると、案内にない手段が決済画面に出たり、その逆が起きます。
+
+Apple Pay / Google Pay / Link はカードの上に乗るウォレットなので、`card` が
+有効なら自動的に候補に入ります（対応ブラウザかつ端末に登録済みの場合のみ表示）。
+Checkout は Stripe のドメインで動くため、ドメイン登録は不要です。
+
+PayPay は日本の Stripe アカウントで、チェックアウトが payment モード・JPY
+であれば使えます（このアプリはどちらも満たしています）。¥50〜1,000,000 の範囲で
+表示され、支払いは即時確定、チャージバックはありません。現在はダッシュボードで
+無効にしてあるため、案内も出していません。
+
+コンビニ決済は後払いなので、有効にする前に別途対応が要ります。申込時点では
+入金されず、支援者は成功ページに戻らずに Stripe の支払い案内ページへ飛びます。
+支払期限の設定、案内メール、期限切れ（`checkout.session.async_payment_failed`）の
+処理が未実装です。また Stripe 側の業種制限で、開業3年未満の個人事業主は使えません。
+対応が済むまではダッシュボードで無効のままにしてください。
 
 #### 本番決済に切り替えるとき
 

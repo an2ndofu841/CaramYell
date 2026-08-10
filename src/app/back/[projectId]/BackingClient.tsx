@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Reward, Project } from "@/types";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { paymentMethodBadges } from "@/lib/config/payment-methods";
 import { useAuth } from "@/hooks/useAuth";
 import {
   COUNTRIES,
@@ -769,7 +770,7 @@ export default function BackingClient({
                         {t.backing.paymentNote2}
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {["💳 カード", "🍎 Apple Pay", "🔗 Link"].map((m) => (
+                        {paymentMethodBadges(locale).map((m) => (
                           <span
                             key={m}
                             className="px-3 py-1.5 rounded-full text-xs font-bold bg-white border-2 border-caramel-100 text-gray-600"

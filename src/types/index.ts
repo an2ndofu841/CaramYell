@@ -15,12 +15,20 @@ export type RewardType = "physical" | "digital" | "experience" | "no_reward";
 
 export type BackerStatus = "pending" | "paid" | "refunded" | "cancelled";
 
+/**
+ * 支援の決済手段。実決済では Stripe が返す payment_method_details の
+ * 種別（ウォレット決済ならその種類）をそのまま入れるので、
+ * ダッシュボードで新しい手段を有効にしたらここにも足す。
+ */
 export type PaymentMethod =
   | "card"
   | "apple_pay"
   | "google_pay"
+  | "samsung_pay"
   | "paypal"
-  | "link";
+  | "link"
+  | "paypay"
+  | "konbini";
 
 export type UserRole = "user" | "creator" | "admin";
 

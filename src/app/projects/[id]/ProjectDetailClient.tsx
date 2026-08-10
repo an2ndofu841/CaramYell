@@ -39,6 +39,7 @@ import AnimatedSection from "@/components/animations/AnimatedSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { paymentMethodBadges } from "@/lib/config/payment-methods";
 import ProjectThemeScope from "@/components/project/ProjectThemeScope";
 import { ProjectTheme, resolveTheme } from "@/lib/theme/project-theme";
 import { isCampaignOver } from "@/lib/date/campaign-end";
@@ -55,7 +56,7 @@ export default function ProjectDetailClient({
   isPreview = false,
   themeOverride,
 }: ProjectDetailClientProps) {
-  const { t, pick } = useLocale();
+  const { t, locale, pick } = useLocale();
   const allowComments = project.allow_comments !== false;
   // 締切を過ぎたら決済側で弾かれるので、画面側でも入口を閉じておく
   const isEnded = isCampaignOver(project.end_date);
@@ -652,7 +653,7 @@ export default function ProjectDetailClient({
                 <Card variant="outlined">
                   <p className="text-xs font-bold text-gray-500 mb-3">{t.detail.paymentMethods}</p>
                   <div className="flex flex-wrap gap-2">
-                    {["💳 カード", "🍎 Apple Pay", "🔗 Link"].map((method) => (
+                    {paymentMethodBadges(locale).map((method) => (
                       <span key={method} className="px-2.5 py-1 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
                         {method}
                       </span>

@@ -68,6 +68,44 @@ function parseAmount(value: string | undefined): number | null {
 }
 
 /**
+ * 実際に使われた決済手段（card / google_pay / paypay など）を Stripe から引く。
+ *
+ * セッションには「提示した手段の一覧」しか入っていないので、
+ * どれで払われたかは PaymentIntent の charge までたどる必要がある。
+ * ここが取れなくても支援そのものは記録したいので、失敗したら候補の先頭で妥協する。
+ *
+ * Apple Pay / Google Pay / Link はカードの上に乗るウォレットなので、
+ * charge の type は "card" になる。どのウォレットかは wallet.type にしか出ず、
+ * 集計時に区別できないと困るのでそちらを優先して記録する。
+ */
+async function resolvePaymentMethod(
+  session: Stripe.Checkout.Session
+): Promise<string> {
+  const fallback = session.payment_method_types?.[0] ?? "card";
+
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
+  if (!paymentIntentId) return fallback;
+
+  try {
+    const pi = await getStripeClient().paymentIntents.retrieve(
+      paymentIntentId,
+      { expand: ["latest_charge"] }
+    );
+    const charge = pi.latest_charge as Stripe.Charge | null;
+    const details = charge?.payment_method_details;
+    if (!details) return fallback;
+
+    return details.card?.wallet?.type ?? details.type;
+  } catch (e) {
+    console.error("Error resolving payment method:", e);
+    return fallback;
+  }
+}
+
+/**
  * 支払い済みの Checkout セッションを backers に記録する。
  *
  * webhook と成功ページの両方から呼ばれ、どちらが先に走っても、
@@ -113,6 +151,7 @@ export async function recordBackingFromSession(
 
   const supabase = getServiceSupabase();
   const guestAddress = resolveGuestAddress(session);
+  const paymentMethod = await resolvePaymentMethod(session);
 
   const { data: inserted, error } = await supabase
     .from("backers")
@@ -131,7 +170,7 @@ export async function recordBackingFromSession(
         is_anonymous: metadata.is_anonymous === "true",
         stripe_payment_intent_id: (session.payment_intent as string) || null,
         stripe_session_id: session.id,
-        payment_method: "card",
+        payment_method: paymentMethod,
         status: "paid",
         currency: "JPY",
       },

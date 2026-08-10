@@ -17,6 +17,7 @@ import {
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import Button from "@/components/ui/Button";
 import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
+import { paymentMethodList } from "@/lib/config/payment-methods";
 
 const FEE_FAQ_EXAMPLE = feeExample(1000);
 const FEE_TABLE_EXAMPLE = feeExample(5000);
@@ -114,7 +115,7 @@ const faqItems = [
   },
   {
     q: "海外からの出資も受けられますか？",
-    a: "はい。Apple Pay・Google Pay・クレジットカードなど多彩な決済方法に対応し、AI自動翻訳でプロジェクトページを多言語表示できます。",
+    a: `はい。${paymentMethodList("ja")} など多彩な決済方法に対応し、AI自動翻訳でプロジェクトページを多言語表示できます。`,
   },
 ];
 
