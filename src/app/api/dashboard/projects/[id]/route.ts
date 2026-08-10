@@ -114,6 +114,7 @@ export async function PUT(
     titleEn,
     taglineEn,
     descriptionEn,
+    storyEn,
     goalAmount,
     endDate,
     theme,
@@ -131,6 +132,7 @@ export async function PUT(
       value: descriptionEn,
       max: TEXT_LIMITS.description,
     },
+    { label: "英語のストーリー", value: storyEn, max: TEXT_LIMITS.story },
   ]);
   if (tooLong) {
     return NextResponse.json({ error: tooLong }, { status: 400 });
@@ -146,6 +148,7 @@ export async function PUT(
   if (descriptionEn !== undefined) {
     updateData.description_en = blankToNull(descriptionEn);
   }
+  if (storyEn !== undefined) updateData.story_en = blankToNull(storyEn);
   if (goalAmount !== undefined) updateData.goal_amount = goalAmount;
   if (endDate !== undefined) updateData.end_date = campaignEndFromInput(endDate);
   // null は「既定テーマに戻す」の意味なのでそのまま通す

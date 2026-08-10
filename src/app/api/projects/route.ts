@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
       value: body.descriptionEn,
       max: TEXT_LIMITS.description,
     },
+    { label: "英語のストーリー", value: body.storyEn, max: TEXT_LIMITS.story },
   ]);
   if (tooLong) {
     return NextResponse.json({ error: tooLong }, { status: 400 });
@@ -146,6 +147,7 @@ export async function POST(req: NextRequest) {
     titleEn,
     taglineEn,
     descriptionEn,
+    storyEn,
     categoryId,
     tags,
     goalAmount,
@@ -204,6 +206,7 @@ export async function POST(req: NextRequest) {
     title_en: blankToNull(titleEn),
     tagline_en: blankToNull(taglineEn),
     description_en: blankToNull(descriptionEn),
+    story_en: blankToNull(storyEn),
     end_date: campaignEndFromInput(endDate),
     allow_free_amount: allowFreeAmount !== false,
     allow_comments: allowComments !== false,

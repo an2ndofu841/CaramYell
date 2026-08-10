@@ -99,6 +99,7 @@ export default function CreateProjectClient() {
     titleEn: "",
     taglineEn: "",
     descriptionEn: "",
+    storyEn: "",
     endDate: "",
     mainImageUrl: null as string | null,
     images: [] as string[],
@@ -154,6 +155,7 @@ export default function CreateProjectClient() {
           titleEn: p.title_en || "",
           taglineEn: p.tagline_en || "",
           descriptionEn: p.description_en || "",
+          storyEn: p.story_en || "",
           endDate: p.end_date ? p.end_date.slice(0, 10) : "",
           mainImageUrl: p.main_image_url || null,
           images: Array.isArray(p.images) ? p.images : [],
@@ -341,6 +343,7 @@ export default function CreateProjectClient() {
     titleEn: formData.titleEn,
     taglineEn: formData.taglineEn,
     descriptionEn: formData.descriptionEn,
+    storyEn: formData.storyEn,
     categoryId: formData.category,
     tags: [],
     goalAmount: validMilestones()[0]?.amount ?? 0,
@@ -792,13 +795,25 @@ export default function CreateProjectClient() {
                     allowImages
                   />
 
-                  <EnglishPanel hasContent={Boolean(formData.descriptionEn)}>
+                  <EnglishPanel
+                    hasContent={Boolean(
+                      formData.descriptionEn || formData.storyEn
+                    )}
+                  >
                     <MarkdownEditor
                       label="Project overview"
                       placeholder="Describe your project in English."
                       value={formData.descriptionEn}
                       onChange={(v) => updateField("descriptionEn", v)}
                       rows={8}
+                      allowImages
+                    />
+                    <MarkdownEditor
+                      label="Story"
+                      placeholder="Tell your story in English."
+                      value={formData.storyEn}
+                      onChange={(v) => updateField("storyEn", v)}
+                      rows={6}
                       allowImages
                     />
                   </EnglishPanel>

@@ -417,6 +417,7 @@ function EditTab({
     titleEn: project.title_en || "",
     taglineEn: project.tagline_en || "",
     descriptionEn: project.description_en || "",
+    storyEn: project.story_en || "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -482,7 +483,10 @@ function EditTab({
 
             <EnglishPanel
               hasContent={Boolean(
-                form.titleEn || form.taglineEn || form.descriptionEn
+                form.titleEn ||
+                  form.taglineEn ||
+                  form.descriptionEn ||
+                  form.storyEn
               )}
             >
               <Input
@@ -507,6 +511,13 @@ function EditTab({
                 value={form.descriptionEn}
                 onChange={(v) => setForm((p) => ({ ...p, descriptionEn: v }))}
                 rows={10}
+                allowImages
+              />
+              <MarkdownEditor
+                label="Story"
+                value={form.storyEn}
+                onChange={(v) => setForm((p) => ({ ...p, storyEn: v }))}
+                rows={8}
                 allowImages
               />
             </EnglishPanel>

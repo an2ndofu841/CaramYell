@@ -510,7 +510,9 @@ export default function ProjectDetailClient({
                   {project.story && (
                     <>
                       <hr className="my-6 border-caramel-100" />
-                      <Markdown>{project.story}</Markdown>
+                      <Markdown>
+                        {pick(project.story, project.story_en)}
+                      </Markdown>
                     </>
                   )}
                 </Card>

@@ -60,6 +60,7 @@ export interface Project {
   title_en?: string;
   tagline_en?: string;
   description_en?: string;
+  story_en?: string;
   category_id?: string;
   tags: string[];
   goal_amount: number;
