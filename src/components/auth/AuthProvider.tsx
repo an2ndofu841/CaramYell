@@ -30,9 +30,6 @@ export interface AuthContextValue extends AuthState {
   resendSignUpEmail: (email: string) => Promise<{ error: AuthError | null }>;
   sendPasswordReset: (email: string) => Promise<{ error: AuthError | null }>;
   updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
-  signInWithOAuth: (
-    provider: "google" | "github"
-  ) => Promise<{ data: unknown; error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   /** プロフィール更新後にヘッダー等の表示を追随させる */
   refreshProfile: () => Promise<void>;
@@ -159,16 +156,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signInWithOAuth = async (provider: "google" | "github") => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { data, error };
-  };
-
   const refreshProfile = useCallback(async () => {
     const userId = state.user?.id;
     if (!userId) return;
@@ -194,7 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resendSignUpEmail,
     sendPasswordReset,
     updatePassword,
-    signInWithOAuth,
     signOut,
     refreshProfile,
   };
