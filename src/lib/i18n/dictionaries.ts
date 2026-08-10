@@ -107,7 +107,7 @@ export const dictionaries = {
         },
         {
           q: "目標金額に届かなかった場合はどうなりますか？",
-          a: "All-or-Nothing方式のプロジェクトでは、目標未達の場合は出資者への課金は行われません。All-In方式では目標金額に関わらず実施されます。段階ゴールが設定されている場合は、達成した段階まで実施されます。",
+          a: "支援金はお申し込み時に決済されるため、目標金額に届かなかった場合でも返金は行われません。掲載者は集まった資金の範囲で実施できる内容に調整してプロジェクトを進めます。段階ゴールが設定されている場合は、達成した段階まで実施されます。",
         },
         {
           q: "どんな決済方法が使えますか？",
@@ -314,7 +314,7 @@ export const dictionaries = {
         },
         {
           q: "What happens if the goal isn't reached?",
-          a: "All-or-Nothing projects don't charge backers when the goal is missed. All-In projects go ahead regardless of the total. When stretch goals are set, every goal that gets funded is delivered.",
+          a: "Payment is taken at checkout, so backers are not refunded if the goal is missed. The creator scales the project to what the funds allow and goes ahead. When stretch goals are set, every goal that gets funded is delivered.",
         },
         {
           q: "Which payment methods are supported?",

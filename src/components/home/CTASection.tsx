@@ -109,7 +109,7 @@ export default function CTASection() {
           </div>
 
           <p className="text-sm text-white/30 mt-6">
-            クレジットカード不要 · アカウント登録なしで応援可能 · いつでもキャンセルOK
+            クレジットカード不要 · アカウント登録なしで応援可能 · 掲載者の手数料0%
           </p>
         </AnimatedSection>
       </div>
