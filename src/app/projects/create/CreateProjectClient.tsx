@@ -30,6 +30,7 @@ import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProjectImagePicker from "@/components/project/ProjectImagePicker";
 import ThemeEditor from "@/components/project/ThemeEditor";
 import { DEFAULT_THEME, resolveTheme } from "@/lib/theme/project-theme";
+import { jstDateAfterDays } from "@/lib/date/campaign-end";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -849,7 +850,7 @@ export default function CreateProjectClient() {
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => updateField("endDate", e.target.value)}
-                    min={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+                    min={jstDateAfterDays(7)}
                     fullWidth
                     hint="最短7日・最長90日"
                   />

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
+import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme } from "@/lib/theme/project-theme";
 
@@ -189,7 +190,7 @@ export async function POST(req: NextRequest) {
     category_id: categoryUuid,
     tags: tags || [],
     goal_amount: baseGoalAmount,
-    end_date: endDate || null,
+    end_date: campaignEndFromInput(endDate),
     allow_free_amount: allowFreeAmount !== false,
     allow_comments: allowComments !== false,
     status,

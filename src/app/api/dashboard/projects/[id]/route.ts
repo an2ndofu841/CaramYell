@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
+import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
 import { resolveTheme } from "@/lib/theme/project-theme";
@@ -123,7 +124,7 @@ export async function PUT(
   if (description !== undefined) updateData.description = description;
   if (story !== undefined) updateData.story = story;
   if (goalAmount !== undefined) updateData.goal_amount = goalAmount;
-  if (endDate !== undefined) updateData.end_date = endDate;
+  if (endDate !== undefined) updateData.end_date = campaignEndFromInput(endDate);
   // null は「既定テーマに戻す」の意味なのでそのまま通す
   if (theme !== undefined) {
     updateData.theme = theme === null ? null : resolveTheme(theme);

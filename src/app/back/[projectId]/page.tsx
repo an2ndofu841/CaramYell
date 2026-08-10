@@ -1,5 +1,7 @@
 import BackingClient from "./BackingClient";
+import CampaignEndedNotice from "./CampaignEndedNotice";
 import { createClient } from "@/lib/supabase/server";
+import { isCampaignOver } from "@/lib/date/campaign-end";
 import type { Project } from "@/types";
 
 // 掲載中(active)の実プロジェクト＋リターンを取得（見つからなければ null → デモ扱い）
@@ -43,6 +45,11 @@ export default async function BackingPage({
   const { reward } = await searchParams;
 
   const project = await getRealProject(projectId);
+
+  // 直リンクで来ても締切後は入口を閉じる（決済側でも弾いてはいる）
+  if (project && isCampaignOver(project.end_date)) {
+    return <CampaignEndedNotice projectSlug={project.slug} />;
+  }
 
   return (
     <BackingClient

@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import ProjectThemeScope from "@/components/project/ProjectThemeScope";
 import { ProjectTheme, resolveTheme } from "@/lib/theme/project-theme";
+import { isCampaignOver } from "@/lib/date/campaign-end";
 
 interface ProjectDetailClientProps {
   project: Project;
@@ -56,6 +57,12 @@ export default function ProjectDetailClient({
 }: ProjectDetailClientProps) {
   const { t, pick } = useLocale();
   const allowComments = project.allow_comments !== false;
+  // 締切を過ぎたら決済側で弾かれるので、画面側でも入口を閉じておく
+  const isEnded = isCampaignOver(project.end_date);
+  const canBack = !isPreview && !isEnded;
+  const disabledLabel = isPreview
+    ? t.detail.previewDisabled
+    : t.detail.endedDisabled;
   // リターンはタブに隠さず本文の下に常時並べるので、タブからは外している
   const tabs = [
     { id: "story", label: t.detail.tabStory },
@@ -210,21 +217,23 @@ export default function ProjectDetailClient({
         </div>
       </div>
 
-      {isPreview ? (
-        <Button fullWidth size="lg" className="mb-3" disabled>
-          {t.detail.previewDisabled}
-        </Button>
-      ) : (
+      {canBack ? (
         <Link href={`/back/${project.slug}`}>
           <Button fullWidth size="lg" className="mb-3">
             💝 {t.common.backThisProject}
           </Button>
         </Link>
+      ) : (
+        <Button fullWidth size="lg" className="mb-3" disabled>
+          {disabledLabel}
+        </Button>
       )}
 
-      <p className="text-xs text-center text-gray-400">
-        {t.common.noAccountNeeded}
-      </p>
+      {!isEnded && (
+        <p className="text-xs text-center text-gray-400">
+          {t.common.noAccountNeeded}
+        </p>
+      )}
 
       <div className="border-t border-caramel-100 mt-4 pt-4">
         <p className="text-xs text-gray-400 text-center mb-2">{t.detail.feesTitle}</p>
@@ -652,11 +661,7 @@ export default function ProjectDetailClient({
           （MobileTabBar 側で詳細ページを除外）。読み進めた先でも支援に入れるように。 */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-caramel-100 tabbar-safe">
         <div className="px-4 py-3">
-          {isPreview ? (
-            <Button fullWidth size="lg" disabled>
-              {t.detail.previewDisabled}
-            </Button>
-          ) : (
+          {canBack ? (
             <Link
               href={
                 selectedReward
@@ -668,6 +673,10 @@ export default function ProjectDetailClient({
                 💝 {t.common.backThisProject}
               </Button>
             </Link>
+          ) : (
+            <Button fullWidth size="lg" disabled>
+              {disabledLabel}
+            </Button>
           )}
         </div>
       </div>
