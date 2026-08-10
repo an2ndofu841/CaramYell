@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
+import { resolveTheme } from "@/lib/theme/project-theme";
 
 /**
  * or() は文字列で組み立てるため、値に , や ) が混ざると別の条件として
@@ -144,6 +145,7 @@ export async function POST(req: NextRequest) {
     allowComments,
     mainImageUrl,
     images,
+    theme,
     mode,
     projectId,
   } = body;
@@ -193,6 +195,12 @@ export async function POST(req: NextRequest) {
     status,
     submitted_at: isDraft ? null : new Date().toISOString(),
   };
+
+  // 掲載者が書いた色やフォントをそのまま CSS に流すことになるので、
+  // 受け取った値は必ず resolveTheme に通してから保存する
+  if (theme !== undefined) {
+    fields.theme = theme === null ? null : resolveTheme(theme);
+  }
 
   // 送ってきたときだけ触る。省略された画像を消してしまわないように
   if (mainImageUrl !== undefined) {

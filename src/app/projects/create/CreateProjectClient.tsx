@@ -28,6 +28,8 @@ import { Input, Textarea } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProjectImagePicker from "@/components/project/ProjectImagePicker";
+import ThemeEditor from "@/components/project/ThemeEditor";
+import { DEFAULT_THEME, resolveTheme } from "@/lib/theme/project-theme";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,7 +59,8 @@ const steps = [
   { id: 2, title: "プロジェクト詳細", icon: "📖" },
   { id: 3, title: "段階ゴール・期間", icon: "🎯" },
   { id: 4, title: "リターン設定", icon: "🎁" },
-  { id: 5, title: "確認・送信", icon: "🚀" },
+  { id: 5, title: "デザイン", icon: "🎨" },
+  { id: 6, title: "確認・送信", icon: "🚀" },
 ];
 
 type RewardInput = {
@@ -96,6 +99,7 @@ export default function CreateProjectClient() {
     allowFreeAmount: true,
     allowComments: true,
     rewards: [] as RewardInput[],
+    theme: { ...DEFAULT_THEME },
   });
 
   // ステップが変わったらページ先頭へ戻す
@@ -146,6 +150,7 @@ export default function CreateProjectClient() {
             : [{ amount: p.goal_amount || 50000, title: "", description: "" }],
           allowFreeAmount: p.allow_free_amount !== false,
           allowComments: p.allow_comments !== false,
+          theme: resolveTheme(p.theme),
           rewards: (p.rewards || []).map((r: Record<string, unknown>) => ({
             title: (r.title as string) || "",
             description: (r.description as string) || "",
@@ -327,6 +332,7 @@ export default function CreateProjectClient() {
     allowFreeAmount: formData.allowFreeAmount,
     allowComments: formData.allowComments,
     rewards: formData.rewards,
+    theme: formData.theme,
   });
 
   // 下書き保存（作成/更新）。保存したプロジェクトIDとプレビュートークンを返す。
@@ -988,8 +994,34 @@ export default function CreateProjectClient() {
               </div>
             )}
 
-            {/* STEP 5: 確認 */}
+            {/* STEP 5: デザイン */}
             {currentStep === 5 && (
+              <div>
+                <Card className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">
+                    🎨 ページの見た目を決める
+                  </h2>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    プロジェクトページの配色とフォントです。あとから何度でも変えられるので、
+                    迷ったらそのままで大丈夫です。
+                  </p>
+                </Card>
+
+                <ThemeEditor
+                  theme={formData.theme}
+                  onChange={(theme) => updateField("theme", theme)}
+                  preview={{
+                    title: formData.title,
+                    tagline: formData.tagline || formData.title,
+                    imageUrl: formData.mainImageUrl,
+                    goalAmount: validMilestones()[0]?.amount ?? 0,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* STEP 6: 確認 */}
+            {currentStep === 6 && (
               <Card>
                 <h2 className="text-xl font-bold text-gray-800 mb-6">
                   🚀 内容を確認して申請する
