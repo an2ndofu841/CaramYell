@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const BUCKET = "avatars";
 const MAX_SIZE = 2 * 1024 * 1024;
+/** service_role で保存する経路なので、連打でストレージを埋められないようにする */
+const UPLOADS_PER_HOUR = 30;
 const ALLOWED_TYPES: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
@@ -50,6 +53,13 @@ async function removeUserFiles(
 }
 
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(
+    clientKey(req, "avatar-upload"),
+    UPLOADS_PER_HOUR,
+    60 * 60 * 1000
+  );
+  if (!limit.ok) return tooManyRequests(limit.retryAfter);
+
   const supabase = await createClient();
 
   const {

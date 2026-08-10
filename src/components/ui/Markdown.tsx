@@ -17,7 +17,12 @@ import { cn } from "@/lib/utils";
 function safeUrl(url: string): string {
   const cleaned = defaultUrlTransform(url);
   if (!cleaned) return "";
-  if (/^(https?:|mailto:|#|\/)/i.test(cleaned)) return cleaned;
+  // //evil.example や /\evil.example はサイト内リンクの見た目のまま
+  // 外部へ飛ぶ。掲載者が偽のログイン画面へ誘導できてしまうので弾く。
+  if (/^\/[/\\]/.test(cleaned)) return "";
+  // https:/evil.example のようにスラッシュが足りない書き方も外部へ解決される
+  if (/^https?:(?!\/\/)/i.test(cleaned)) return "";
+  if (/^(https?:\/\/|mailto:|#|\/)/i.test(cleaned)) return cleaned;
   return "";
 }
 
