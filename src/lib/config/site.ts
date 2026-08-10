@@ -3,6 +3,10 @@ export const SITE_NAME = "CaramYell";
 /** 本番の公開ドメイン */
 export const SITE_DOMAIN = "caramyell.com";
 
+/** 問い合わせの受付先。フォームの送信先と各ページの表記で共有する */
+export const SUPPORT_EMAIL = "info@mlbl.co.jp";
+export const SUPPORT_TEL = "070-8509-5708";
+
 const PRODUCTION_URL = `https://${SITE_DOMAIN}`;
 
 const stripTrailingSlash = (url: string) => url.replace(/\/+$/, "");
