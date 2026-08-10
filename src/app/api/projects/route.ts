@@ -5,6 +5,16 @@ import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme } from "@/lib/theme/project-theme";
 import { resolveFaqs } from "@/lib/project/faqs";
+import { autoSlug, normalizeSlug, slugError } from "@/lib/project/slug";
+
+/** slug の UNIQUE 制約に当たったとき Postgres が返すコード */
+const SLUG_TAKEN = "23505";
+
+const slugTakenResponse = () =>
+  NextResponse.json(
+    { error: "このURLは既に使われています。別のURLにしてください" },
+    { status: 409 }
+  );
 
 /**
  * or() は文字列で組み立てるため、値に , や ) が混ざると別の条件として
@@ -143,6 +153,7 @@ export async function POST(req: NextRequest) {
   const {
     title,
     tagline,
+    slug,
     description,
     story,
     titleEn,
@@ -184,6 +195,15 @@ export async function POST(req: NextRequest) {
 
   const baseGoalAmount =
     sortedMilestones.length > 0 ? sortedMilestones[0].amount : goalAmount || 0;
+
+  // 掲載者が決めた公開URL。未入力ならタイトルから自動で作る
+  const desiredSlug = normalizeSlug(slug);
+  if (desiredSlug) {
+    const invalid = slugError(desiredSlug);
+    if (invalid) {
+      return NextResponse.json({ error: invalid }, { status: 400 });
+    }
+  }
 
   // categoryId はスラッグ（例: "music"）で届くので UUID に解決する
   let categoryUuid: string | null = null;
@@ -261,11 +281,13 @@ export async function POST(req: NextRequest) {
     }
     const { data, error } = await supabase
       .from("projects")
-      .update(fields)
+      // 公開前なので URL を変えても外に出したリンクは壊れない
+      .update(desiredSlug ? { ...fields, slug: desiredSlug } : fields)
       .eq("id", projectId)
       .select()
       .single();
     if (error) {
+      if (error.code === SLUG_TAKEN) return slugTakenResponse();
       return dbError(error);
     }
     project = data;
@@ -273,21 +295,17 @@ export async function POST(req: NextRequest) {
     await supabase.from("rewards").delete().eq("project_id", projectId);
     await supabase.from("project_milestones").delete().eq("project_id", projectId);
   } else {
-    const slug =
-      ((title || "project")
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-        .trim() || "project") +
-      "-" +
-      Math.random().toString(36).substr(2, 6);
     const { data, error } = await supabase
       .from("projects")
-      .insert({ creator_id: user.id, slug, ...fields })
+      .insert({
+        creator_id: user.id,
+        slug: desiredSlug || autoSlug(title),
+        ...fields,
+      })
       .select()
       .single();
     if (error) {
+      if (error.code === SLUG_TAKEN) return slugTakenResponse();
       return dbError(error);
     }
     project = data;

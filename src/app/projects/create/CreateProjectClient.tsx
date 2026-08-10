@@ -30,6 +30,11 @@ import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProjectImagePicker from "@/components/project/ProjectImagePicker";
 import EnglishPanel from "@/components/project/EnglishPanel";
 import FaqEditor from "@/components/project/FaqEditor";
+import {
+  normalizeSlug,
+  normalizeSlugInput,
+  slugError,
+} from "@/lib/project/slug";
 import ThemeEditor from "@/components/project/ThemeEditor";
 import { DEFAULT_THEME, resolveTheme } from "@/lib/theme/project-theme";
 import { jstDateAfterDays } from "@/lib/date/campaign-end";
@@ -43,6 +48,11 @@ const FEE_EXAMPLE = feeExample(3000);
 
 /** 第1目標の下限。支援の最低額（¥100）に合わせている */
 const MIN_GOAL_AMOUNT = 100;
+
+/** 公開URLのプレビュー用。プロトコルまで見せる必要はない */
+const SITE_HOST = (process.env.NEXT_PUBLIC_APP_URL || "https://caramyell.com")
+  .replace(/^https?:\/\//, "")
+  .replace(/\/+$/, "");
 
 const categories = [
   { slug: "music", name: "音楽", icon: "🎵" },
@@ -93,6 +103,7 @@ export default function CreateProjectClient() {
   const [formData, setFormData] = useState({
     title: "",
     tagline: "",
+    slug: "",
     category: "",
     description: "",
     story: "",
@@ -151,6 +162,7 @@ export default function CreateProjectClient() {
         setFormData({
           title: p.title || "",
           tagline: p.tagline || "",
+          slug: p.slug || "",
           category: p.categories?.slug || "",
           description: p.description || "",
           story: p.story || "",
@@ -303,12 +315,18 @@ export default function CreateProjectClient() {
    * 「次へ」を押せない理由。押せるときは null。
    * 無効にするだけだと、金額なのか達成内容なのか分からず手が止まる。
    */
+  // 入力中は末尾のハイフンを許しているので、確定形（API と同じ正規化）で判定する。
+  // 空欄なら自動生成に任せるため見ない。
+  const finalSlug = normalizeSlug(formData.slug);
+  const slugIssue = finalSlug ? slugError(finalSlug) : null;
+
   const nextBlockedReason = (): string | null => {
     switch (currentStep) {
       case 1:
         if (formData.title.trim().length < 5)
           return "タイトルを5文字以上で入力してください";
         if (!formData.category) return "カテゴリーを選んでください";
+        if (slugIssue) return slugIssue;
         return null;
       case 2:
         if (formData.description.length < 50)
@@ -341,6 +359,7 @@ export default function CreateProjectClient() {
     projectId: savedProjectId ?? undefined,
     title: formData.title,
     tagline: formData.tagline || formData.title,
+    slug: formData.slug,
     description: formData.description,
     story: formData.story,
     titleEn: formData.titleEn,
@@ -668,6 +687,26 @@ export default function CreateProjectClient() {
                         )}
                       </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <Input
+                      label="公開URL（任意）"
+                      placeholder="例：scent-music-album"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        updateField("slug", normalizeSlugInput(e.target.value))
+                      }
+                      error={slugIssue ?? undefined}
+                      fullWidth
+                      hint="半角英数字とハイフン。空欄ならこちらで決めます。公開後は変更できません"
+                    />
+                    <p className="text-xs text-gray-400 mt-1.5 break-all">
+                      {SITE_HOST}/projects/
+                      <span className="font-bold text-caramel-500">
+                        {finalSlug || "（自動）"}
+                      </span>
+                    </p>
                   </div>
 
                   <EnglishPanel
@@ -1105,6 +1144,14 @@ export default function CreateProjectClient() {
 
                 <div className="space-y-4">
                   <ReviewItem label="タイトル" value={formData.title || "（未入力）"} />
+                  <ReviewItem
+                    label="公開URL"
+                    value={
+                      finalSlug
+                        ? `${SITE_HOST}/projects/${finalSlug}`
+                        : "（自動で決まります）"
+                    }
+                  />
                   <ReviewItem label="カテゴリー" value={categories.find(c => c.slug === formData.category)?.name || "（未選択）"} />
                   <ReviewItem label="タグライン" value={formData.tagline || "（未入力）"} />
                   <ReviewItem
