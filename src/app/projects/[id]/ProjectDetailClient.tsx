@@ -34,6 +34,7 @@ import MilestonesProgress from "@/components/project/MilestonesProgress";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
+import Markdown from "@/components/ui/Markdown";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -465,19 +466,15 @@ export default function ProjectDetailClient({
             <AnimatedSection animation="fade-in" key={activeTab}>
               {activeTab === "story" && (
                 <Card>
-                  <div className="prose max-w-none">
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
-                      {pick(project.description, project.description_en)}
-                    </div>
-                    {project.story && (
-                      <>
-                        <hr className="my-6 border-caramel-100" />
-                        <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                          {project.story}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  <Markdown className="text-base">
+                    {pick(project.description, project.description_en)}
+                  </Markdown>
+                  {project.story && (
+                    <>
+                      <hr className="my-6 border-caramel-100" />
+                      <Markdown>{project.story}</Markdown>
+                    </>
+                  )}
                 </Card>
               )}
 
@@ -501,9 +498,9 @@ export default function ProjectDetailClient({
                               </Badge>
                             )}
                           </div>
-                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          <Markdown>
                             {pick(update.content, update.content_en)}
-                          </p>
+                          </Markdown>
                           <p className="text-xs text-gray-400 mt-3">
                             {timeAgo(update.created_at)}
                           </p>

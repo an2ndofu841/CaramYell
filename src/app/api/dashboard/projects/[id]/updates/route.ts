@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
+import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
@@ -34,6 +35,14 @@ export async function POST(
       { error: "タイトルと内容は必須です" },
       { status: 400 }
     );
+  }
+
+  const tooLong = lengthError([
+    { label: "タイトル", value: title, max: TEXT_LIMITS.updateTitle },
+    { label: "内容", value: content, max: TEXT_LIMITS.updateContent },
+  ]);
+  if (tooLong) {
+    return NextResponse.json({ error: tooLong }, { status: 400 });
   }
 
   const { data, error } = await supabase

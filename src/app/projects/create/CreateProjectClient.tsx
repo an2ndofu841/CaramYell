@@ -26,6 +26,7 @@ import {
 import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
+import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProjectImagePicker from "@/components/project/ProjectImagePicker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -705,9 +706,9 @@ export default function CreateProjectClient() {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-gray-700">プロジェクト概要</p>
+                  <MarkdownEditor
+                    label="プロジェクト概要"
+                    labelExtra={
                       <button
                         onClick={() => generateWithAI("description")}
                         disabled={isGenerating === "description"}
@@ -717,23 +718,18 @@ export default function CreateProjectClient() {
                         <Wand2 size={12} />
                         {isGenerating === "description" ? "生成中..." : "AIで生成"}
                       </button>
-                    </div>
-                    <Textarea
-                      placeholder="プロジェクトについて詳しく説明してください。何を作りたいのか、なぜそれをしたいのか、誰に届けたいのかを書きましょう。"
-                      value={formData.description}
-                      onChange={(e) => updateField("description", e.target.value)}
-                      rows={8}
-                      fullWidth
-                      hint={`${formData.description.length}文字（最低50文字）`}
-                    />
-                  </div>
+                    }
+                    placeholder="プロジェクトについて詳しく説明してください。何を作りたいのか、なぜそれをしたいのか、誰に届けたいのかを書きましょう。"
+                    value={formData.description}
+                    onChange={(v) => updateField("description", v)}
+                    rows={10}
+                    allowImages
+                    hint={`${formData.description.length}文字（最低50文字）・見出しや箇条書きで区切ると読みやすくなります`}
+                  />
 
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-gray-700">
-                        ストーリー
-                        <span className="text-xs text-gray-400 font-normal ml-1">（任意）</span>
-                      </p>
+                  <MarkdownEditor
+                    label="ストーリー（任意）"
+                    labelExtra={
                       <button
                         onClick={() => generateWithAI("story")}
                         disabled={isGenerating === "story"}
@@ -743,15 +739,13 @@ export default function CreateProjectClient() {
                         <Wand2 size={12} />
                         {isGenerating === "story" ? "生成中..." : "AIで生成"}
                       </button>
-                    </div>
-                    <Textarea
-                      placeholder="このプロジェクトを始めたきっかけや、あなたの想いを書きましょう。"
-                      value={formData.story}
-                      onChange={(e) => updateField("story", e.target.value)}
-                      rows={6}
-                      fullWidth
-                    />
-                  </div>
+                    }
+                    placeholder="このプロジェクトを始めたきっかけや、あなたの想いを書きましょう。"
+                    value={formData.story}
+                    onChange={(v) => updateField("story", v)}
+                    rows={8}
+                    allowImages
+                  />
                 </div>
               </Card>
             )}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
+import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
 import { resolveTheme } from "@/lib/theme/project-theme";
@@ -105,6 +106,16 @@ export async function PUT(
 
   const body = await req.json();
   const { title, tagline, description, story, goalAmount, endDate, theme } = body;
+
+  const tooLong = lengthError([
+    { label: "タイトル", value: title, max: TEXT_LIMITS.title },
+    { label: "タグライン", value: tagline, max: TEXT_LIMITS.tagline },
+    { label: "プロジェクト概要", value: description, max: TEXT_LIMITS.description },
+    { label: "ストーリー", value: story, max: TEXT_LIMITS.story },
+  ]);
+  if (tooLong) {
+    return NextResponse.json({ error: tooLong }, { status: 400 });
+  }
 
   const updateData: Record<string, unknown> = {};
   if (title !== undefined) updateData.title = title;

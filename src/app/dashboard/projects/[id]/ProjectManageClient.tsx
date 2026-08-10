@@ -37,6 +37,8 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import { Input, Textarea } from "@/components/ui/Input";
+import Markdown from "@/components/ui/Markdown";
+import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProgressBar from "@/components/ui/ProgressBar";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import {
@@ -458,22 +460,20 @@ function EditTab({
               fullWidth
             />
 
-            <Textarea
+            <MarkdownEditor
               label="プロジェクト概要"
               value={form.description}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, description: e.target.value }))
-              }
-              rows={10}
-              fullWidth
+              onChange={(v) => setForm((p) => ({ ...p, description: v }))}
+              rows={12}
+              allowImages
             />
 
-            <Textarea
+            <MarkdownEditor
               label="ストーリー"
               value={form.story}
-              onChange={(e) => setForm((p) => ({ ...p, story: e.target.value }))}
-              rows={8}
-              fullWidth
+              onChange={(v) => setForm((p) => ({ ...p, story: v }))}
+              rows={10}
+              allowImages
             />
 
             <Button
@@ -957,15 +957,13 @@ function UpdatesTab({
                 }
                 fullWidth
               />
-              <Textarea
+              <MarkdownEditor
                 label="内容"
                 placeholder="プロジェクトの進捗や支援者へのメッセージを書きましょう"
                 value={form.content}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, content: e.target.value }))
-                }
+                onChange={(v) => setForm((p) => ({ ...p, content: v }))}
                 rows={8}
-                fullWidth
+                allowImages
               />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -1021,9 +1019,9 @@ function UpdatesTab({
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+                <Markdown className="text-sm text-gray-600">
                   {update.content}
-                </p>
+                </Markdown>
                 <p className="text-xs text-gray-300 mt-3">
                   {timeAgo(update.created_at)}
                 </p>
