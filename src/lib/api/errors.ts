@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 
+/** slug の UNIQUE 制約に当たったとき Postgres が返すコード */
+export const SLUG_TAKEN = "23505";
+
+export const slugTakenResponse = () =>
+  NextResponse.json(
+    { error: "このURLは既に使われています。別のURLにしてください" },
+    { status: 409 }
+  );
+
 /** RLS 違反の定型文はテーブル名が出るので、こちらは通さない */
 const INTERNAL_DENIAL = /^(new row violates|permission denied|violates row-level)/i;
 

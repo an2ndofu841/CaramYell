@@ -44,6 +44,12 @@ import EnglishPanel from "@/components/project/EnglishPanel";
 import FaqEditor from "@/components/project/FaqEditor";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import {
+  canEditSlug,
+  normalizeSlug,
+  normalizeSlugInput,
+  slugError,
+} from "@/lib/project/slug";
+import {
   formatCurrency,
   formatNumber,
   getStatusLabel,
@@ -52,6 +58,11 @@ import {
 } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import type { Project, Reward, Backer, ProjectUpdate } from "@/types";
+
+/** 公開URLのプレビュー用。プロトコルまで見せる必要はない */
+const SITE_HOST = (process.env.NEXT_PUBLIC_APP_URL || "https://caramyell.com")
+  .replace(/^https?:\/\//, "")
+  .replace(/\/+$/, "");
 
 type Tab =
   | "overview"
@@ -413,6 +424,7 @@ function EditTab({
   const [form, setForm] = useState({
     title: project.title,
     tagline: project.tagline,
+    slug: project.slug || "",
     description: project.description,
     story: project.story || "",
     titleEn: project.title_en || "",
@@ -423,19 +435,35 @@ function EditTab({
   });
   const [saving, setSaving] = useState(false);
 
+  // 公開後は共有済みのリンクが壊れるので変えさせない
+  const slugEditable = canEditSlug(project.status);
+  // 入力中は末尾のハイフンを許しているので、確定形で判定する
+  const finalSlug = normalizeSlug(form.slug);
+  const slugIssue = slugEditable ? slugError(finalSlug) : null;
+
   const handleSave = async () => {
+    if (slugIssue) {
+      alert(slugIssue);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/dashboard/projects/${project.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        // 公開後は送っても弾かれるので、変えられるときだけ載せる
+        body: JSON.stringify(
+          slugEditable ? { ...form, slug: finalSlug } : { ...form, slug: undefined }
+        ),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: null }));
+        throw new Error(error || "保存に失敗しました");
+      }
       onSaved();
       alert("保存しました");
-    } catch {
-      alert("保存に失敗しました");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "保存に失敗しました");
     } finally {
       setSaving(false);
     }
@@ -466,6 +494,42 @@ function EditTab({
               rows={2}
               fullWidth
             />
+
+            <div>
+              {slugEditable ? (
+                <>
+                  <Input
+                    label="公開URL"
+                    placeholder="例：scent-music-album"
+                    value={form.slug}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        slug: normalizeSlugInput(e.target.value),
+                      }))
+                    }
+                    error={slugIssue ?? undefined}
+                    fullWidth
+                    hint="半角英数字とハイフン。公開したあとは変更できません"
+                  />
+                  <p className="text-xs text-gray-400 mt-1.5 break-all">
+                    {`${SITE_HOST}/projects/${finalSlug || "..."}`}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold text-gray-700 mb-1.5">
+                    公開URL
+                  </p>
+                  <p className="text-sm text-gray-600 break-all">
+                    {`${SITE_HOST}/projects/${project.slug || project.id}`}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    公開後は変更できません。共有済みのリンクが開けなくなるためです
+                  </p>
+                </>
+              )}
+            </div>
 
             <MarkdownEditor
               label="プロジェクト概要"

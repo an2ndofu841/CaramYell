@@ -38,6 +38,16 @@ export function normalizeSlug(value: unknown): string {
   return normalizeSlugInput(value).replace(/-+$/, "");
 }
 
+/**
+ * 公開URLを変えても外に出したリンクが壊れない掲載ステータス。
+ * 公開後に変えると、共有済みのリンクや SNS の投稿から飛べなくなる。
+ */
+const SLUG_EDITABLE_STATUSES = ["draft", "reviewing", "cancelled"];
+
+export function canEditSlug(status: string | null | undefined): boolean {
+  return SLUG_EDITABLE_STATUSES.includes(status ?? "");
+}
+
 /** 使えない理由があれば日本語で返す。問題なければ null */
 export function slugError(slug: string): string | null {
   if (slug.length < SLUG_LIMITS.min) {

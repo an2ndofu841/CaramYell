@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbError } from "@/lib/api/errors";
+import { SLUG_TAKEN, dbError, slugTakenResponse } from "@/lib/api/errors";
 import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
 import { resolveFaqs } from "@/lib/project/faqs";
+import { canEditSlug, normalizeSlug, slugError } from "@/lib/project/slug";
 import { resolveTheme } from "@/lib/theme/project-theme";
 
 export async function GET(
@@ -110,6 +111,7 @@ export async function PUT(
   const {
     title,
     tagline,
+    slug,
     description,
     story,
     titleEn,
@@ -141,6 +143,44 @@ export async function PUT(
   }
 
   const updateData: Record<string, unknown> = {};
+
+  // 公開URLは公開前だけ変えられる。画面は常に送ってくるので、
+  // 実際に変わるときだけ掲載ステータスを見る。
+  if (slug !== undefined) {
+    const desired = normalizeSlug(slug);
+    const invalid = desired
+      ? slugError(desired)
+      : "公開URLを入力してください";
+    if (invalid) {
+      return NextResponse.json({ error: invalid }, { status: 400 });
+    }
+
+    const { data: existing } = await supabase
+      .from("projects")
+      .select("slug, status")
+      .eq("id", id)
+      .eq("creator_id", user.id)
+      .maybeSingle();
+    if (!existing) {
+      return NextResponse.json(
+        { error: "プロジェクトが見つかりません" },
+        { status: 404 }
+      );
+    }
+    if (desired !== existing.slug) {
+      if (!canEditSlug(existing.status)) {
+        return NextResponse.json(
+          {
+            error:
+              "公開後は公開URLを変更できません。共有済みのリンクが開けなくなるためです",
+          },
+          { status: 409 }
+        );
+      }
+      updateData.slug = desired;
+    }
+  }
+
   if (title !== undefined) updateData.title = title;
   if (tagline !== undefined) updateData.tagline = tagline;
   if (description !== undefined) updateData.description = description;
@@ -168,6 +208,7 @@ export async function PUT(
     .single();
 
   if (error) {
+    if (error.code === SLUG_TAKEN) return slugTakenResponse();
     return dbError(error);
   }
 

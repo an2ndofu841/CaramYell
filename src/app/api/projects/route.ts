@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbError } from "@/lib/api/errors";
+import { SLUG_TAKEN, dbError, slugTakenResponse } from "@/lib/api/errors";
 import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
@@ -7,15 +7,6 @@ import { resolveTheme } from "@/lib/theme/project-theme";
 import { resolveFaqs } from "@/lib/project/faqs";
 import { autoSlug, normalizeSlug, slugError } from "@/lib/project/slug";
 import { PUBLIC_PROJECT_COLUMNS } from "@/lib/project/public-columns";
-
-/** slug の UNIQUE 制約に当たったとき Postgres が返すコード */
-const SLUG_TAKEN = "23505";
-
-const slugTakenResponse = () =>
-  NextResponse.json(
-    { error: "このURLは既に使われています。別のURLにしてください" },
-    { status: 409 }
-  );
 
 /**
  * or() は文字列で組み立てるため、値に , や ) が混ざると別の条件として

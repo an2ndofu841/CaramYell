@@ -5,6 +5,7 @@
 
 import {
   autoSlug,
+  canEditSlug,
   normalizeSlug,
   normalizeSlugInput,
   slugError,
@@ -56,6 +57,15 @@ eq("自動: タイトルから作る", auto.startsWith("scent-music-album-"), tr
 eq("自動: 日本語のみは project-", autoSlug("生誕ライブ").startsWith("project-"), true);
 eq("自動: 生成物は有効", slugError(auto), null);
 eq("自動: 60文字を超えない", autoSlug("a".repeat(120)).length <= 60, true);
+
+// 変更できるのは外にリンクが出ていない間だけ
+eq("編集可否: 下書き", canEditSlug("draft"), true);
+eq("編集可否: 審査中", canEditSlug("reviewing"), true);
+eq("編集可否: キャンセル", canEditSlug("cancelled"), true);
+eq("編集可否: 公開中は不可", canEditSlug("active"), false);
+eq("編集可否: 達成後は不可", canEditSlug("funded"), false);
+eq("編集可否: 終了後は不可", canEditSlug("completed"), false);
+eq("編集可否: 未設定は不可", canEditSlug(null), false);
 
 console.log(failed === 0 ? "\nすべて通りました" : `\n${failed} 件失敗`);
 process.exit(failed === 0 ? 0 : 1);
