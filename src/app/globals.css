@@ -30,8 +30,14 @@
   margin: 0;
 }
 
+/* 画面外で待機している登場アニメーション（右からのスライド）は
+   translate の分だけ右にはみ出すので、そのままだとスマホで横に振れる。
+   clip はスクロールコンテナを作らないため、追従サイドバーの position: sticky
+   を壊さずに切り落とせる。clip 未対応のブラウザは hidden に落ちる。 */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -39,6 +45,7 @@ body {
   font-family: var(--font-sans);
   color: #4A2C17;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* スクロールバーのカスタマイズ */
