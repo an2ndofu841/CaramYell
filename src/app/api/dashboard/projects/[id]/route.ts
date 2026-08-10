@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
-import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
+import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { countUniqueBackers } from "@/lib/utils";
@@ -106,13 +106,31 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { title, tagline, description, story, goalAmount, endDate, theme } = body;
+  const {
+    title,
+    tagline,
+    description,
+    story,
+    titleEn,
+    taglineEn,
+    descriptionEn,
+    goalAmount,
+    endDate,
+    theme,
+  } = body;
 
   const tooLong = lengthError([
     { label: "タイトル", value: title, max: TEXT_LIMITS.title },
     { label: "タグライン", value: tagline, max: TEXT_LIMITS.tagline },
     { label: "プロジェクト概要", value: description, max: TEXT_LIMITS.description },
     { label: "ストーリー", value: story, max: TEXT_LIMITS.story },
+    { label: "英語のタイトル", value: titleEn, max: TEXT_LIMITS.title },
+    { label: "英語のタグライン", value: taglineEn, max: TEXT_LIMITS.tagline },
+    {
+      label: "英語のプロジェクト概要",
+      value: descriptionEn,
+      max: TEXT_LIMITS.description,
+    },
   ]);
   if (tooLong) {
     return NextResponse.json({ error: tooLong }, { status: 400 });
@@ -123,6 +141,11 @@ export async function PUT(
   if (tagline !== undefined) updateData.tagline = tagline;
   if (description !== undefined) updateData.description = description;
   if (story !== undefined) updateData.story = story;
+  if (titleEn !== undefined) updateData.title_en = blankToNull(titleEn);
+  if (taglineEn !== undefined) updateData.tagline_en = blankToNull(taglineEn);
+  if (descriptionEn !== undefined) {
+    updateData.description_en = blankToNull(descriptionEn);
+  }
   if (goalAmount !== undefined) updateData.goal_amount = goalAmount;
   if (endDate !== undefined) updateData.end_date = campaignEndFromInput(endDate);
   // null は「既定テーマに戻す」の意味なのでそのまま通す

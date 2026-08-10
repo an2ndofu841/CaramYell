@@ -10,6 +10,7 @@ import { calcProjectStats, cn, formatCurrency, formatNumber } from "@/lib/utils"
 import ProgressBar from "@/components/ui/ProgressBar";
 import Badge from "@/components/ui/Badge";
 import Confetti from "@/components/animations/Confetti";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface ProjectCardProps {
   project: Project;
@@ -17,6 +18,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, featured = false }: ProjectCardProps) {
+  const { pick } = useLocale();
   const stats = calcProjectStats(project);
   const [hovered, setHovered] = useState(false);
 
@@ -141,7 +143,7 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
 
           {/* タイトル */}
           <h3 className="font-bold text-cocoa-700 text-sm leading-snug mb-3 line-clamp-2">
-            {project.title}
+            {pick(project.title, project.title_en)}
           </h3>
 
           {/* 達成率 + プログレスバー */}

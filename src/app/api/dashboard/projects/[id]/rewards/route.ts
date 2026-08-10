@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
+import { blankToNull } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
@@ -28,7 +29,16 @@ export async function POST(
   }
 
   const body = await req.json();
-  const { title, description, amount, rewardType, needsAddress, quantityTotal } = body;
+  const {
+    title,
+    description,
+    titleEn,
+    descriptionEn,
+    amount,
+    rewardType,
+    needsAddress,
+    quantityTotal,
+  } = body;
 
   if (!title || !amount) {
     return NextResponse.json(
@@ -54,6 +64,8 @@ export async function POST(
       project_id: id,
       title,
       description: description || "",
+      title_en: blankToNull(titleEn),
+      description_en: blankToNull(descriptionEn),
       amount,
       reward_type: rewardType || "physical",
       needs_address: needsAddress ?? true,

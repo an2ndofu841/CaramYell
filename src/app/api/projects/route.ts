@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
-import { TEXT_LIMITS, lengthError } from "@/lib/api/text";
+import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTheme } from "@/lib/theme/project-theme";
@@ -126,6 +126,13 @@ export async function POST(req: NextRequest) {
     { label: "タグライン", value: body.tagline, max: TEXT_LIMITS.tagline },
     { label: "プロジェクト概要", value: body.description, max: TEXT_LIMITS.description },
     { label: "ストーリー", value: body.story, max: TEXT_LIMITS.story },
+    { label: "英語のタイトル", value: body.titleEn, max: TEXT_LIMITS.title },
+    { label: "英語のタグライン", value: body.taglineEn, max: TEXT_LIMITS.tagline },
+    {
+      label: "英語のプロジェクト概要",
+      value: body.descriptionEn,
+      max: TEXT_LIMITS.description,
+    },
   ]);
   if (tooLong) {
     return NextResponse.json({ error: tooLong }, { status: 400 });
@@ -136,6 +143,9 @@ export async function POST(req: NextRequest) {
     tagline,
     description,
     story,
+    titleEn,
+    taglineEn,
+    descriptionEn,
     categoryId,
     tags,
     goalAmount,
@@ -190,6 +200,10 @@ export async function POST(req: NextRequest) {
     category_id: categoryUuid,
     tags: tags || [],
     goal_amount: baseGoalAmount,
+    // 英語はすべて任意。空欄は null にして日本語へのフォールバックに任せる
+    title_en: blankToNull(titleEn),
+    tagline_en: blankToNull(taglineEn),
+    description_en: blankToNull(descriptionEn),
     end_date: campaignEndFromInput(endDate),
     allow_free_amount: allowFreeAmount !== false,
     allow_comments: allowComments !== false,
@@ -279,6 +293,8 @@ export async function POST(req: NextRequest) {
         project_id: project.id,
         title: r.title || "",
         description: r.description || "",
+        title_en: blankToNull(r.titleEn),
+        description_en: blankToNull(r.descriptionEn),
         amount: r.amount || 0,
         reward_type: r.rewardType,
         needs_address: r.needsAddress,

@@ -28,6 +28,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProjectImagePicker from "@/components/project/ProjectImagePicker";
+import EnglishPanel from "@/components/project/EnglishPanel";
 import ThemeEditor from "@/components/project/ThemeEditor";
 import { DEFAULT_THEME, resolveTheme } from "@/lib/theme/project-theme";
 import { jstDateAfterDays } from "@/lib/date/campaign-end";
@@ -67,6 +68,9 @@ const steps = [
 type RewardInput = {
   title: string;
   description: string;
+  /** 英語表示用（任意）。空なら日本語がそのまま出る */
+  titleEn: string;
+  descriptionEn: string;
   amount: number;
   rewardType: "physical" | "digital" | "experience" | "no_reward";
   needsAddress: boolean;
@@ -91,6 +95,10 @@ export default function CreateProjectClient() {
     category: "",
     description: "",
     story: "",
+    // 英語に切り替えたときに出す文面（すべて任意）
+    titleEn: "",
+    taglineEn: "",
+    descriptionEn: "",
     endDate: "",
     mainImageUrl: null as string | null,
     images: [] as string[],
@@ -143,6 +151,9 @@ export default function CreateProjectClient() {
           category: p.categories?.slug || "",
           description: p.description || "",
           story: p.story || "",
+          titleEn: p.title_en || "",
+          taglineEn: p.tagline_en || "",
+          descriptionEn: p.description_en || "",
           endDate: p.end_date ? p.end_date.slice(0, 10) : "",
           mainImageUrl: p.main_image_url || null,
           images: Array.isArray(p.images) ? p.images : [],
@@ -155,6 +166,8 @@ export default function CreateProjectClient() {
           rewards: (p.rewards || []).map((r: Record<string, unknown>) => ({
             title: (r.title as string) || "",
             description: (r.description as string) || "",
+            titleEn: (r.title_en as string) || "",
+            descriptionEn: (r.description_en as string) || "",
             amount: r.amount as number,
             rewardType: r.reward_type as RewardInput["rewardType"],
             needsAddress: r.needs_address !== false,
@@ -219,6 +232,8 @@ export default function CreateProjectClient() {
         {
           title: "",
           description: "",
+          titleEn: "",
+          descriptionEn: "",
           amount: 1000,
           rewardType: "physical" as const,
           needsAddress: true,
@@ -323,6 +338,9 @@ export default function CreateProjectClient() {
     tagline: formData.tagline || formData.title,
     description: formData.description,
     story: formData.story,
+    titleEn: formData.titleEn,
+    taglineEn: formData.taglineEn,
+    descriptionEn: formData.descriptionEn,
     categoryId: formData.category,
     tags: [],
     goalAmount: validMilestones()[0]?.amount ?? 0,
@@ -645,6 +663,26 @@ export default function CreateProjectClient() {
                     </div>
                   </div>
 
+                  <EnglishPanel
+                    hasContent={Boolean(formData.titleEn || formData.taglineEn)}
+                  >
+                    <Input
+                      label="Title"
+                      placeholder="e.g. A music album you can enjoy with scent"
+                      value={formData.titleEn}
+                      onChange={(e) => updateField("titleEn", e.target.value)}
+                      fullWidth
+                    />
+                    <Textarea
+                      label="Tagline"
+                      placeholder="e.g. A brand-new listening experience blending music and scent"
+                      value={formData.taglineEn}
+                      onChange={(e) => updateField("taglineEn", e.target.value)}
+                      rows={2}
+                      fullWidth
+                    />
+                  </EnglishPanel>
+
                   <div>
                     <p className="text-sm font-semibold text-gray-700 mb-3">
                       カテゴリー
@@ -753,6 +791,17 @@ export default function CreateProjectClient() {
                     rows={8}
                     allowImages
                   />
+
+                  <EnglishPanel hasContent={Boolean(formData.descriptionEn)}>
+                    <MarkdownEditor
+                      label="Project overview"
+                      placeholder="Describe your project in English."
+                      value={formData.descriptionEn}
+                      onChange={(v) => updateField("descriptionEn", v)}
+                      rows={8}
+                      allowImages
+                    />
+                  </EnglishPanel>
                 </div>
               </Card>
             )}
@@ -1201,14 +1250,7 @@ function RewardForm({
   onChange,
   onRemove,
 }: {
-  reward: {
-    title: string;
-    description: string;
-    amount: number;
-    rewardType: string;
-    needsAddress: boolean;
-    quantityTotal?: number;
-  };
+  reward: RewardInput;
   index: number;
   onChange: (field: string, value: unknown) => void;
   onRemove: () => void;
@@ -1271,6 +1313,26 @@ function RewardForm({
             rows={3}
             fullWidth
           />
+
+          <EnglishPanel
+            hasContent={Boolean(reward.titleEn || reward.descriptionEn)}
+          >
+            <Input
+              label="Title"
+              placeholder="e.g. Limited thank-you voice message + digital album"
+              value={reward.titleEn}
+              onChange={(e) => onChange("titleEn", e.target.value)}
+              fullWidth
+            />
+            <Textarea
+              label="Description"
+              placeholder="Describe this reward in English"
+              value={reward.descriptionEn}
+              onChange={(e) => onChange("descriptionEn", e.target.value)}
+              rows={3}
+              fullWidth
+            />
+          </EnglishPanel>
 
           <div className="grid grid-cols-2 gap-3">
             <Input

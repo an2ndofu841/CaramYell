@@ -70,7 +70,7 @@ export default function BackingClient({
   realProject?: Project | null;
 }) {
   // 実プロジェクトがあれば実データ＋実決済、なければモック＋デモ決済
-  const { t, locale } = useLocale();
+  const { t, locale, pick } = useLocale();
   const isReal = !!realProject;
   const project =
     realProject || getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
@@ -259,7 +259,9 @@ export default function BackingClient({
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">{project.title}</p>
+              <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">
+                {pick(project.title, project.title_en)}
+              </p>
               <ProgressBar percentage={stats.progress} />
               <p className="text-xs text-gray-400 mt-1">
                 {stats.progress}% 達成 · 残り{stats.daysLeft}日
@@ -344,7 +346,9 @@ export default function BackingClient({
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm font-bold text-gray-800">{reward.title}</p>
+                            <p className="text-sm font-bold text-gray-800">
+                              {pick(reward.title, reward.title_en)}
+                            </p>
                           </div>
 
                           {/* 数量ステッパー */}
@@ -422,7 +426,8 @@ export default function BackingClient({
                       {selectedItems.map((it) => (
                         <div key={it.reward.id} className="flex justify-between text-sm">
                           <span className="text-gray-500 truncate max-w-[70%]">
-                            {it.reward.title} <span className="text-gray-400">× {it.qty}</span>
+                            {pick(it.reward.title, it.reward.title_en)}{" "}
+                            <span className="text-gray-400">× {it.qty}</span>
                           </span>
                           <span className="font-semibold">
                             {formatCurrency(it.reward.amount * it.qty)}
@@ -668,7 +673,7 @@ export default function BackingClient({
                     <div className="flex justify-between">
                       <span className="text-gray-500">{t.backing.project}</span>
                       <span className="font-semibold text-right max-w-[60%] line-clamp-1">
-                        {project.title}
+                        {pick(project.title, project.title_en)}
                       </span>
                     </div>
                     <div className="flex justify-between gap-2">
@@ -680,7 +685,8 @@ export default function BackingClient({
                           <>
                             {selectedItems.map((it) => (
                               <span key={it.reward.id} className="block">
-                                {it.reward.title} × {it.qty}
+                                {pick(it.reward.title, it.reward.title_en)} ×{" "}
+                                {it.qty}
                               </span>
                             ))}
                             {effectiveFree > 0 && (

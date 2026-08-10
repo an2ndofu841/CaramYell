@@ -40,6 +40,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import Markdown from "@/components/ui/Markdown";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ProgressBar from "@/components/ui/ProgressBar";
+import EnglishPanel from "@/components/project/EnglishPanel";
 import AnimatedSection from "@/components/animations/AnimatedSection";
 import {
   formatCurrency,
@@ -413,6 +414,9 @@ function EditTab({
     tagline: project.tagline,
     description: project.description,
     story: project.story || "",
+    titleEn: project.title_en || "",
+    taglineEn: project.tagline_en || "",
+    descriptionEn: project.description_en || "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -475,6 +479,37 @@ function EditTab({
               rows={10}
               allowImages
             />
+
+            <EnglishPanel
+              hasContent={Boolean(
+                form.titleEn || form.taglineEn || form.descriptionEn
+              )}
+            >
+              <Input
+                label="Title"
+                value={form.titleEn}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, titleEn: e.target.value }))
+                }
+                fullWidth
+              />
+              <Textarea
+                label="Tagline"
+                value={form.taglineEn}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, taglineEn: e.target.value }))
+                }
+                rows={2}
+                fullWidth
+              />
+              <MarkdownEditor
+                label="Project overview"
+                value={form.descriptionEn}
+                onChange={(v) => setForm((p) => ({ ...p, descriptionEn: v }))}
+                rows={10}
+                allowImages
+              />
+            </EnglishPanel>
 
             <Button
               onClick={handleSave}
@@ -632,6 +667,8 @@ function RewardsTab({
   const [newReward, setNewReward] = useState({
     title: "",
     description: "",
+    titleEn: "",
+    descriptionEn: "",
     amount: 1000,
     rewardType: "physical",
     needsAddress: true,
@@ -656,6 +693,8 @@ function RewardsTab({
       setNewReward({
         title: "",
         description: "",
+        titleEn: "",
+        descriptionEn: "",
         amount: 1000,
         rewardType: "physical",
         needsAddress: true,
@@ -772,6 +811,34 @@ function RewardsTab({
                 rows={3}
                 fullWidth
               />
+
+              <EnglishPanel
+                hasContent={Boolean(
+                  newReward.titleEn || newReward.descriptionEn
+                )}
+              >
+                <Input
+                  label="Title"
+                  value={newReward.titleEn}
+                  onChange={(e) =>
+                    setNewReward((p) => ({ ...p, titleEn: e.target.value }))
+                  }
+                  fullWidth
+                />
+                <Textarea
+                  label="Description"
+                  value={newReward.descriptionEn}
+                  onChange={(e) =>
+                    setNewReward((p) => ({
+                      ...p,
+                      descriptionEn: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                  fullWidth
+                />
+              </EnglishPanel>
+
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   label="金額（円）"

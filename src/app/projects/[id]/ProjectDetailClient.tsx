@@ -695,6 +695,7 @@ function RewardCard({
   onSelect: () => void;
   index: number;
 }) {
+  const { pick } = useLocale();
   const available = isRewardAvailable(reward);
   const remaining = reward.quantity_total
     ? reward.quantity_total - reward.quantity_claimed
@@ -753,8 +754,12 @@ function RewardCard({
               )}
             </div>
 
-            <h3 className="font-bold text-gray-800 mb-2">{reward.title}</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">{reward.description}</p>
+            <h3 className="font-bold text-gray-800 mb-2">
+              {pick(reward.title, reward.title_en)}
+            </h3>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              {pick(reward.description, reward.description_en)}
+            </p>
 
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
               {reward.estimated_delivery_date && (
