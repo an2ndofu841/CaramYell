@@ -42,7 +42,7 @@ STRIPE_WEBHOOK_SECRET=your_webhook_secret
 # OpenAI
 OPENAI_API_KEY=your_openai_api_key
 
-# App（ローカル開発時。本番/Vercelでは https://caramyell.com を設定）
+# App（ローカル開発時のみ参照される。本番では設定しても無視される）
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -68,13 +68,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 それぞれで行い、環境ごとに対応するキーを設定します。
 
 1. [Stripe](https://stripe.com) でアカウント作成
-2. Apple Pay / Google Pay のドメイン登録に `caramyell.com` を追加
-3. Webhookエンドポイントを `https://caramyell.com/api/stripe/webhook` に設定し、
+2. Apple Pay / Google Pay のドメイン登録に `www.caramyell.com` を追加
+3. Webhookエンドポイントを `https://www.caramyell.com/api/stripe/webhook` に設定し、
    以下のイベントを選択
    - `checkout.session.completed`（決済完了）
    - `checkout.session.async_payment_succeeded`（コンビニ払いなど後から入金される決済）
    - `payment_intent.payment_failed`（決済失敗）
    - `charge.refunded`（返金。これが無いと返金してもプロジェクトの集計金額が減らない）
+   - `charge.dispute.created` / `charge.dispute.closed`（チャージバック。
+     これが無いと資金が引き上げられても集計に載ったままになる）
+
+   URL は必ず Vercel の primary domain（www 付き）を指定すること。
+   apex を指定すると Vercel が www へ 308 リダイレクトを返すが、
+   Stripe はリダイレクトを追わないため全イベントが配信失敗になる。
 4. 作成したエンドポイントの署名シークレット（`whsec_...`）を `STRIPE_WEBHOOK_SECRET` に設定
 
 #### 決済手段を増やすとき

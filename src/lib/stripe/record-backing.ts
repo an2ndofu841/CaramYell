@@ -9,6 +9,7 @@ export type RecordBackingResult =
   | { status: "created" }
   | { status: "duplicate" }
   | { status: "not_paid" }
+  | { status: "foreign" }
   | { status: "error"; message: string };
 
 export function getStripeClient() {
@@ -115,12 +116,21 @@ async function resolvePaymentMethod(
 export async function recordBackingFromSession(
   session: Stripe.Checkout.Session
 ): Promise<RecordBackingResult> {
+  const metadata = session.metadata || {};
+  const projectId = metadata.project_id;
+
+  // この Stripe アカウントは別サービスと共有していて、Stripe はアカウント内の
+  // 全 webhook エンドポイントに同じイベントを配信する。project_id が無いものは
+  // 他サービスの決済なので、error にして 500 を返すと Stripe が再送を繰り返し、
+  // 最後にはこちらのエンドポイントごと配信を止められてしまう。黙って見送る。
+  if (!projectId) {
+    return { status: "foreign" };
+  }
+
   if (session.payment_status !== "paid") {
     return { status: "not_paid" };
   }
 
-  const metadata = session.metadata || {};
-  const projectId = metadata.project_id;
   let amount = parseAmount(metadata.amount);
   let feeAmount = parseAmount(metadata.fee_amount);
   let totalAmount = parseAmount(metadata.total_amount) ?? session.amount_total;
@@ -129,7 +139,7 @@ export async function recordBackingFromSession(
     session.customer_details?.email ||
     session.customer_email;
 
-  if (!projectId || amount == null || feeAmount == null || totalAmount == null || !guestEmail) {
+  if (amount == null || feeAmount == null || totalAmount == null || !guestEmail) {
     return {
       status: "error",
       message: `セッション ${session.id} の metadata が不足しています`,
