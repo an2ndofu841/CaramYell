@@ -31,7 +31,10 @@ async function getProject(slugOrId: string): Promise<Project | null> {
     const { data } = await (isUuid
       ? query.eq("id", slugOrId)
       : query.eq("slug", slugOrId)
-    ).maybeSingle();
+    )
+      // 指定しないとDBが返した順（不定）になり、編集のたびに並びが変わる
+      .order("amount", { referencedTable: "rewards", ascending: true })
+      .maybeSingle();
 
     if (data) {
       return data as unknown as Project;

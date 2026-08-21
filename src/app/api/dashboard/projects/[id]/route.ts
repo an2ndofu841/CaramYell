@@ -34,6 +34,8 @@ export async function GET(
     )
     .eq("id", id)
     .eq("creator_id", user.id)
+    // 掲載者の管理画面と公開ページで並びを揃える
+    .order("amount", { referencedTable: "rewards", ascending: true })
     .single();
 
   if (error || !project) {
