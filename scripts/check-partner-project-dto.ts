@@ -50,9 +50,11 @@ const base = (overrides: Partial<V1ProjectSource> = {}): V1ProjectSource => ({
   description: "概要です",
   story: "本文です",
   title_en: "",
-  goal_amount: 1_000_000,
-  current_amount: 420_000,
-  backer_count: 87,
+  // 実在の案件と同じ形。goal_amount は基本目標（最小段階）で、
+  // 最終目標は段階ゴールの最大値 350,000
+  goal_amount: 100_000,
+  current_amount: 266_200,
+  backer_count: 9,
   currency: "JPY",
   status: "active",
   main_image_url: "https://example.com/main.jpg",
@@ -63,8 +65,9 @@ const base = (overrides: Partial<V1ProjectSource> = {}): V1ProjectSource => ({
   profiles: { display_name: "掲載者", avatar_url: null },
   categories: { slug: "music", name_ja: "音楽", name_en: "Music" },
   project_milestones: [
-    { id: "m1", amount: 1_000_000, title: "基本目標", sort_order: 0 },
-    { id: "m2", amount: 2_000_000, title: "ネクスト", sort_order: 1 },
+    { id: "m1", amount: 100_000, title: "基本目標", sort_order: 0 },
+    { id: "m2", amount: 200_000, title: "セカンド", sort_order: 1 },
+    { id: "m3", amount: 350_000, title: "楽曲制作決定", sort_order: 2 },
   ],
   rewards: [
     {
@@ -83,7 +86,21 @@ const base = (overrides: Partial<V1ProjectSource> = {}): V1ProjectSource => ({
 });
 
 const active = serializePartnerProject(base());
-check("達成率は四捨五入", active.percent, 42);
+// サイトの詳細ページは ¥266,200 / 最終目標 ¥350,000 を 76% と出す
+check("goal_amount は最終目標", active.goal_amount, 350_000);
+check("base_goal_amount は基本目標", active.base_goal_amount, 100_000);
+check("達成率は最終目標を分母にする", active.percent, 76);
+check("最終目標は未達なので未達成扱い", active.is_funded, false);
+check("次の段階ゴール", active.next_milestone, {
+  id: "m3",
+  title: "楽曲制作決定",
+  amount: 350_000,
+  remaining: 83_800,
+});
+check("段階ゴールは金額の小さい順", active.milestones.map((m) => m.amount), [
+  100_000, 200_000, 350_000,
+]);
+check("到達済みの段階数", active.milestones.filter((m) => m.reached).length, 2);
 check("募集中は支援できる", active.can_back, true);
 check("詳細URL", active.urls.detail.endsWith("/projects/group-campaign"), true);
 check(
@@ -92,7 +109,7 @@ check(
     active.urls.back.includes("utm_source=partner"),
   true
 );
-check("基本目標は到達前", active.milestones[0]?.reached, false);
+check("基本目標は到達済み", active.milestones[0]?.reached, true);
 check("リターン残数", active.rewards[0]?.quantity_remaining, 88);
 check("リターンも支援できる", active.rewards[0]?.can_back, true);
 check(
@@ -101,10 +118,19 @@ check(
   true
 );
 
-const over = serializePartnerProject(base({ current_amount: 1_200_000 }));
-check("超過達成は 100 で切らない", over.percent, 120);
-check("超過でも基本目標は到達", over.milestones[0]?.reached, true);
-check("ネクストは未到達", over.milestones[1]?.reached, false);
+// 最終目標を超えたときだけ 100% / 達成済みになる
+const over = serializePartnerProject(base({ current_amount: 400_000 }));
+check("超過しても 100 で止める", over.percent, 100);
+check("最終目標超えは達成済み", over.is_funded, true);
+check("全段階到達なら next は null", over.next_milestone, null);
+
+// 段階ゴールが無い案件は goal_amount がそのまま分母
+const noMilestones = serializePartnerProject(
+  base({ goal_amount: 500_000, current_amount: 250_000, project_milestones: [] })
+);
+check("段階なしは goal_amount が分母", noMilestones.percent, 50);
+check("段階なしの goal_amount", noMilestones.goal_amount, 500_000);
+check("段階なしの next は null", noMilestones.next_milestone, null);
 
 const ended = serializePartnerProject(base({ end_date: past }));
 check("締切後は支援できない", ended.can_back, false);

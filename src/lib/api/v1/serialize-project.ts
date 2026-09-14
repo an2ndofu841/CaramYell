@@ -36,6 +36,15 @@ export interface V1Milestone {
   reached: boolean;
 }
 
+/** まだ到達していない直近の段階ゴール。全部到達済みなら null */
+export interface V1NextMilestone {
+  id: string;
+  title: string;
+  amount: number;
+  /** 到達までの残り金額 */
+  remaining: number;
+}
+
 export interface V1Reward {
   id: string;
   title: string;
@@ -67,9 +76,17 @@ export interface V1Project {
   tags: string[];
   status: string;
   currency: string;
+  /**
+   * 画面に出る目標額。段階ゴールがあればその最終目標。
+   * サイト側（ProjectDetailClient / ProjectCard）と同じ基準にしてある。
+   */
   goal_amount: number;
+  /** 基本目標（最小段階）。参考用で、達成率の分母には使わない */
+  base_goal_amount: number;
   current_amount: number;
+  /** goal_amount に対する達成率。サイトと同じく 100 で止める */
   percent: number;
+  is_funded: boolean;
   backer_count: number;
   days_left: number;
   can_back: boolean;
@@ -81,6 +98,7 @@ export interface V1Project {
   creator: V1Creator | null;
   category: V1Category | null;
   milestones: V1Milestone[];
+  next_milestone: V1NextMilestone | null;
   rewards: V1Reward[];
   urls: V1ProjectUrls;
 }
@@ -179,8 +197,9 @@ function remaining(
 
 function achievementPercent(goal: number, current: number): number {
   if (goal <= 0) return 0;
-  // 超過達成もそのまま出す（段階ゴールの進捗に使う）
-  return Math.round((current / goal) * 100);
+  // サイト側と同じく 100 で止める。超過分は is_funded と
+  // milestones[].reached で分かる
+  return Math.min(Math.round((current / goal) * 100), 100);
 }
 
 /**
@@ -190,24 +209,19 @@ function achievementPercent(goal: number, current: number): number {
 export function serializePartnerProject(row: V1ProjectSource): V1Project {
   const slug = text(row.slug);
   const status = text(row.status);
-  const goal = Number(row.goal_amount) || 0;
+  const baseGoal = Number(row.goal_amount) || 0;
   const current = Number(row.current_amount) || 0;
   const backerCount = Number(row.backer_count) || 0;
   const endDate = row.end_date ?? null;
   const canBack = status === "active" && !isCampaignOver(endDate);
-  const stats = calcProjectStats({
-    goal_amount: goal,
-    current_amount: current,
-    backer_count: backerCount,
-    end_date: endDate ?? undefined,
-  });
 
   const creator = one(row.profiles);
   const category = one(row.categories);
 
   const milestones = many(row.project_milestones)
     .slice()
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    // 金額の小さい順。最後の要素が最終目標になる
+    .sort((a, b) => (Number(a.amount) || 0) - (Number(b.amount) || 0))
     .map((milestone) => {
       const amount = Number(milestone.amount) || 0;
       return {
@@ -219,6 +233,31 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
         reached: current >= amount,
       };
     });
+
+  /**
+   * 段階ゴールがある案件の goal_amount は最小段階（基本目標）なので、
+   * これを分母にすると第1目標を超えた時点で達成済みに見えてしまう。
+   * サイトの表示と同じく最終目標を基準にする。
+   */
+  const goal =
+    milestones.length > 0 ? milestones[milestones.length - 1].amount : baseGoal;
+
+  const stats = calcProjectStats({
+    goal_amount: goal,
+    current_amount: current,
+    backer_count: backerCount,
+    end_date: endDate ?? undefined,
+  });
+
+  const upcoming = milestones.find((milestone) => !milestone.reached);
+  const nextMilestone = upcoming
+    ? {
+        id: upcoming.id,
+        title: upcoming.title,
+        amount: upcoming.amount,
+        remaining: upcoming.amount - current,
+      }
+    : null;
 
   const rewards = many(row.rewards)
     .slice()
@@ -271,8 +310,10 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
     status,
     currency: text(row.currency) || "JPY",
     goal_amount: goal,
+    base_goal_amount: baseGoal,
     current_amount: current,
     percent: achievementPercent(goal, current),
+    is_funded: goal > 0 && current >= goal,
     backer_count: backerCount,
     days_left: stats.days_left,
     can_back: canBack,
@@ -297,6 +338,7 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
         }
       : null,
     milestones,
+    next_milestone: nextMilestone,
     rewards,
     urls: {
       detail: absoluteUrl(`/projects/${slug}`),
