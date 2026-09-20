@@ -1,6 +1,11 @@
 import { absoluteUrl } from "@/lib/config/site";
 import { isCampaignOver } from "@/lib/date/campaign-end";
 import { calcProjectStats, isRewardAvailable } from "@/lib/utils";
+import {
+  nextUnreached,
+  resolveFinalGoal,
+  splitMilestones,
+} from "@/lib/project/goals";
 import type { RewardType } from "@/types";
 
 const UTM_SOURCE = "partner";
@@ -34,6 +39,11 @@ export interface V1Milestone {
   description: string | null;
   sort_order: number;
   reached: boolean;
+  /**
+   * 努力目標。最終目標（goal_amount）のさらに上に置くプラスアルファで、
+   * goal_amount / percent / is_funded / next_milestone には含めない
+   */
+  is_stretch: boolean;
 }
 
 /** まだ到達していない直近の段階ゴール。全部到達済みなら null */
@@ -97,8 +107,12 @@ export interface V1Project {
   end_date: string | null;
   creator: V1Creator | null;
   category: V1Category | null;
+  /** 基本の段階と努力目標の両方。is_stretch で見分ける。金額の小さい順 */
   milestones: V1Milestone[];
+  /** 基本の段階のうち、まだ到達していない直近のもの */
   next_milestone: V1NextMilestone | null;
+  /** 努力目標のうち、まだ到達していない直近のもの。無ければ null */
+  next_stretch_goal: V1NextMilestone | null;
   rewards: V1Reward[];
   urls: V1ProjectUrls;
 }
@@ -142,6 +156,7 @@ export interface V1ProjectSource {
     title?: string | null;
     description?: string | null;
     sort_order?: number | null;
+    is_stretch?: boolean | null;
   }>;
   rewards?: Nested<{
     id: string;
@@ -218,9 +233,9 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
   const creator = one(row.profiles);
   const category = one(row.categories);
 
-  const milestones = many(row.project_milestones)
+  const milestones: V1Milestone[] = many(row.project_milestones)
     .slice()
-    // 金額の小さい順。最後の要素が最終目標になる
+    // 金額の小さい順。基本の段階の最後の要素が最終目標になる
     .sort((a, b) => (Number(a.amount) || 0) - (Number(b.amount) || 0))
     .map((milestone) => {
       const amount = Number(milestone.amount) || 0;
@@ -231,16 +246,20 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
         description: nullable(milestone.description),
         sort_order: Number(milestone.sort_order) || 0,
         reached: current >= amount,
+        is_stretch: milestone.is_stretch === true,
       };
     });
+
+  // 努力目標は最終目標のさらに上に置くプラスアルファ。分母には入れない
+  const { base: baseMilestones, stretch: stretchGoals } =
+    splitMilestones(milestones);
 
   /**
    * 段階ゴールがある案件の goal_amount は最小段階（基本目標）なので、
    * これを分母にすると第1目標を超えた時点で達成済みに見えてしまう。
    * サイトの表示と同じく最終目標を基準にする。
    */
-  const goal =
-    milestones.length > 0 ? milestones[milestones.length - 1].amount : baseGoal;
+  const goal = resolveFinalGoal(baseGoal, baseMilestones);
 
   const stats = calcProjectStats({
     goal_amount: goal,
@@ -249,15 +268,18 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
     end_date: endDate ?? undefined,
   });
 
-  const upcoming = milestones.find((milestone) => !milestone.reached);
-  const nextMilestone = upcoming
-    ? {
-        id: upcoming.id,
-        title: upcoming.title,
-        amount: upcoming.amount,
-        remaining: upcoming.amount - current,
-      }
-    : null;
+  const toNext = (upcoming: V1Milestone | undefined): V1NextMilestone | null =>
+    upcoming
+      ? {
+          id: upcoming.id,
+          title: upcoming.title,
+          amount: upcoming.amount,
+          remaining: upcoming.amount - current,
+        }
+      : null;
+
+  const nextMilestone = toNext(nextUnreached(baseMilestones, current));
+  const nextStretchGoal = toNext(nextUnreached(stretchGoals, current));
 
   const rewards = many(row.rewards)
     .slice()
@@ -339,6 +361,7 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
       : null,
     milestones,
     next_milestone: nextMilestone,
+    next_stretch_goal: nextStretchGoal,
     rewards,
     urls: {
       detail: absoluteUrl(`/projects/${slug}`),

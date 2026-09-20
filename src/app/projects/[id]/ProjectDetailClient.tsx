@@ -43,6 +43,11 @@ import { paymentMethodBadges } from "@/lib/config/payment-methods";
 import ProjectThemeScope from "@/components/project/ProjectThemeScope";
 import { ProjectTheme, resolveTheme } from "@/lib/theme/project-theme";
 import { isCampaignOver } from "@/lib/date/campaign-end";
+import {
+  nextUnreached,
+  resolveFinalGoal,
+  splitMilestones,
+} from "@/lib/project/goals";
 
 interface ProjectDetailClientProps {
   project: Project;
@@ -98,20 +103,27 @@ export default function ProjectDetailClient({
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
-  const hasMilestones = milestones.length > 0;
+  // 努力目標（is_stretch）は最終目標の分母に入れない。掲載中に足しても
+  // 達成率・達成バッジが動かないように、ここで基本の段階と切り分ける
+  const { base: sortedMilestones, stretch: stretchGoals } =
+    splitMilestones(milestones);
+  const hasMilestones = sortedMilestones.length > 0;
+  const hasStretch = stretchGoals.length > 0;
   // 段階ゴールがある場合は「最終目標」を基準に進捗を見せる（第1目標達成で満タンに見せない）
-  const sortedMilestones = [...milestones].sort((a, b) => a.amount - b.amount);
-  const finalGoal = hasMilestones
-    ? sortedMilestones[sortedMilestones.length - 1].amount
-    : project.goal_amount;
+  const finalGoal = resolveFinalGoal(project.goal_amount, sortedMilestones);
   const nextMilestone = hasMilestones
-    ? sortedMilestones.find((m) => project.current_amount < m.amount)
+    ? nextUnreached(sortedMilestones, project.current_amount)
     : undefined;
   const headlinePct = Math.min(
     Math.round((project.current_amount / finalGoal) * 100),
     100
   );
   const allMilestonesAchieved = hasMilestones && !nextMilestone;
+  // 最終目標を越えたあとに見せるプラスアルファ。未達の努力目標が無ければ全達成
+  const finalGoalReached = hasMilestones
+    ? allMilestonesAchieved
+    : stats.is_funded;
+  const nextStretch = nextUnreached(stretchGoals, project.current_amount);
   // 進捗バー上の段階目標マーカー。名前はバーの下に並べると隣と重なって
   // 読めなくなるので出さず、下の段階ゴール一覧に任せている。
   const milestoneMarkers = hasMilestones
@@ -206,6 +218,30 @@ export default function ProjectDetailClient({
           <div className="mb-4 p-3 rounded-2xl text-center bg-green-50 border-2 border-green-100">
             <p className="text-sm font-bold text-green-700">
               🎉 全ての目標を達成しました！
+            </p>
+          </div>
+        )
+      )}
+
+      {/* 努力目標。最終目標を越えたあとだけ出す。達成率には影響しない */}
+      {hasStretch && finalGoalReached && (
+        nextStretch ? (
+          <div className="mb-4 p-3 rounded-2xl text-center bg-pink-50 border-2 border-pink-100">
+            <p className="text-xs font-bold text-candy-pink mb-0.5">
+              ✨ {t.detail.stretchGoals}
+            </p>
+            <p className="text-sm font-bold text-pink-700">
+              {t.detail.stretchNextPrefix}
+              {formatCurrency(nextStretch.amount - project.current_amount)}
+              {t.detail.stretchNextSuffix}
+              <br />
+              「{nextStretch.title}」{t.detail.stretchNextAchieve}
+            </p>
+          </div>
+        ) : (
+          <div className="mb-4 p-3 rounded-2xl text-center bg-pink-50 border-2 border-pink-100">
+            <p className="text-sm font-bold text-pink-700">
+              {t.detail.stretchAllAchieved}
             </p>
           </div>
         )
@@ -318,7 +354,7 @@ export default function ProjectDetailClient({
     </Card>
   ) : null;
 
-  const milestonesPanel = hasMilestones ? (
+  const milestonesPanel = hasMilestones || hasStretch ? (
     <MilestonesProgress
       milestones={milestones}
       currentAmount={project.current_amount}

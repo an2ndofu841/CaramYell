@@ -29,7 +29,7 @@ export async function GET(
       *,
       categories(id, slug, name_ja, icon, color),
       rewards(*),
-      project_milestones(id, amount, title, description, sort_order)
+      project_milestones(id, amount, title, description, sort_order, is_stretch)
     `
     )
     .eq("id", id)

@@ -22,7 +22,7 @@ const V1_SELECT = `
   profiles!projects_creator_id_fkey(display_name, avatar_url),
   categories(slug, name_ja, name_en),
   rewards(id, title, description, title_en, description_en, amount, quantity_total, quantity_claimed, reward_type, estimated_delivery_date, sort_order),
-  project_milestones(id, amount, title, description, sort_order)
+  project_milestones(id, amount, title, description, sort_order, is_stretch)
 `;
 
 export function isUuid(value: string): boolean {

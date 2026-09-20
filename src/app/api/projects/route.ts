@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       ${PUBLIC_PROJECT_COLUMNS},
       profiles!projects_creator_id_fkey(id, display_name, avatar_url),
       categories(id, slug, name_ja, name_en, icon, color),
-      project_milestones(id, amount, title, sort_order)
+      project_milestones(id, amount, title, sort_order, is_stretch)
     `)
     .in("status", ["active", "funded", "completed"]);
 

@@ -11,6 +11,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import Badge from "@/components/ui/Badge";
 import Confetti from "@/components/animations/Confetti";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { resolveFinalGoal, splitMilestones } from "@/lib/project/goals";
 
 interface ProjectCardProps {
   project: Project;
@@ -25,11 +26,9 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
   // 段階ゴールがある場合は最終目標を基準にする。
   // 第1目標（goal_amount）基準のままだと、まだ上の段階が残っているのに
   // カードだけ「100% 達成！」に見えてしまうため。
-  const milestones = project.project_milestones ?? [];
-  const hasMilestones = milestones.length > 0;
-  const finalGoal = hasMilestones
-    ? Math.max(...milestones.map((m) => m.amount))
-    : project.goal_amount;
+  // 努力目標（is_stretch）は最終目標のさらに上なので分母には入れない。
+  const { base: baseMilestones } = splitMilestones(project.project_milestones);
+  const finalGoal = resolveFinalGoal(project.goal_amount, baseMilestones);
   const progressPct = Math.min(
     Math.round((project.current_amount / (finalGoal || 1)) * 100),
     100
