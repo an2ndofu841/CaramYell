@@ -22,6 +22,8 @@ export type BackingConfirmation = {
   totalAmount: number;
   items: BackingConfirmationItem[];
   address: Record<string, string> | null;
+  /** 現地での現金支援など、Stripe 決済以外のときの支払い方法の説明 */
+  paymentNote?: string | null;
 };
 
 function escapeHtml(value: string): string {
@@ -56,7 +58,13 @@ function buildLines(c: BackingConfirmation): [string, string][] {
   if (c.amount > itemsTotal) {
     lines.push(["応援金額", formatCurrency(c.amount - itemsTotal)]);
   }
-  lines.push([`手数料（${BACKER_FEE_PERCENT}%）`, formatCurrency(c.feeAmount)]);
+  // 現地の現金支援は手数料を取らないので、0 円の行は出さない
+  if (c.feeAmount > 0) {
+    lines.push([`手数料（${BACKER_FEE_PERCENT}%）`, formatCurrency(c.feeAmount)]);
+  }
+  if (c.paymentNote) {
+    lines.push(["お支払い方法", c.paymentNote]);
+  }
   return lines;
 }
 

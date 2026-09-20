@@ -39,7 +39,7 @@ export async function GET() {
   if (projectIds.length > 0) {
     const { data: backers } = await supabase
       .from("backers")
-      .select("project_id, amount, user_id, guest_email")
+      .select("id, project_id, amount, user_id, guest_email")
       .in("project_id", projectIds)
       .eq("status", "paid");
 

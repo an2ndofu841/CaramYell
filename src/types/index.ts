@@ -28,7 +28,9 @@ export type PaymentMethod =
   | "paypal"
   | "link"
   | "paypay"
-  | "konbini";
+  | "konbini"
+  /** 現地で現金を受け取り、掲載者がダッシュボードから記録した支援 */
+  | "cash";
 
 export type UserRole = "user" | "creator" | "admin";
 
@@ -175,7 +177,8 @@ export interface Backer {
   reward_id?: string;
   user_id?: string;
   guest_nickname?: string;
-  guest_email: string;
+  /** 現金支援では未入力のことがある */
+  guest_email: string | null;
   guest_address?: GuestAddress;
   amount: number;
   fee_amount: number;
@@ -194,6 +197,8 @@ export interface Backer {
   tracking_number?: string;
   shipping_carrier?: string;
   fulfillment_note?: string;
+  /** 現地支援を記録した掲載者 */
+  recorded_by?: string | null;
   created_at: string;
   updated_at: string;
   // Joined

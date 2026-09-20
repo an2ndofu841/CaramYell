@@ -25,13 +25,19 @@ export function formatNumber(num: number): string {
 }
 
 type BackerIdentityFields = {
+  id?: string;
   user_id?: string | null;
   guest_email?: string | null;
 };
 
-/** 同一人物の判定キー。ログイン支援は user_id、ゲスト支援はメールアドレス */
+/**
+ * 同一人物の判定キー。ログイン支援は user_id、ゲスト支援はメールアドレス。
+ * メール無しの現金支援は同一人物を判定できないので、1件を1人として数える
+ * （DB 側の update_project_stats と同じ規則）
+ */
 export function backerIdentity(backer: BackerIdentityFields): string {
-  return backer.user_id ?? (backer.guest_email || "").trim().toLowerCase();
+  const email = (backer.guest_email || "").trim().toLowerCase();
+  return backer.user_id ?? (email || `row:${backer.id ?? ""}`);
 }
 
 /** 応援した人数。同じ人が複数回支援しても1人として数える */

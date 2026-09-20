@@ -85,7 +85,7 @@ export default function FulfillmentTab({
     return (
       (b.guest_address?.recipient_name || "").toLowerCase().includes(q) ||
       (b.guest_nickname || "").toLowerCase().includes(q) ||
-      b.guest_email.toLowerCase().includes(q) ||
+      (b.guest_email || "").toLowerCase().includes(q) ||
       formatAddress(b).toLowerCase().includes(q)
     );
   });
@@ -150,7 +150,7 @@ export default function FulfillmentTab({
         b.guest_address?.postal_code || "",
         formatAddress(b),
         b.guest_address?.country || "",
-        b.guest_email,
+        b.guest_email || "",
         items,
         String(b.amount),
         STATUS_META[(b.shipping_status || "pending") as ShippingStatus].label,
@@ -276,7 +276,7 @@ export default function FulfillmentTab({
                       )}
                       {formatAddress(b)}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{b.guest_email}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{b.guest_email || "メール未登録（現地支援）"}</p>
                   </div>
                   <button
                     onClick={() => copyAddress(b)}

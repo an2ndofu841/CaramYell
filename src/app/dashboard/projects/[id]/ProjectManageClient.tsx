@@ -31,10 +31,14 @@ import {
   Truck,
   Palette,
   Flag,
+  Banknote,
+  Undo2,
 } from "lucide-react";
+import { toast } from "sonner";
 import FulfillmentTab from "@/components/dashboard/FulfillmentTab";
 import DesignTab from "@/components/dashboard/DesignTab";
 import GoalsTab from "@/components/dashboard/GoalsTab";
+import OfflineBackingForm from "@/components/dashboard/OfflineBackingForm";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -262,7 +266,9 @@ export default function ProjectManageClient() {
         {activeTab === "design" && (
           <DesignTab project={project} onSaved={fetchData} />
         )}
-        {activeTab === "backers" && <BackersTab backers={backers} />}
+        {activeTab === "backers" && (
+          <BackersTab backers={backers} project={project} onChanged={fetchData} />
+        )}
         {activeTab === "fulfillment" && (
           <FulfillmentTab
             projectId={projectId}
@@ -618,8 +624,49 @@ function EditTab({
 }
 
 /* ================ Backers Tab ================ */
-function BackersTab({ backers }: { backers: Backer[] }) {
+function BackersTab({
+  backers,
+  project,
+  onChanged,
+}: {
+  backers: Backer[];
+  project: Project;
+  onChanged: () => void;
+}) {
   const [filter, setFilter] = useState<"all" | "paid" | "refunded">("all");
+  const [showOfflineForm, setShowOfflineForm] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  // 現地支援を記録できるのは受付中だけ（終了後に総額が動くのを防ぐ）
+  const canRecordOffline = project.status === "active" || project.status === "funded";
+
+  const cancelOffline = async (backer: Backer) => {
+    if (
+      !confirm(
+        `${backer.guest_nickname || "この支援者"} の現地支援 ${formatCurrency(
+          backer.amount
+        )} を取り消しますか？\n支援総額と支援者数から差し引かれます。`
+      )
+    )
+      return;
+    setCancellingId(backer.id);
+    try {
+      const res = await fetch(
+        `/api/dashboard/projects/${project.id}/offline-backings?backerId=${backer.id}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "取り消しに失敗しました");
+        return;
+      }
+      toast.success("現地支援を取り消しました");
+      onChanged();
+    } catch {
+      toast.error("取り消しに失敗しました");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const filtered = backers.filter((b) => {
     if (filter === "all") return true;
@@ -643,7 +690,17 @@ function BackersTab({ backers }: { backers: Backer[] }) {
         <h3 className="text-lg font-bold text-gray-800">
           支援者一覧（{filtered.length}名）
         </h3>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
+          {canRecordOffline && !showOfflineForm && (
+            <Button
+              size="sm"
+              variant="outline"
+              icon={<Banknote size={14} />}
+              onClick={() => setShowOfflineForm(true)}
+            >
+              現地支援を記録
+            </Button>
+          )}
           {(["all", "paid", "refunded"] as const).map((f) => (
             <button
               key={f}
@@ -665,6 +722,14 @@ function BackersTab({ backers }: { backers: Backer[] }) {
           ))}
         </div>
       </div>
+
+      {showOfflineForm && (
+        <OfflineBackingForm
+          project={project}
+          onSaved={onChanged}
+          onClose={() => setShowOfflineForm(false)}
+        />
+      )}
 
       {filtered.length === 0 ? (
         <Card>
@@ -700,16 +765,38 @@ function BackersTab({ backers }: { backers: Backer[] }) {
                             : backer.guest_nickname || "サポーター"}
                         </span>
                         {statusBadge(backer.status)}
+                        {backer.payment_method === "cash" && (
+                          <Badge color="lemon" size="sm">💵 現地・現金</Badge>
+                        )}
                       </div>
-                      <span className="text-lg font-bold text-caramel-600">
-                        {formatCurrency(backer.amount)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-caramel-600">
+                          {formatCurrency(backer.amount)}
+                        </span>
+                        {backer.payment_method === "cash" &&
+                          backer.status === "paid" && (
+                            <button
+                              type="button"
+                              onClick={() => cancelOffline(backer)}
+                              disabled={cancellingId === backer.id}
+                              className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 disabled:opacity-50"
+                              title="この現地支援を取り消す"
+                              aria-label="この現地支援を取り消す"
+                            >
+                              {cancellingId === backer.id ? (
+                                <Loader2 size={14} className="animate-spin" />
+                              ) : (
+                                <Undo2 size={14} />
+                              )}
+                            </button>
+                          )}
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         <Mail size={12} />
-                        {backer.guest_email}
+                        {backer.guest_email || "メール未登録"}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
@@ -732,6 +819,11 @@ function BackersTab({ backers }: { backers: Backer[] }) {
                     {backer.message && (
                       <p className="text-sm text-gray-500 mt-2 p-2 rounded-xl bg-caramel-50">
                         &ldquo;{backer.message}&rdquo;
+                      </p>
+                    )}
+                    {backer.payment_method === "cash" && backer.fulfillment_note && (
+                      <p className="text-xs text-gray-400 mt-2">
+                        メモ: {backer.fulfillment_note}
                       </p>
                     )}
                   </div>
