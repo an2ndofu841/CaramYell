@@ -40,7 +40,7 @@ export interface V1Milestone {
   sort_order: number;
   reached: boolean;
   /**
-   * 努力目標。最終目標（goal_amount）のさらに上に置くプラスアルファで、
+   * ネクストゴール。最終目標（goal_amount）のさらに上に置くプラスアルファで、
    * goal_amount / percent / is_funded / next_milestone には含めない
    */
   is_stretch: boolean;
@@ -107,11 +107,11 @@ export interface V1Project {
   end_date: string | null;
   creator: V1Creator | null;
   category: V1Category | null;
-  /** 基本の段階と努力目標の両方。is_stretch で見分ける。金額の小さい順 */
+  /** 基本の段階とネクストゴールの両方。is_stretch で見分ける。金額の小さい順 */
   milestones: V1Milestone[];
   /** 基本の段階のうち、まだ到達していない直近のもの */
   next_milestone: V1NextMilestone | null;
-  /** 努力目標のうち、まだ到達していない直近のもの。無ければ null */
+  /** ネクストゴールのうち、まだ到達していない直近のもの。無ければ null */
   next_stretch_goal: V1NextMilestone | null;
   rewards: V1Reward[];
   urls: V1ProjectUrls;
@@ -250,7 +250,7 @@ export function serializePartnerProject(row: V1ProjectSource): V1Project {
       };
     });
 
-  // 努力目標は最終目標のさらに上に置くプラスアルファ。分母には入れない
+  // ネクストゴールは最終目標のさらに上に置くプラスアルファ。分母には入れない
   const { base: baseMilestones, stretch: stretchGoals } =
     splitMilestones(milestones);
 

@@ -103,7 +103,7 @@ export default function ProjectDetailClient({
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
-  // 努力目標（is_stretch）は最終目標の分母に入れない。掲載中に足しても
+  // ネクストゴール（is_stretch）は最終目標の分母に入れない。掲載中に足しても
   // 達成率・達成バッジが動かないように、ここで基本の段階と切り分ける
   const { base: sortedMilestones, stretch: stretchGoals } =
     splitMilestones(milestones);
@@ -119,7 +119,7 @@ export default function ProjectDetailClient({
     100
   );
   const allMilestonesAchieved = hasMilestones && !nextMilestone;
-  // 最終目標を越えたあとに見せるプラスアルファ。未達の努力目標が無ければ全達成
+  // 最終目標を越えたあとに見せるプラスアルファ。未達のネクストゴールが無ければ全達成
   const finalGoalReached = hasMilestones
     ? allMilestonesAchieved
     : stats.is_funded;
@@ -223,7 +223,7 @@ export default function ProjectDetailClient({
         )
       )}
 
-      {/* 努力目標。最終目標を越えたあとだけ出す。達成率には影響しない */}
+      {/* ネクストゴール。最終目標を越えたあとだけ出す。達成率には影響しない */}
       {hasStretch && finalGoalReached && (
         nextStretch ? (
           <div className="mb-4 p-3 rounded-2xl text-center bg-pink-50 border-2 border-pink-100">

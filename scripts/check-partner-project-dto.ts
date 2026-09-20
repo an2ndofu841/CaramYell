@@ -124,7 +124,7 @@ check("超過しても 100 で止める", over.percent, 100);
 check("最終目標超えは達成済み", over.is_funded, true);
 check("全段階到達なら next は null", over.next_milestone, null);
 
-// 努力目標（is_stretch）は最終目標の上に置くプラスアルファ。
+// ネクストゴール（is_stretch）は最終目標の上に置くプラスアルファ。
 // 分母・達成判定・next_milestone には一切影響させない
 const withStretch = serializePartnerProject(
   base({
@@ -137,11 +137,11 @@ const withStretch = serializePartnerProject(
     ],
   })
 );
-check("努力目標があっても goal_amount は最終目標", withStretch.goal_amount, 350_000);
-check("努力目標があっても達成率は 100 のまま", withStretch.percent, 100);
-check("努力目標があっても達成済み", withStretch.is_funded, true);
+check("ネクストゴールがあっても goal_amount は最終目標", withStretch.goal_amount, 350_000);
+check("ネクストゴールがあっても達成率は 100 のまま", withStretch.percent, 100);
+check("ネクストゴールがあっても達成済み", withStretch.is_funded, true);
 check("基本の段階は全到達なので next は null", withStretch.next_milestone, null);
-check("努力目標の次", withStretch.next_stretch_goal, {
+check("ネクストゴールの次", withStretch.next_stretch_goal, {
   id: "s1",
   title: "MV制作",
   amount: 550_000,
@@ -152,8 +152,8 @@ check(
   withStretch.milestones.map((m) => [m.amount, m.is_stretch]),
   [[100_000, false], [200_000, false], [350_000, false], [550_000, true]]
 );
-check("努力目標は未到達", withStretch.milestones[3]?.reached, false);
-check("努力目標が無ければ next_stretch_goal は null", active.next_stretch_goal, null);
+check("ネクストゴールは未到達", withStretch.milestones[3]?.reached, false);
+check("ネクストゴールが無ければ next_stretch_goal は null", active.next_stretch_goal, null);
 check("is_stretch 未設定は基本扱い", active.milestones[0]?.is_stretch, false);
 
 // 段階ゴールが無い案件は goal_amount がそのまま分母

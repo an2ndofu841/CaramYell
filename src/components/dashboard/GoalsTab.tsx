@@ -26,8 +26,8 @@ const LIVE_STATUSES = new Set(["active", "funded", "completed"]);
  * ゴール管理。
  *
  * 基本の段階ゴール（最終目標の分母）は掲載開始後に動かせないので
- * 読み取り専用で並べる。掲載中に足せるのは、その上に置く「努力目標」だけ。
- * 努力目標は達成率・達成バッジに影響しないため、達成済みのプロジェクトを
+ * 読み取り専用で並べる。掲載中に足せるのは、その上に置く「ネクストゴール」だけ。
+ * ネクストゴールは達成率・達成バッジに影響しないため、達成済みのプロジェクトを
  * 未達成に戻すことなく、残りの期間で目指す先を追加できる。
  */
 export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
@@ -56,7 +56,7 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
       : amountNum <= finalGoal
       ? `最終目標（${formatCurrency(finalGoal)}）より大きい金額にしてください`
       : stretch.some((m) => m.amount === amountNum)
-      ? "同じ金額の努力目標がすでにあります"
+      ? "同じ金額のネクストゴールがすでにあります"
       : null;
   const canSubmit =
     form.amount !== "" && !amountIssue && form.title.trim().length > 0;
@@ -82,7 +82,7 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
       setForm({ amount: "", title: "", description: "" });
       setShowForm(false);
       onChanged();
-      toast.success("努力目標を追加しました");
+      toast.success("ネクストゴールを追加しました");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "追加に失敗しました");
     } finally {
@@ -91,7 +91,7 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
   };
 
   const handleDelete = async (m: ProjectMilestone) => {
-    if (!confirm(`努力目標「${m.title}」を削除しますか？`)) return;
+    if (!confirm(`ネクストゴール「${m.title}」を削除しますか？`)) return;
     setDeletingId(m.id);
     try {
       const res = await fetch(
@@ -105,7 +105,7 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "削除に失敗しました");
       onChanged();
-      toast.success("努力目標を削除しました");
+      toast.success("ネクストゴールを削除しました");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "削除に失敗しました");
     } finally {
@@ -150,20 +150,20 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
         </Card>
       </AnimatedSection>
 
-      {/* 努力目標 */}
+      {/* ネクストゴール */}
       <AnimatedSection animation="fade-up" delay={60}>
         <Card>
           <div className="flex items-center justify-between gap-3 mb-1">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
               <Sparkles size={18} className="text-candy-pink" />
-              努力目標
+              ネクストゴール
             </h3>
             <Button
               size="sm"
               icon={<Plus size={14} />}
               onClick={() => setShowForm((v) => !v)}
             >
-              努力目標を追加
+              ネクストゴールを追加
             </Button>
           </div>
           <p className="text-xs text-gray-400 mb-4">
@@ -173,7 +173,7 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
 
           {!finalReached && stretch.length > 0 && (
             <div className="mb-4 p-3 rounded-2xl bg-caramel-50 text-xs text-caramel-700 font-semibold">
-              最終目標にまだ届いていないため、努力目標の案内はプロジェクトページの
+              最終目標にまだ届いていないため、ネクストゴールの案内はプロジェクトページの
               支援状況には出ません（ゴール一覧には表示されます）
             </div>
           )}
@@ -234,7 +234,7 @@ export default function GoalsTab({ project, onChanged }: GoalsTabProps) {
           {stretch.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <Sparkles size={36} className="mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-semibold">努力目標はまだありません</p>
+              <p className="text-sm font-semibold">ネクストゴールはまだありません</p>
               <p className="text-xs mt-1">
                 最終目標を達成したら、残りの期間で目指す次のゴールを置けます
               </p>
@@ -352,7 +352,7 @@ function GoalRow({
           type="button"
           onClick={onDelete}
           disabled={deleting}
-          aria-label="この努力目標を削除"
+          aria-label="このネクストゴールを削除"
           className="p-1.5 rounded-full text-red-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
         >
           <Trash2 size={14} />

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveFinalGoal, splitMilestones } from "@/lib/project/goals";
 
 /**
- * 努力目標（最終目標のさらに上に置くプラスアルファのゴール）。
+ * ネクストゴール（最終目標のさらに上に置くプラスアルファのゴール）。
  *
  * 掲載中でも掲載者が足せる唯一のゴール。基本の段階ゴール（最終目標の分母）
  * は掲載開始後に動かせないので、ここでは is_stretch = true の行しか触らない。
@@ -80,7 +80,7 @@ export async function POST(
     );
   }
 
-  // 努力目標は最終目標のさらに上に置く。下に置くと達成済みの努力目標が
+  // ネクストゴールは最終目標のさらに上に置く。下に置くと達成済みのネクストゴールが
   // 生まれて表示が破綻するし、最終目標の意味も曖昧になる
   const milestones = (project.project_milestones ?? []) as {
     id: string;
@@ -93,14 +93,14 @@ export async function POST(
   if (amount <= finalGoal) {
     return NextResponse.json(
       {
-        error: `努力目標の金額は最終目標（¥${finalGoal.toLocaleString()}）より大きくしてください`,
+        error: `ネクストゴールの金額は最終目標（¥${finalGoal.toLocaleString()}）より大きくしてください`,
       },
       { status: 400 }
     );
   }
   if (stretch.some((m) => m.amount === amount)) {
     return NextResponse.json(
-      { error: "同じ金額の努力目標がすでにあります" },
+      { error: "同じ金額のネクストゴールがすでにあります" },
       { status: 400 }
     );
   }
@@ -147,7 +147,7 @@ export async function DELETE(
     typeof body.milestoneId === "string" ? body.milestoneId : "";
   if (!milestoneId) {
     return NextResponse.json(
-      { error: "削除する努力目標を指定してください" },
+      { error: "削除するネクストゴールを指定してください" },
       { status: 400 }
     );
   }
@@ -164,7 +164,7 @@ export async function DELETE(
   if (error) return dbError(error);
   if (!data || data.length === 0) {
     return NextResponse.json(
-      { error: "努力目標が見つかりません" },
+      { error: "ネクストゴールが見つかりません" },
       { status: 404 }
     );
   }

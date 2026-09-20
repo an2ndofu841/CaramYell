@@ -1,4 +1,4 @@
--- 努力目標（最終目標のさらに上に置く、プラスアルファのゴール）
+-- ネクストゴール（最終目標のさらに上に置く、プラスアルファのゴール）
 --
 -- 段階ゴールは「最上位の段階 = 最終目標」として達成率や達成バッジの分母に
 -- なっている。掲載中に段階を1つ足すと最終目標そのものが動き、達成済みの
@@ -14,18 +14,18 @@ ALTER TABLE public.project_milestones
   ADD COLUMN IF NOT EXISTS is_stretch BOOLEAN NOT NULL DEFAULT false;
 
 COMMENT ON COLUMN public.project_milestones.is_stretch IS
-  '努力目標。true の行は最終目標（達成率の分母）に含めない';
+  'ネクストゴール。true の行は最終目標（達成率の分母）に含めない';
 
 -- ============================================
 -- 掲載開始後の段階ゴールを凍結する
 -- ============================================
 -- 022 で projects.goal_amount は掲載中に動かせなくしたが、段階ゴールが
 -- ある案件では実際の分母は project_milestones の最大額なので、こちらも
--- 同じように守らないと意味がない。掲載中に掲載者が触れるのは努力目標だけ。
+-- 同じように守らないと意味がない。掲載中に掲載者が触れるのはネクストゴールだけ。
 --
 -- - 掲載中の INSERT は is_stretch = true のみ
--- - 掲載中の UPDATE / DELETE は元が努力目標の行のみ（基本の段階へ昇格も不可）
--- - 努力目標の金額は、基本目標（goal_amount と基本の段階すべて）より上
+-- - 掲載中の UPDATE / DELETE は元がネクストゴールの行のみ（基本の段階へ昇格も不可）
+-- - ネクストゴールの金額は、基本目標（goal_amount と基本の段階すべて）より上
 --
 -- 運営（admin / service_role）は従来どおり通す。
 -- 作成フローは draft / reviewing / cancelled のときだけ子レコードを
@@ -70,18 +70,18 @@ BEGIN
         USING ERRCODE = 'insufficient_privilege';
     END IF;
     IF NEW.project_id IS DISTINCT FROM OLD.project_id THEN
-      RAISE EXCEPTION '努力目標は別のプロジェクトへ移せません'
+      RAISE EXCEPTION 'ネクストゴールは別のプロジェクトへ移せません'
         USING ERRCODE = 'insufficient_privilege';
     END IF;
   END IF;
 
-  -- INSERT / UPDATE 共通。掲載中に置けるのは努力目標だけ
+  -- INSERT / UPDATE 共通。掲載中に置けるのはネクストゴールだけ
   IF NOT NEW.is_stretch THEN
-    RAISE EXCEPTION '掲載中に追加できるのは努力目標のみです'
+    RAISE EXCEPTION '掲載中に追加できるのはネクストゴールのみです'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
 
-  -- 努力目標は最終目標より上に置く。下に置くと達成済みの努力目標が
+  -- ネクストゴールは最終目標より上に置く。下に置くと達成済みのネクストゴールが
   -- 生まれて表示が破綻するし、最終目標の意味も曖昧になる
   SELECT GREATEST(
            COALESCE(p.goal_amount, 0),
@@ -95,7 +95,7 @@ BEGIN
   WHERE p.id = v_project_id;
 
   IF NEW.amount <= v_base_top THEN
-    RAISE EXCEPTION '努力目標の金額は最終目標（%円）より大きくしてください', v_base_top
+    RAISE EXCEPTION 'ネクストゴールの金額は最終目標（%円）より大きくしてください', v_base_top
       USING ERRCODE = 'check_violation';
   END IF;
 

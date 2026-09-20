@@ -119,7 +119,7 @@ export interface ProjectMilestone {
   description?: string;
   sort_order: number;
   /**
-   * 努力目標。最終目標を達成したあとのプラスアルファで、
+   * ネクストゴール。最終目標を達成したあとのプラスアルファで、
    * 達成率や達成バッジの分母には含めない。未設定（列追加前）は false 扱い
    */
   is_stretch?: boolean;

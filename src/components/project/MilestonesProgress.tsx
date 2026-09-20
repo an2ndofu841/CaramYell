@@ -14,7 +14,7 @@ import { nextUnreached, splitMilestones } from "@/lib/project/goals";
  * 現在の支援額に対して、達成済み／未達成の段階をマーカー表示する。
  * 進捗バーは最上位の段階（最終目標）まで伸びる。
  *
- * 努力目標（is_stretch）は最終目標の分母に入れず、下に別枠で出す。
+ * ネクストゴール（is_stretch）は最終目標の分母に入れず、下に別枠で出す。
  * 掲載中に足しても、上の達成率・達成表示は一切動かない。
  */
 export default function MilestonesProgress({
@@ -36,7 +36,7 @@ export default function MilestonesProgress({
   const achievedCount = sorted.filter((m) => currentAmount >= m.amount).length;
   const nextMilestone = nextUnreached(sorted, currentAmount);
 
-  // 努力目標側。バーは努力目標の最大額を分母にして、最終目標の位置も
+  // ネクストゴール側。バーはネクストゴールの最大額を分母にして、最終目標の位置も
   // 到達済みマーカーとして載せる（「ここまでは達成済み」が一目で分かるように）
   const stretchTop = stretch.length > 0 ? stretch[stretch.length - 1].amount : 0;
   const stretchPct =
@@ -185,7 +185,7 @@ function MilestoneRow({
   achieved: boolean;
   isNext: boolean;
   remaining: number;
-  /** 努力目標。ロック色を候補ピンクに寄せて基本の段階と区別する */
+  /** ネクストゴール。ロック色を候補ピンクに寄せて基本の段階と区別する */
   stretch?: boolean;
 }) {
   const t = useT();
