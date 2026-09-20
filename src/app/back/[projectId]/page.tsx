@@ -19,7 +19,8 @@ async function getRealProject(slugOrId: string): Promise<Project | null> {
         `
         ${PUBLIC_PROJECT_COLUMNS},
         rewards(*),
-        categories(*)
+        categories(*),
+        project_milestones(id, amount, title, sort_order, is_stretch)
       `
       )
       .in("status", ["active"]);

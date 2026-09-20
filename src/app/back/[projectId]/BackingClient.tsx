@@ -31,6 +31,11 @@ import Card from "@/components/ui/Card";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { calcFee, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import {
+  nextUnreached,
+  resolveFinalGoal,
+  splitMilestones,
+} from "@/lib/project/goals";
 import { toast } from "sonner";
 import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Reward, Project } from "@/types";
@@ -161,8 +166,26 @@ export default function BackingClient({
   const needsAddress = selectedItems.some((it) => it.reward.needs_address);
   const { fee, total } = calcFee(amount);
 
+  // 詳細ページと同じ基準で進捗を出す。段階ゴールがあれば最終目標が分母、
+  // ネクストゴールは分母に入れない
+  const { base: baseMilestones, stretch: stretchGoals } = splitMilestones(
+    project.project_milestones
+  );
+  const finalGoal = resolveFinalGoal(project.goal_amount, baseMilestones);
+  const nextStretch = nextUnreached(stretchGoals, project.current_amount);
+  const finalReached = project.current_amount >= finalGoal;
+  // 最終目標を達成したうえで未達のネクストゴールがある＝挑戦中。
+  // ここで「100% 達成」だけ見せると終わったと思われて支援を止められるので、
+  // ゲージをネクストゴールまで伸ばし、達成済み区間とその先を塗り分ける
+  const stretchChallenging = finalReached && !!nextStretch;
+  const stretchTop = stretchChallenging
+    ? stretchGoals[stretchGoals.length - 1].amount
+    : 0;
+  const toStretchPos = (amount: number) =>
+    stretchTop > 0 ? Math.min((amount / stretchTop) * 100, 100) : 0;
   const stats = {
-    progress: Math.min(Math.round((project.current_amount / project.goal_amount) * 100), 100),
+    progress: Math.min(Math.round((project.current_amount / finalGoal) * 100), 100),
+    progressUncapped: Math.round((project.current_amount / finalGoal) * 100),
     daysLeft: project.end_date
       ? Math.max(0, Math.ceil((new Date(project.end_date).getTime() - Date.now()) / 86400000))
       : 0,
@@ -333,10 +356,43 @@ export default function BackingClient({
               <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">
                 {pick(project.title, project.title_en)}
               </p>
-              <ProgressBar percentage={stats.progress} />
-              <p className="text-xs text-gray-400 mt-1">
-                {stats.progress}% 達成 · 残り{stats.daysLeft}日
-              </p>
+              {stretchChallenging ? (
+                <>
+                  <ProgressBar
+                    percentage={toStretchPos(finalGoal)}
+                    extension={{
+                      from: toStretchPos(finalGoal),
+                      to: toStretchPos(project.current_amount),
+                    }}
+                    markers={[
+                      { position: toStretchPos(finalGoal), reached: true, final: true },
+                      { position: 100, reached: false, final: true },
+                    ]}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    <span className="inline-block text-[10px] font-bold text-white bg-caramel-500 rounded-full px-1.5 py-px mr-1.5 align-middle">
+                      {t.detail.stretchRibbonBadge}
+                    </span>
+                    <span className="font-bold text-caramel-600">
+                      {stats.progressUncapped}% · {t.detail.stretchRibbonTitle}
+                    </span>
+                    <span className="whitespace-nowrap"> · 残り{stats.daysLeft}日</span>
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {t.detail.stretchNextPrefix}
+                    {formatCurrency(nextStretch.amount - project.current_amount)}
+                    {t.detail.stretchNextSuffix}「{nextStretch.title}」
+                    {t.detail.stretchNextAchieve}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <ProgressBar percentage={stats.progress} />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {stats.progress}% 達成 · 残り{stats.daysLeft}日
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </Card>

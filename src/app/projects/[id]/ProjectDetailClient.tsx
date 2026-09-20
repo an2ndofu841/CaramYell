@@ -142,6 +142,11 @@ export default function ProjectDetailClient({
     ? stretchGoals[stretchGoals.length - 1].amount
     : 0;
   const showStretchGauge = hasStretch && finalGoalReached && stretchTop > 0;
+  // 未達のネクストゴールがある＝達成したうえで、まだ次に向けて募集している
+  const stretchChallenging = showStretchGauge && !!nextStretch;
+  // ネクストゴール挑戦中は 100% で止めず、最終目標に対する実際の率（101% など）を
+  // 出す。「達成して終わり」ではなく伸び続けていることが数字でも分かる
+  const uncappedPct = Math.round((project.current_amount / finalGoal) * 100);
   const toStretchPos = (amount: number) => (amount / stretchTop) * 100;
   const gaugePct = showStretchGauge
     ? toStretchPos(finalGoal)
@@ -219,6 +224,27 @@ export default function ProjectDetailClient({
   // 同じ中身を置き場所だけ変えて使い回す
   const fundingSummary = (
     <Card>
+      {/* ネクストゴール挑戦中の帯。「100% 達成」だけだと終わったように見えて
+          離脱されるので、達成したうえでまだ募集中だと最初に伝える */}
+      {stretchChallenging && (
+        <div
+          className="-mx-6 -mt-6 mb-5 px-5 py-3 text-white"
+          style={{ background: "var(--pt-gradient, linear-gradient(135deg, #F2807B 0%, #E8842C 60%, #F5A34B 100%))" }}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-white text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/25 ring-1 ring-white/50 whitespace-nowrap">
+              {t.detail.stretchRibbonBadge}
+            </span>
+            <span className="text-base font-bold tracking-wide">
+              {t.detail.stretchRibbonTitle}
+            </span>
+          </div>
+          <p className="text-center text-[11px] text-white/85 mt-1">
+            {t.detail.stretchRibbonSub}
+          </p>
+        </div>
+      )}
+
       <div className="mb-4">
         <p className="text-xs font-semibold text-gray-400 mb-0.5">
           {t.common.raisedSoFar}
@@ -228,7 +254,11 @@ export default function ProjectDetailClient({
             {formatCurrency(project.current_amount)}
           </span>
           <span className="text-2xl font-bold text-caramel-500">
-            {hasMilestones ? headlinePct : stats.progress_percentage}%
+            {showStretchGauge
+              ? uncappedPct
+              : hasMilestones
+              ? headlinePct
+              : stats.progress_percentage}%
           </span>
         </div>
         <p className="text-sm text-gray-400">
@@ -258,7 +288,9 @@ export default function ProjectDetailClient({
         </div>
       )}
 
-      {hasMilestones && (
+      {/* ネクストゴールがある場合、全達成の箱は帯（挑戦中）か
+          「ネクストゴールもすべて達成」の箱に置き換わる */}
+      {hasMilestones && !(allMilestonesAchieved && hasStretch) && (
         nextMilestone ? (
           <div className="mb-4 p-3 rounded-2xl text-center bg-caramel-50 border-2 border-caramel-100">
             <p className="text-sm font-bold text-caramel-700">

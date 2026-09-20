@@ -11,7 +11,11 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import Badge from "@/components/ui/Badge";
 import Confetti from "@/components/animations/Confetti";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { resolveFinalGoal, splitMilestones } from "@/lib/project/goals";
+import {
+  nextUnreached,
+  resolveFinalGoal,
+  splitMilestones,
+} from "@/lib/project/goals";
 
 interface ProjectCardProps {
   project: Project;
@@ -19,7 +23,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, featured = false }: ProjectCardProps) {
-  const { pick } = useLocale();
+  const { t, pick } = useLocale();
   const stats = calcProjectStats(project);
   const [hovered, setHovered] = useState(false);
 
@@ -27,13 +31,28 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
   // 第1目標（goal_amount）基準のままだと、まだ上の段階が残っているのに
   // カードだけ「100% 達成！」に見えてしまうため。
   // ネクストゴール（is_stretch）は最終目標のさらに上なので分母には入れない。
-  const { base: baseMilestones } = splitMilestones(project.project_milestones);
+  const { base: baseMilestones, stretch: stretchGoals } = splitMilestones(
+    project.project_milestones
+  );
   const finalGoal = resolveFinalGoal(project.goal_amount, baseMilestones);
   const progressPct = Math.min(
     Math.round((project.current_amount / (finalGoal || 1)) * 100),
     100
   );
   const isFunded = project.current_amount >= finalGoal;
+  // 達成したうえで未達のネクストゴールがある＝挑戦中。
+  // 「達成！」だけだと終わったと思われてカードを開いてもらえないので、
+  // バッジと数字（100% で止めない）とゲージで、まだ続いていることを見せる
+  const nextStretch = nextUnreached(stretchGoals, project.current_amount);
+  const stretchChallenging = isFunded && !!nextStretch;
+  const stretchTop = stretchChallenging
+    ? stretchGoals[stretchGoals.length - 1].amount
+    : 0;
+  const toStretchPos = (amount: number) =>
+    stretchTop > 0 ? Math.min((amount / stretchTop) * 100, 100) : 0;
+  const uncappedPct = Math.round(
+    (project.current_amount / (finalGoal || 1)) * 100
+  );
 
   // NEW: 作成から14日以内
   const isNew =
@@ -87,9 +106,14 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
                 ✨ NEW
               </Badge>
             )}
-            {isFunded && (
+            {isFunded && !stretchChallenging && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold text-white bg-mint">
                 🎉 達成！
+              </span>
+            )}
+            {stretchChallenging && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold text-white bg-candy-gradient shadow-candy">
+                {t.detail.stretchRibbonBadge} {t.detail.stretchRibbonTitle}
               </span>
             )}
           </div>
@@ -148,10 +172,30 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
           {/* 達成率 + プログレスバー */}
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-lg font-black text-caramel-500 leading-none">
-              {progressPct}%
+              {stretchChallenging ? uncappedPct : progressPct}%
             </span>
+            {stretchChallenging && nextStretch && (
+              <span className="text-xs font-semibold text-candy-pink truncate">
+                {t.detail.stretchCardRemaining}
+                {formatCurrency(nextStretch.amount - project.current_amount)}
+              </span>
+            )}
           </div>
-          <ProgressBar percentage={progressPct} className="mb-3" />
+          {stretchChallenging ? (
+            <ProgressBar
+              percentage={toStretchPos(finalGoal)}
+              extension={{
+                from: toStretchPos(finalGoal),
+                to: toStretchPos(project.current_amount),
+              }}
+              markers={[
+                { position: toStretchPos(finalGoal), reached: true, final: true },
+              ]}
+              className="mb-3"
+            />
+          ) : (
+            <ProgressBar percentage={progressPct} className="mb-3" />
+          )}
 
           {/* 金額・支援者・残り */}
           <div className="flex items-center justify-between text-xs">
