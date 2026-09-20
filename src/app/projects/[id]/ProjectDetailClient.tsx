@@ -134,6 +134,44 @@ export default function ProjectDetailClient({
       }))
     : undefined;
 
+  // 最終目標を達成してネクストゴールがあるときは、ゲージの分母をネクストゴールまで
+  // 伸ばす。最終目標までは通常色、その先の進捗は別色（ストライプ）で描き、
+  // 「達成して終わり」ではなく「まだ次を目指している」ことが見えるようにする。
+  // 達成率の数字（100%）と達成バッジは最終目標基準のまま動かさない。
+  const stretchTop = hasStretch
+    ? stretchGoals[stretchGoals.length - 1].amount
+    : 0;
+  const showStretchGauge = hasStretch && finalGoalReached && stretchTop > 0;
+  const toStretchPos = (amount: number) => (amount / stretchTop) * 100;
+  const gaugePct = showStretchGauge
+    ? toStretchPos(finalGoal)
+    : hasMilestones
+    ? headlinePct
+    : stats.progress_percentage;
+  const gaugeExtension = showStretchGauge
+    ? {
+        from: toStretchPos(finalGoal),
+        to: Math.min(toStretchPos(project.current_amount), 100),
+      }
+    : undefined;
+  const gaugeMarkers = showStretchGauge
+    ? [
+        // 最終目標の位置。基本の段階があればそれぞれの位置も残す
+        ...(hasMilestones
+          ? sortedMilestones.map((m) => ({
+              position: toStretchPos(m.amount),
+              reached: true,
+              final: m.amount >= finalGoal,
+            }))
+          : [{ position: toStretchPos(finalGoal), reached: true, final: true }]),
+        ...stretchGoals.map((m) => ({
+          position: toStretchPos(m.amount),
+          reached: project.current_amount >= m.amount,
+          final: m.amount >= stretchTop,
+        })),
+      ]
+    : milestoneMarkers;
+
   // 掲載者が書いた質問を先に出す。手数料や決済方法といった共通の説明は
   // 掲載者側で消せると支援者が困るので、その下に必ず残す。
   const faqItems = [
@@ -200,10 +238,25 @@ export default function ProjectDetailClient({
       </div>
 
       <ProgressBar
-        percentage={hasMilestones ? headlinePct : stats.progress_percentage}
-        markers={milestoneMarkers}
-        className={hasMilestones ? "mb-2" : "mb-4"}
+        percentage={gaugePct}
+        markers={gaugeMarkers}
+        extension={gaugeExtension}
+        className={showStretchGauge ? "mb-1" : hasMilestones ? "mb-2" : "mb-4"}
       />
+
+      {showStretchGauge && (
+        <div className="flex justify-between text-xs text-gray-400 mb-3">
+          <span className="text-green-600 font-semibold">
+            {t.common.finalGoal} {t.common.achieved}
+          </span>
+          <span>
+            {t.detail.stretchTop}{" "}
+            <span className="font-bold text-gray-600">
+              {formatCurrency(stretchTop)}
+            </span>
+          </span>
+        </div>
+      )}
 
       {hasMilestones && (
         nextMilestone ? (
@@ -226,11 +279,13 @@ export default function ProjectDetailClient({
       {/* ネクストゴール。最終目標を越えたあとだけ出す。達成率には影響しない */}
       {hasStretch && finalGoalReached && (
         nextStretch ? (
-          <div className="mb-4 p-3 rounded-2xl text-center bg-pink-50 border-2 border-pink-100">
-            <p className="text-xs font-bold text-candy-pink mb-0.5">
-              ✨ {t.detail.stretchGoals}
+          // 「あと〜で達成」の箱と同じテーマ対応クラスを使う。
+          // pink-* はテーマ変数に差し替わらず、暗いテーマで白く浮いてしまう
+          <div className="mb-4 p-3 rounded-2xl text-center bg-caramel-50 border-2 border-candy-pink">
+            <p className="text-xs font-bold text-caramel-600 mb-1">
+              {t.detail.stretchGoals}
             </p>
-            <p className="text-sm font-bold text-pink-700">
+            <p className="text-sm font-bold text-gray-800">
               {t.detail.stretchNextPrefix}
               {formatCurrency(nextStretch.amount - project.current_amount)}
               {t.detail.stretchNextSuffix}
@@ -239,8 +294,8 @@ export default function ProjectDetailClient({
             </p>
           </div>
         ) : (
-          <div className="mb-4 p-3 rounded-2xl text-center bg-pink-50 border-2 border-pink-100">
-            <p className="text-sm font-bold text-pink-700">
+          <div className="mb-4 p-3 rounded-2xl text-center bg-green-50 border-2 border-green-100">
+            <p className="text-sm font-bold text-green-700">
               {t.detail.stretchAllAchieved}
             </p>
           </div>

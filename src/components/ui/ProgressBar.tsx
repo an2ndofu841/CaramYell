@@ -20,6 +20,12 @@ interface ProgressBarProps {
   color?: "candy" | "caramel" | "mint";
   /** 段階目標などの位置マーカー */
   markers?: ProgressMarker[];
+  /**
+   * 本来のゴールを越えたあとの延長区間（0〜100%）。
+   * 最終目標を達成したうえでネクストゴールへ向かっている進捗を、
+   * 達成済みの区間とは別の色で描く。from は本来のゴールの位置。
+   */
+  extension?: { from: number; to: number };
 }
 
 export default function ProgressBar({
@@ -29,15 +35,21 @@ export default function ProgressBar({
   showLabel = false,
   color = "candy",
   markers,
+  extension,
 }: ProgressBarProps) {
   const [width, setWidth] = useState(0);
+  const [extended, setExtended] = useState(false);
 
   useEffect(() => {
     if (animated) {
-      const timer = setTimeout(() => setWidth(Math.min(percentage, 100)), 100);
+      const timer = setTimeout(() => {
+        setWidth(Math.min(percentage, 100));
+        setExtended(true);
+      }, 100);
       return () => clearTimeout(timer);
     } else {
       setWidth(Math.min(percentage, 100));
+      setExtended(true);
     }
   }, [percentage, animated]);
 
@@ -51,6 +63,13 @@ export default function ProgressBar({
   const clamp = (n: number, min = 0, max = 100) =>
     Math.min(Math.max(n, min), max);
 
+  const extFrom = extension ? clamp(extension.from) : 0;
+  // 達成直後は延長分がごく僅か（数千円）で 1px にも満たないので、
+  // 進み始めたことが見えるだけの最小幅は確保する
+  const extRaw = extension ? clamp(extension.to) - extFrom : 0;
+  const extWidth =
+    extRaw > 0 ? Math.min(Math.max(extRaw, 2), 100 - extFrom) : 0;
+
   return (
     <div className={cn("relative", className)}>
       <div className="relative">
@@ -63,6 +82,24 @@ export default function ProgressBar({
               transition: animated ? "width 1.2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
             }}
           />
+          {/* 延長区間。達成済みの区間と見分けがつくよう強調色のストライプにする。
+              色はテーマの強調色（--pt-accent）に追従する */}
+          {extension && extWidth > 0 && (
+            <div
+              className="absolute top-0 h-full"
+              style={{
+                left: `${extFrom}%`,
+                width: `${extended ? extWidth : 0}%`,
+                background:
+                  "repeating-linear-gradient(135deg, var(--pt-accent, #C96A1B) 0 5px, rgba(255,255,255,0.55) 5px 10px)",
+                borderRadius: "0 999px 999px 0",
+                transition: animated
+                  ? "width 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s"
+                  : "none",
+              }}
+              aria-hidden
+            />
+          )}
         </div>
 
         {/* 段階目標の位置マーカー（縦線）。最終目標はゴール線として長く太くする */}

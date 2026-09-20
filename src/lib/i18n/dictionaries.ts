@@ -85,7 +85,7 @@ export const dictionaries = {
       stretchGoals: "ネクストゴール",
       stretchGoalsNote:
         "最終目標のさらに先に置いた、プラスアルファの目標です。達成率には含まれません",
-      stretchNextPrefix: "ネクストゴール：あと ",
+      stretchNextPrefix: "あと ",
       stretchNextSuffix: " で",
       stretchNextAchieve: "を達成！",
       stretchAllAchieved: "🎉 ネクストゴールもすべて達成しました！",
@@ -300,7 +300,7 @@ export const dictionaries = {
       stretchGoals: "Next goals",
       stretchGoalsNote:
         "Goals placed beyond the final goal. They don't count toward the funding percentage",
-      stretchNextPrefix: "Next goal: ",
+      stretchNextPrefix: "",
       stretchNextSuffix: " more to unlock ",
       stretchNextAchieve: "!",
       stretchAllAchieved: "🎉 Every next goal reached too!",

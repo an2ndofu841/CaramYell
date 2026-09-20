@@ -39,10 +39,17 @@ export default function MilestonesProgress({
   // ネクストゴール側。バーはネクストゴールの最大額を分母にして、最終目標の位置も
   // 到達済みマーカーとして載せる（「ここまでは達成済み」が一目で分かるように）
   const stretchTop = stretch.length > 0 ? stretch[stretch.length - 1].amount : 0;
-  const stretchPct =
-    stretchTop > 0
-      ? Math.min(Math.round((currentAmount / stretchTop) * 100), 100)
-      : 0;
+  const toStretchPos = (amount: number) =>
+    stretchTop > 0 ? Math.min((amount / stretchTop) * 100, 100) : 0;
+  // 最終目標までは通常色、その先は別色（ストライプ）。最終目標に届いていなければ
+  // 通常色だけが現在地まで伸びる
+  const finalReached = topAmount > 0 && currentAmount >= topAmount;
+  const stretchPct = finalReached
+    ? toStretchPos(topAmount)
+    : toStretchPos(currentAmount);
+  const stretchExtension = finalReached
+    ? { from: toStretchPos(topAmount), to: toStretchPos(currentAmount) }
+    : undefined;
   const stretchAchievedCount = stretch.filter(
     (m) => currentAmount >= m.amount
   ).length;
@@ -124,18 +131,19 @@ export default function MilestonesProgress({
 
           <ProgressBar
             percentage={stretchPct}
+            extension={stretchExtension}
             markers={[
               ...(topAmount > 0
                 ? [
                     {
-                      position: (topAmount / stretchTop) * 100,
-                      reached: currentAmount >= topAmount,
-                      final: false,
+                      position: toStretchPos(topAmount),
+                      reached: finalReached,
+                      final: true,
                     },
                   ]
                 : []),
               ...stretch.map((m) => ({
-                position: (m.amount / stretchTop) * 100,
+                position: toStretchPos(m.amount),
                 reached: currentAmount >= m.amount,
                 final: m.amount >= stretchTop,
               })),
@@ -144,9 +152,15 @@ export default function MilestonesProgress({
           />
           <div className="flex justify-between text-xs text-gray-400 mb-4">
             <span>
-              <span className="font-bold text-caramel-600">
-                {formatCurrency(currentAmount)}
-              </span>
+              {finalReached ? (
+                <span className="font-semibold text-green-600">
+                  {t.common.finalGoal} {t.common.achieved}
+                </span>
+              ) : (
+                <span className="font-bold text-caramel-600">
+                  {formatCurrency(currentAmount)}
+                </span>
+              )}
             </span>
             <span>
               {t.detail.stretchTop}{" "}
@@ -197,7 +211,7 @@ function MilestoneRow({
           ? "border-transparent bg-green-50"
           : isNext
           ? stretch
-            ? "border-pink-200 bg-pink-50"
+            ? "border-candy-pink bg-caramel-50"
             : "border-caramel-200 bg-caramel-50"
           : "border-caramel-100 bg-white"
       )}
@@ -208,7 +222,7 @@ function MilestoneRow({
           achieved
             ? "text-white"
             : stretch
-            ? "text-candy-pink bg-pink-100"
+            ? "text-candy-pink bg-caramel-100"
             : "text-gray-400 bg-caramel-100"
         )}
         style={
@@ -258,12 +272,7 @@ function MilestoneRow({
             {t.detail.reachedLabel}
           </p>
         ) : isNext ? (
-          <p
-            className={cn(
-              "text-xs font-semibold mt-0.5",
-              stretch ? "text-pink-600" : "text-caramel-600"
-            )}
-          >
+          <p className="text-xs font-semibold mt-0.5 text-caramel-600">
             {formatCurrency(remaining)}
             {t.detail.remainingToReach}
           </p>
