@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Package,
   Truck,
@@ -10,6 +10,7 @@ import {
   Download,
   Search,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -17,7 +18,8 @@ import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getCountryFormat } from "@/lib/data/countries";
-import type { Backer, ShippingStatus } from "@/types";
+import { expandBackerRewards, type PackLine } from "@/lib/project/reward-bundle";
+import type { Backer, Reward, ShippingStatus } from "@/types";
 
 const STATUS_META: Record<
   ShippingStatus,
@@ -36,36 +38,92 @@ const STATUS_ORDER: ShippingStatus[] = [
   "delivered",
 ];
 
-/** 住所を1行の文字列に整形（国ごとの並びに合わせる） */
+/** 住所を1行の文字列に整形（国ごとの並びに合わせる）。郵便番号は別に表示するので含めない */
 function formatAddress(b: Backer): string {
   const a = b.guest_address;
   if (!a) return "";
   const fmt = getCountryFormat(a.country);
   const parts = fmt.fields
+    .filter((f) => f.key !== "postal_code")
     .map((f) => (a as unknown as Record<string, string>)[f.key])
     .filter(Boolean);
   const country = a.country && a.country !== "JP" ? ` (${a.country})` : "";
   return `${parts.join(" ")}${country}`;
 }
 
+function recipientName(b: Backer): string {
+  return b.guest_address?.recipient_name || b.guest_nickname || "（氏名未登録）";
+}
+
+const UNSHIPPED: ShippingStatus[] = ["pending", "preparing"];
+
+interface PrepRow {
+  key: string;
+  title: string;
+  amount: number;
+  total: number;
+  recipients: { backerId: string; name: string; quantity: number }[];
+}
+
 export default function FulfillmentTab({
   projectId,
   backers,
+  rewards,
   onUpdated,
 }: {
   projectId: string;
   backers: Backer[];
+  rewards: Reward[];
   onUpdated: (updated: Backer) => void;
 }) {
   const [filter, setFilter] = useState<"all" | ShippingStatus>("all");
+  const [itemFilter, setItemFilter] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [trackingDrafts, setTrackingDrafts] = useState<Record<string, string>>({});
 
   // 発送が必要なのは「支払済み」かつ「住所あり（物品リターンを含む）」の支援
-  const shippable = backers.filter(
-    (b) => b.status === "paid" && !!b.guest_address
+  const shippable = useMemo(
+    () => backers.filter((b) => b.status === "paid" && !!b.guest_address),
+    [backers]
   );
+
+  const packs = useMemo(
+    () =>
+      new Map<string, PackLine[]>(
+        shippable.map((b) => [b.id, expandBackerRewards(b, rewards)])
+      ),
+    [shippable, rewards]
+  );
+  const packOf = (b: Backer) => packs.get(b.id) || [];
+
+  // 未発送分で「何を何個・誰に」用意するかの集計
+  const unshipped = useMemo(
+    () =>
+      shippable.filter((b) =>
+        UNSHIPPED.includes((b.shipping_status || "pending") as ShippingStatus)
+      ),
+    [shippable]
+  );
+  const prepRows = useMemo(() => {
+    const rows = new Map<string, PrepRow>();
+    for (const b of unshipped) {
+      for (const line of packs.get(b.id) || []) {
+        if (!line.needsAddress) continue;
+        const row =
+          rows.get(line.key) ??
+          { key: line.key, title: line.title, amount: line.amount, total: 0, recipients: [] };
+        row.total += line.quantity;
+        row.recipients.push({
+          backerId: b.id,
+          name: recipientName(b),
+          quantity: line.quantity,
+        });
+        rows.set(line.key, row);
+      }
+    }
+    return [...rows.values()].sort((a, b) => b.amount - a.amount);
+  }, [unshipped, packs]);
 
   const counts = STATUS_ORDER.reduce(
     (acc, s) => {
@@ -80,15 +138,20 @@ export default function FulfillmentTab({
   const filtered = shippable.filter((b) => {
     const status = b.shipping_status || "pending";
     if (filter !== "all" && status !== filter) return false;
+    if (itemFilter && !packOf(b).some((l) => l.key === itemFilter)) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
       (b.guest_address?.recipient_name || "").toLowerCase().includes(q) ||
       (b.guest_nickname || "").toLowerCase().includes(q) ||
       (b.guest_email || "").toLowerCase().includes(q) ||
-      formatAddress(b).toLowerCase().includes(q)
+      formatAddress(b).toLowerCase().includes(q) ||
+      packOf(b).some((l) => l.title.toLowerCase().includes(q))
     );
   });
+  const itemFilterTitle = itemFilter
+    ? [...packs.values()].flat().find((l) => l.key === itemFilter)?.title
+    : undefined;
 
   const patch = async (backer: Backer, body: Record<string, unknown>) => {
     setBusyId(backer.id);
@@ -132,26 +195,30 @@ export default function FulfillmentTab({
       "住所",
       "国",
       "メール",
-      "リターン内訳",
+      "支援プラン",
+      "発送するもの",
+      "発送不要の特典",
       "金額",
       "発送状況",
       "追跡番号",
       "支援日",
     ];
+    const join = (lines: PackLine[]) =>
+      lines.map((l) => `${l.title}×${l.quantity}`).join(" / ");
     const rows = filtered.map((b) => {
-      const items =
-        (b.backer_items || []).length > 0
-          ? (b.backer_items || [])
-              .map((it) => `${it.reward_title}×${it.quantity}`)
-              .join(" / ")
-          : b.rewards?.title || "";
+      const pack = packOf(b);
       return [
         b.guest_address?.recipient_name || b.guest_nickname || "",
         b.guest_address?.postal_code || "",
         formatAddress(b),
         b.guest_address?.country || "",
         b.guest_email || "",
-        items,
+        pack
+          .filter((l) => l.planQuantity > 0)
+          .map((l) => `${l.title}×${l.planQuantity}`)
+          .join(" / "),
+        join(pack.filter((l) => l.needsAddress)),
+        join(pack.filter((l) => !l.needsAddress)),
         String(b.amount),
         STATUS_META[(b.shipping_status || "pending") as ShippingStatus].label,
         b.tracking_number || "",
@@ -198,6 +265,70 @@ export default function FulfillmentTab({
         ))}
       </div>
 
+      {/* 用意するもの（未発送分の合計と送り先） */}
+      {shippable.length > 0 && (
+        <Card>
+          <div className="mb-3">
+            <h3 className="flex items-center gap-1.5 font-bold text-gray-800">
+              <ClipboardList size={16} className="text-caramel-500" />
+              用意するもの
+              <span className="text-xs font-semibold text-gray-400">
+                未発送 {unshipped.length}件分
+              </span>
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              上位プランには、それより安いリターンもすべて含めて数えています。品目を押すとその送り先だけに絞り込めます
+            </p>
+          </div>
+          {prepRows.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">
+              未発送の品目はありません
+            </p>
+          ) : (
+            <ul className="divide-y divide-caramel-100">
+              {prepRows.map((row) => (
+                <li key={row.key} className="py-3 first:pt-0 last:pb-0">
+                  <button
+                    onClick={() =>
+                      setItemFilter(itemFilter === row.key ? null : row.key)
+                    }
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors",
+                      itemFilter === row.key
+                        ? "bg-candy-pink/10"
+                        : "hover:bg-caramel-50"
+                    )}
+                  >
+                    <span className="font-bold text-gray-800 min-w-0 truncate">
+                      {row.title}
+                    </span>
+                    <span className="ml-auto flex items-baseline gap-0.5 text-caramel-600 font-bold tabular-nums flex-shrink-0">
+                      <span className="text-2xl">{row.total}</span>
+                      <span className="text-xs">個</span>
+                    </span>
+                  </button>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5 px-3 max-h-28 overflow-y-auto">
+                    {row.recipients.map((r) => (
+                      <span
+                        key={r.backerId}
+                        className="px-2 py-0.5 rounded-lg bg-caramel-50 text-xs text-gray-600"
+                      >
+                        {r.name}
+                        {r.quantity > 1 && (
+                          <span className="font-bold text-caramel-600 ml-1">
+                            ×{r.quantity}
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
+
       {/* 検索・書き出し */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
@@ -213,9 +344,12 @@ export default function FulfillmentTab({
           />
         </div>
         <div className="flex gap-2">
-          {filter !== "all" && (
+          {(filter !== "all" || itemFilter) && (
             <button
-              onClick={() => setFilter("all")}
+              onClick={() => {
+                setFilter("all");
+                setItemFilter(null);
+              }}
               className="px-4 py-2.5 rounded-2xl text-sm font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors whitespace-nowrap"
             >
               絞り込み解除
@@ -232,6 +366,12 @@ export default function FulfillmentTab({
           </button>
         </div>
       </div>
+
+      {itemFilterTitle && (
+        <p className="text-sm text-gray-500 -mt-2">
+          「<span className="font-bold text-gray-700">{itemFilterTitle}</span>」を送る支援 {filtered.length}件を表示中
+        </p>
+      )}
 
       {filtered.length === 0 ? (
         <Card>
@@ -254,17 +394,20 @@ export default function FulfillmentTab({
           {filtered.map((b) => {
             const status = (b.shipping_status || "pending") as ShippingStatus;
             const meta = STATUS_META[status];
-            const items = b.backer_items || [];
+            const pack = packOf(b);
+            const plans = pack.filter((l) => l.planQuantity > 0);
+            const shipLines = pack.filter((l) => l.needsAddress);
+            const otherLines = pack.filter((l) => !l.needsAddress);
             return (
               <Card key={b.id}>
                 {/* 宛先 */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-gray-400">送り先</p>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="font-bold text-gray-800">
-                        {b.guest_address?.recipient_name ||
-                          b.guest_nickname ||
-                          "（氏名未登録）"}
+                      <span className="text-lg font-bold text-gray-800">
+                        {recipientName(b)}
+                        <span className="text-sm font-semibold text-gray-500 ml-1">様</span>
                       </span>
                       <Badge color={meta.color} size="sm">
                         {meta.label}
@@ -289,30 +432,71 @@ export default function FulfillmentTab({
 
                 {/* 送るもの */}
                 <div className="p-3 rounded-2xl bg-caramel-50 mb-3">
-                  <p className="text-xs font-bold text-gray-500 mb-1.5">
-                    送るもの
-                  </p>
-                  {items.length > 0 ? (
-                    <ul className="space-y-1.5">
-                      {items.map((it) => (
-                        <li
-                          key={it.id}
-                          className="flex items-center gap-2 text-sm text-gray-700"
-                        >
-                          <span className="font-semibold">{it.reward_title}</span>
-                          <span className="px-2 py-0.5 rounded-lg bg-white font-bold text-caramel-600 tabular-nums">
-                            × {it.quantity}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
+                  {pack.length === 0 ? (
                     <p className="text-sm text-gray-600">
-                      {b.rewards?.title || "（リターンなしの応援）"}
-                      <span className="text-xs text-gray-400 ml-2">
-                        ※品目の内訳が記録されていません
-                      </span>
+                      （リターンなしの応援）
                     </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-gray-500 mb-2">
+                        支援プラン：
+                        <span className="font-bold text-gray-700">
+                          {plans
+                            .map((l) =>
+                              l.planQuantity > 1
+                                ? `${l.title} ×${l.planQuantity}`
+                                : l.title
+                            )
+                            .join(" / ")}
+                        </span>
+                      </p>
+                      <p className="text-xs font-bold text-gray-500 mb-1.5">
+                        送るもの
+                      </p>
+                      {shipLines.length > 0 ? (
+                        <ul className="space-y-1.5">
+                          {shipLines.map((l) => (
+                            <li
+                              key={l.key}
+                              className="flex items-center gap-2 text-sm text-gray-700"
+                            >
+                              <span className="font-semibold">{l.title}</span>
+                              <span className="px-2 py-0.5 rounded-lg bg-white font-bold text-caramel-600 tabular-nums">
+                                × {l.quantity}
+                              </span>
+                              {l.planQuantity === 0 && (
+                                <span className="text-[11px] text-gray-400">
+                                  上位プランに含む
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500">
+                          発送する品目はありません
+                        </p>
+                      )}
+                      {plans
+                        .filter((l) => l.description)
+                        .map((l) => (
+                          <p
+                            key={l.key}
+                            className="mt-2 text-xs text-gray-500 whitespace-pre-line"
+                          >
+                            <span className="font-bold">プラン内容：</span>
+                            {l.description}
+                          </p>
+                        ))}
+                      {otherLines.length > 0 && (
+                        <p className="mt-2 text-xs text-gray-500">
+                          <span className="font-bold">発送不要の特典（別途対応）：</span>
+                          {otherLines
+                            .map((l) => `${l.title} ×${l.quantity}`)
+                            .join(" / ")}
+                        </p>
+                      )}
+                    </>
                   )}
                   <p className="text-xs text-gray-400 mt-2">
                     支援額 {formatCurrency(b.amount)} ·{" "}

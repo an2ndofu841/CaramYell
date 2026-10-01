@@ -273,6 +273,7 @@ export default function ProjectManageClient() {
           <FulfillmentTab
             projectId={projectId}
             backers={backers}
+            rewards={project.rewards || []}
             onUpdated={(updated) =>
               setBackers((prev) =>
                 prev.map((b) => (b.id === updated.id ? { ...b, ...updated } : b))
