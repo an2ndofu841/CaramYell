@@ -101,3 +101,19 @@ export function expandBackerRewards(
 
   return [...lines.values()].sort((a, b) => b.amount - a.amount);
 }
+
+/** 同じ送り先にまとめて送る複数の支援の品目を、品目ごとに合算する */
+export function mergePackLines(packs: readonly PackLine[][]): PackLine[] {
+  const merged = new Map<string, PackLine>();
+  for (const line of packs.flat()) {
+    const cur = merged.get(line.key);
+    if (!cur) {
+      merged.set(line.key, { ...line });
+      continue;
+    }
+    cur.quantity += line.quantity;
+    cur.planQuantity += line.planQuantity;
+    cur.includedQuantity += line.includedQuantity;
+  }
+  return [...merged.values()].sort((a, b) => b.amount - a.amount);
+}
