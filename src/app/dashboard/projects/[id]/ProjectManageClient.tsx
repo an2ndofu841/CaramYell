@@ -33,12 +33,14 @@ import {
   Flag,
   Banknote,
   Undo2,
+  Flower2,
 } from "lucide-react";
 import { toast } from "sonner";
 import FulfillmentTab from "@/components/dashboard/FulfillmentTab";
 import DesignTab from "@/components/dashboard/DesignTab";
 import GoalsTab from "@/components/dashboard/GoalsTab";
 import OfflineBackingForm from "@/components/dashboard/OfflineBackingForm";
+import NameCreditPanel from "@/components/dashboard/NameCreditPanel";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -636,6 +638,7 @@ function BackersTab({
 }) {
   const [filter, setFilter] = useState<"all" | "paid" | "refunded">("all");
   const [showOfflineForm, setShowOfflineForm] = useState(false);
+  const [showNameCredits, setShowNameCredits] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   // 現地支援を記録できるのは受付中だけ（終了後に総額が動くのを防ぐ）
   const canRecordOffline = project.status === "active" || project.status === "funded";
@@ -692,6 +695,16 @@ function BackersTab({
           支援者一覧（{filtered.length}名）
         </h3>
         <div className="flex gap-2 flex-wrap justify-end">
+          {!showNameCredits && backers.some((b) => b.status === "paid") && (
+            <Button
+              size="sm"
+              variant="outline"
+              icon={<Flower2 size={14} />}
+              onClick={() => setShowNameCredits(true)}
+            >
+              フラスタ用お名前コピー
+            </Button>
+          )}
           {canRecordOffline && !showOfflineForm && (
             <Button
               size="sm"
@@ -723,6 +736,10 @@ function BackersTab({
           ))}
         </div>
       </div>
+
+      {showNameCredits && (
+        <NameCreditPanel backers={backers} onClose={() => setShowNameCredits(false)} />
+      )}
 
       {showOfflineForm && (
         <OfflineBackingForm
