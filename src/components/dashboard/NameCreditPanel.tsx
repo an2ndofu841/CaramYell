@@ -64,7 +64,7 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
             フラスタ用お名前リスト
           </h4>
           <p className="text-xs text-gray-400 mt-1">
-            支払済みの支援を人ごとに合算し、合計額の多い順に並べています（同額は先に支援した順）。
+            支払済みの支援をお名前ごとに合算し、合計額の多い順に並べています（同額は先に支援した順）。同じアカウントでもお名前が違う支援は別の名義として出します。
           </p>
         </div>
         <button
@@ -145,6 +145,16 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
                 {c.otherNames.length > 0 && (
                   <p className="text-xs text-amber-600 truncate">
                     別の表記: {c.otherNames.join(" / ")}
+                  </p>
+                )}
+                {c.emailCount > 1 && (
+                  <p className="text-xs text-amber-600 truncate">
+                    {c.emailCount}つのメールアドレスからの支援を同じお名前で合算
+                  </p>
+                )}
+                {c.relatedNames.length > 0 && (
+                  <p className="text-xs text-amber-600 truncate">
+                    同じメール・アカウントで「{c.relatedNames.join("」「")}」名義の支援もあり
                   </p>
                 )}
               </div>
