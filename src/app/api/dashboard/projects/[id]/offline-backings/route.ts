@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { blankToNull } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
+import { managedBy } from "@/lib/project/access";
 import { sendBackingConfirmation } from "@/lib/email/backing-confirmation";
 import type { GuestAddress } from "@/types";
 
@@ -45,7 +46,7 @@ async function loadOwnedProject(id: string) {
     .from("projects")
     .select("id, title, slug, status, end_date")
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .maybeSingle();
 
   return { user, project };

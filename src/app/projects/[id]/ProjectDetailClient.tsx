@@ -1,5 +1,6 @@
 "use client";
 
+import { publisherName } from "@/lib/project/publisher";
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -404,11 +405,10 @@ export default function ProjectDetailClient({
         <div className="min-w-0">
           <p className="text-xs text-gray-400 font-medium">{t.detail.owner}</p>
           <p className="font-bold text-gray-800">
-            {project.profiles.organization_name || project.profiles.display_name}
+            {publisherName(project)}
           </p>
-          {project.profiles.organization_name &&
-            project.profiles.display_name &&
-            project.profiles.display_name !== project.profiles.organization_name && (
+          {project.profiles.display_name &&
+            project.profiles.display_name !== publisherName(project) && (
               <p className="text-xs text-gray-500">{project.profiles.display_name}</p>
             )}
           {project.profiles.bio && (

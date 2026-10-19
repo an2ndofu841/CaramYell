@@ -12,6 +12,7 @@
 export const PUBLIC_PROJECT_COLUMNS = [
   "id",
   "creator_id",
+  "organization_id",
   "title",
   "slug",
   "tagline",

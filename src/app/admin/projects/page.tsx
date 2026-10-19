@@ -146,7 +146,7 @@ export default function AdminProjectsPage() {
                         </Badge>
                       )}
                       <span className="text-xs text-ink-muted">
-                        {project.profiles?.display_name || "—"}
+                        {project.organizations?.name || project.profiles?.display_name || "—"}
                       </span>
                     </div>
                     <p className="font-bold text-ink text-sm line-clamp-1">{project.title}</p>

@@ -65,6 +65,35 @@ export async function PATCH(
       .update(update)
       .eq("id", application.user_id);
     if (profileError) return dbError(profileError);
+
+    // 事務所を作って申請者をオーナーにする。スタッフはオーナーが招待する。
+    // すでにどこかの事務所に所属している人は、その事務所のまま掲載できる
+    const { data: membership } = await supabase
+      .from("organization_members")
+      .select("organization_id")
+      .eq("user_id", application.user_id)
+      .maybeSingle();
+    if (!membership) {
+      const { data: organization, error: orgError } = await supabase
+        .from("organizations")
+        .insert({ name: application.organization_name })
+        .select("id")
+        .single();
+      if (orgError) return dbError(orgError);
+
+      const { error: memberError } = await supabase
+        .from("organization_members")
+        .insert({
+          organization_id: organization.id,
+          user_id: application.user_id,
+          role: "owner",
+          invited_by: user.id,
+        });
+      if (memberError) {
+        await supabase.from("organizations").delete().eq("id", organization.id);
+        return dbError(memberError);
+      }
+    }
   }
 
   const { data, error } = await supabase

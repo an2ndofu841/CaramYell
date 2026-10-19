@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
+import { managedBy } from "@/lib/project/access";
 
 const ALLOWED_STATUSES = ["pending", "preparing", "shipped", "delivered"];
 
@@ -24,7 +25,7 @@ export async function PATCH(
     .from("projects")
     .select("id")
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .maybeSingle();
 
   if (!project) {

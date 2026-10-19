@@ -20,6 +20,7 @@ async function getProject(slugOrId: string): Promise<Project | null> {
         `
         ${PUBLIC_PROJECT_COLUMNS},
         profiles!projects_creator_id_fkey(*),
+        organizations(id, name),
         categories(*),
         rewards(*),
         project_milestones(*),

@@ -23,11 +23,14 @@ export default function DashboardShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { isCreator } = useAuth();
+  const { isCreator, organization } = useAuth();
 
   const tabs = [
     { href: "/dashboard", label: "応援した" },
     { href: "/dashboard/projects", label: "掲載中" },
+    ...(organization
+      ? [{ href: "/dashboard/organization", label: "事務所のメンバー" }]
+      : []),
   ];
 
   return (

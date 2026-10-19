@@ -3,11 +3,13 @@
 import { createContext, useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
-import type { Profile } from "@/types";
+import type { OrganizationMembership, OrganizationRole, Profile } from "@/types";
 
 interface AuthState {
   user: User | null;
   profile: Profile | null;
+  /** 所属している事務所。どこにも所属していなければ null */
+  organization: OrganizationMembership | null;
   session: Session | null;
   loading: boolean;
 }
@@ -20,7 +22,7 @@ export type SignUpOutcome =
 
 export interface AuthContextValue extends AuthState {
   isAdmin: boolean;
-  /** プロジェクトを掲載できる権限。運営が個別に付与する */
+  /** プロジェクトを掲載できる権限。運営が個別に付与するか、事務所に招待される */
   isCreator: boolean;
   signInWithEmail: (
     email: string,
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: null,
+    organization: null,
     session: null,
     loading: true,
   });
@@ -56,16 +59,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const fetchProfile = useCallback(
-    async (userId: string) => {
+    async (
+      userId: string
+    ): Promise<Pick<AuthState, "profile" | "organization">> => {
       try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .single();
-        return data as Profile | null;
+        const [{ data: profile }, { data: member }] = await Promise.all([
+          supabase.from("profiles").select("*").eq("id", userId).single(),
+          supabase
+            .from("organization_members")
+            .select("role, organizations(id, name)")
+            .eq("user_id", userId)
+            .maybeSingle(),
+        ]);
+        const org = Array.isArray(member?.organizations)
+          ? member.organizations[0]
+          : member?.organizations;
+        return {
+          profile: profile as Profile | null,
+          organization: org
+            ? { id: org.id, name: org.name, role: member!.role as OrganizationRole }
+            : null,
+        };
       } catch {
-        return null;
+        return { profile: null, organization: null };
       }
     },
     [supabase]
@@ -74,10 +90,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const applySession = async (session: Session | null) => {
       if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setState({ user: session.user, profile, session, loading: false });
+        const loaded = await fetchProfile(session.user.id);
+        setState({ user: session.user, ...loaded, session, loading: false });
       } else {
-        setState({ user: null, profile: null, session: null, loading: false });
+        setState({
+          user: null,
+          profile: null,
+          organization: null,
+          session: null,
+          loading: false,
+        });
       }
     };
 
@@ -159,14 +181,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async () => {
     const userId = state.user?.id;
     if (!userId) return;
-    const profile = await fetchProfile(userId);
-    setState((s) => (s.user?.id === userId ? { ...s, profile } : s));
+    const loaded = await fetchProfile(userId);
+    setState((s) => (s.user?.id === userId ? { ...s, ...loaded } : s));
   }, [state.user?.id, fetchProfile]);
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
-      setState({ user: null, profile: null, session: null, loading: false });
+      setState({
+        user: null,
+        profile: null,
+        organization: null,
+        session: null,
+        loading: false,
+      });
     }
     return { error };
   };
@@ -175,7 +203,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ...state,
     isAdmin: state.profile?.role === "admin",
     isCreator:
-      state.profile?.role === "creator" || state.profile?.role === "admin",
+      state.profile?.role === "creator" ||
+      state.profile?.role === "admin" ||
+      state.organization !== null,
     signInWithEmail,
     signUpWithEmail,
     resendSignUpEmail,

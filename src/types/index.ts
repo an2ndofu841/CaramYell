@@ -72,6 +72,8 @@ export interface ProjectFaq {
 export interface Project {
   id: string;
   creator_id?: string;
+  /** 管理する事務所。NULL のときは creator_id 本人だけが管理する */
+  organization_id?: string | null;
   title: string;
   slug: string;
   tagline: string;
@@ -109,6 +111,7 @@ export interface Project {
   updated_at: string;
   // Joined
   profiles?: Profile;
+  organizations?: Pick<Organization, "id" | "name"> | null;
   categories?: Category;
   rewards?: Reward[];
   project_milestones?: ProjectMilestone[];
@@ -316,5 +319,39 @@ export interface CreatorApplication {
   status: CreatorApplicationStatus;
   review_note: string | null;
   reviewed_at: string | null;
+  created_at: string;
+}
+
+/** 掲載する事務所。name は公開ページの掲載者名になり、運営だけが変更できる */
+export interface Organization {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+/** owner はメンバーの招待・権限変更・削除もできる */
+export type OrganizationRole = "owner" | "staff";
+
+/** ログイン中のユーザーが所属する事務所 */
+export interface OrganizationMembership {
+  id: string;
+  name: string;
+  role: OrganizationRole;
+}
+
+export interface OrganizationMember {
+  user_id: string;
+  role: OrganizationRole;
+  display_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  joined_at: string;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  email: string;
+  role: OrganizationRole;
+  expires_at: string;
   created_at: string;
 }

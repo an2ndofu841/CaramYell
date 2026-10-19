@@ -32,7 +32,7 @@ interface DashboardProject extends Project {
 
 export default function CreatorDashboardClient() {
   const router = useRouter();
-  const { user, isCreator, loading: authLoading } = useAuth();
+  const { user, organization, isCreator, loading: authLoading } = useAuth();
   const [projects, setProjects] = useState<DashboardProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<DashboardProject | null>(null);
@@ -136,13 +136,24 @@ export default function CreatorDashboardClient() {
     { label: "全プロジェクト", value: `${projects.length}件` },
   ];
 
+  // 事務所のプロジェクトを消せるのは作成者本人かオーナーだけ（API と同じ判定）
+  const canDelete = (project: DashboardProject) =>
+    project.organization_id
+      ? organization?.id === project.organization_id &&
+        (organization.role === "owner" || project.creator_id === user.id)
+      : project.creator_id === user.id;
+
   const actionClass =
     "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-ink-muted hover:bg-cream-50 hover:text-ink transition-colors";
 
   return (
     <DashboardShell
       title="掲載中のプロジェクト"
-      description="支援の状況と支援者を確認・管理できます"
+      description={
+        organization
+          ? `${organization.name} のプロジェクトを、事務所のメンバーで管理できます`
+          : "支援の状況と支援者を確認・管理できます"
+      }
       actions={
         <Link href="/projects/create">
           <Button icon={<Plus size={16} />} size="md">
@@ -289,13 +300,15 @@ export default function CreatorDashboardClient() {
                           シェア
                         </button>
                       )}
-                      <button
-                        onClick={() => setDeleteTarget(project)}
-                        aria-label="削除"
-                        className="flex-shrink-0 flex items-center justify-center px-4 py-2.5 text-ink-muted hover:bg-red-50 hover:text-red-600 transition-colors rounded-br-xl"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {canDelete(project) && (
+                        <button
+                          onClick={() => setDeleteTarget(project)}
+                          aria-label="削除"
+                          className="flex-shrink-0 flex items-center justify-center px-4 py-2.5 text-ink-muted hover:bg-red-50 hover:text-red-600 transition-colors rounded-br-xl"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </article>
                 );

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
+import { canPublish } from "@/lib/project/access";
 import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const BUCKET = "project-images";
@@ -37,12 +38,7 @@ async function ensureBucket(admin: ServiceClient) {
 /** 掲載者以外に画像置き場として使われないようにする */
 async function requireCreator(userId: string) {
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-  return profile?.role === "creator" || profile?.role === "admin";
+  return canPublish(supabase, userId);
 }
 
 export async function POST(req: NextRequest) {

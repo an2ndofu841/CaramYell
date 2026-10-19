@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
+import { managedBy } from "@/lib/project/access";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import {
   collectDigitalRecipients,
@@ -51,7 +52,7 @@ async function loadOwnedProject(id: string) {
     .from("projects")
     .select("id, title, slug")
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .maybeSingle();
 
   return { supabase, user, project };

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { blankToNull } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
+import { managedBy } from "@/lib/project/access";
 
 export async function POST(
   req: NextRequest,
@@ -21,7 +22,7 @@ export async function POST(
     .from("projects")
     .select("id")
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .single();
 
   if (!project) {

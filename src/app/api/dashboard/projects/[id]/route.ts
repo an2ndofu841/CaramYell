@@ -3,6 +3,7 @@ import { SLUG_TAKEN, dbError, slugTakenResponse } from "@/lib/api/errors";
 import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
+import { canDeleteProject, getProjectAccess, managedBy } from "@/lib/project/access";
 import { countUniqueBackers } from "@/lib/utils";
 import { resolveFaqs } from "@/lib/project/faqs";
 import { canEditSlug, normalizeSlug, slugError } from "@/lib/project/slug";
@@ -33,7 +34,7 @@ export async function GET(
     `
     )
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .single();
 
   if (error || !project) {
@@ -107,6 +108,8 @@ export async function PUT(
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
+  const scope = await managedBy(supabase, user.id);
+
   const body = await req.json();
   const {
     title,
@@ -159,7 +162,7 @@ export async function PUT(
       .from("projects")
       .select("slug, status")
       .eq("id", id)
-      .eq("creator_id", user.id)
+      .or(scope)
       .maybeSingle();
     if (!existing) {
       return NextResponse.json(
@@ -203,7 +206,7 @@ export async function PUT(
     .from("projects")
     .update(updateData)
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(scope)
     .select()
     .single();
 
@@ -229,18 +232,25 @@ export async function DELETE(
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
-  // 本人のプロジェクトか確認
+  // 管理しているプロジェクトか確認。事務所のプロジェクトは作成者本人かオーナーだけが消せる
+  const access = await getProjectAccess(supabase, user.id);
   const { data: project } = await supabase
     .from("projects")
-    .select("id, creator_id")
+    .select("id, creator_id, organization_id")
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(access.filter)
     .maybeSingle();
 
   if (!project) {
     return NextResponse.json(
       { error: "プロジェクトが見つかりません" },
       { status: 404 }
+    );
+  }
+  if (!canDeleteProject(access, project)) {
+    return NextResponse.json(
+      { error: "事務所のプロジェクトを削除できるのは、作成者本人かオーナーだけです" },
+      { status: 403 }
     );
   }
 
@@ -265,7 +275,7 @@ export async function DELETE(
     .from("projects")
     .delete()
     .eq("id", id)
-    .eq("creator_id", user.id);
+    .or(access.filter);
 
   if (error) {
     return dbError(error);

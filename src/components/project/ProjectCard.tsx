@@ -1,5 +1,6 @@
 "use client";
 
+import { publisherName } from "@/lib/project/publisher";
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, Users } from "lucide-react";
@@ -53,8 +54,7 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
   const isNew =
     Date.now() - new Date(project.created_at).getTime() < 14 * 86400000;
   const ended = stats.days_left <= 0;
-  const owner =
-    project.profiles?.organization_name || project.profiles?.display_name;
+  const owner = publisherName(project);
 
   return (
     <Link

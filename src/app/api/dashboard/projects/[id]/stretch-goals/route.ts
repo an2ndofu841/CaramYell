@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { blankToNull } from "@/lib/api/text";
 import { createClient } from "@/lib/supabase/server";
+import { managedBy } from "@/lib/project/access";
 import { resolveFinalGoal, splitMilestones } from "@/lib/project/goals";
 
 /**
@@ -27,7 +28,7 @@ async function loadOwnedProject(id: string) {
     .from("projects")
     .select("id, goal_amount, project_milestones(id, amount, is_stretch, sort_order)")
     .eq("id", id)
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .maybeSingle();
 
   return { supabase, user, project };

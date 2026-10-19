@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
       `
       *,
       profiles!projects_creator_id_fkey(id, display_name, avatar_url, organization_name),
+      organizations(id, name),
       categories(id, slug, name_ja, icon, color)
     `
     );

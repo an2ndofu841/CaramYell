@@ -3,6 +3,7 @@ import { SLUG_TAKEN, dbError, slugTakenResponse } from "@/lib/api/errors";
 import { TEXT_LIMITS, blankToNull, lengthError } from "@/lib/api/text";
 import { campaignEndFromInput } from "@/lib/date/campaign-end";
 import { createClient } from "@/lib/supabase/server";
+import { canPublish, getMembership, managedBy } from "@/lib/project/access";
 import { resolveTheme } from "@/lib/theme/project-theme";
 import { resolveFaqs } from "@/lib/project/faqs";
 import { autoSlug, normalizeSlug, slugError } from "@/lib/project/slug";
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
     .select(`
       ${PUBLIC_PROJECT_COLUMNS},
       profiles!projects_creator_id_fkey(id, display_name, avatar_url, organization_name),
+      organizations(id, name),
       categories(id, slug, name_ja, name_en, icon, color),
       project_milestones(id, amount, title, sort_order, is_stretch)
     `)
@@ -108,14 +110,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
 
-  // プロジェクト作成は運営が承認した掲載者のみ
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "creator" && profile?.role !== "admin") {
+  // プロジェクト作成は運営が承認した掲載者（事務所のメンバーを含む）のみ
+  if (!(await canPublish(supabase, user.id))) {
     return NextResponse.json(
       { error: "プロジェクトの掲載には運営の承認が必要です。" },
       { status: 403 }
@@ -251,13 +247,14 @@ export async function POST(req: NextRequest) {
   let project;
 
   if (projectId) {
-    // 既存の下書きを更新（本人のもののみ）
+    // 既存の下書きを更新（管理しているもののみ）
     const { data: existing } = await supabase
       .from("projects")
-      .select("id, creator_id, status")
+      .select("id, status")
       .eq("id", projectId)
+      .or(await managedBy(supabase, user.id))
       .maybeSingle();
-    if (!existing || existing.creator_id !== user.id) {
+    if (!existing) {
       return NextResponse.json({ error: "対象のプロジェクトが見つかりません" }, { status: 404 });
     }
     // この導線はリターンと段階ゴールを作り直すため、公開後に通すと
@@ -291,6 +288,8 @@ export async function POST(req: NextRequest) {
       .from("projects")
       .insert({
         creator_id: user.id,
+        // 事務所に所属していれば、事務所のメンバー全員で管理するプロジェクトにする
+        organization_id: (await getMembership(supabase, user.id))?.id ?? null,
         slug: desiredSlug || autoSlug(title),
         ...fields,
       })

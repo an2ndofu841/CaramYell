@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
+import { managedBy } from "@/lib/project/access";
 import { backerIdentity } from "@/lib/utils";
 
 export async function GET() {
@@ -22,7 +23,7 @@ export async function GET() {
       rewards(id, title, amount, quantity_total, quantity_claimed, reward_type)
     `
     )
-    .eq("creator_id", user.id)
+    .or(await managedBy(supabase, user.id))
     .order("created_at", { ascending: false });
 
   if (error) {
