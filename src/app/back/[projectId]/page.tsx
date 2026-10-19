@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import BackingClient from "./BackingClient";
 import CampaignEndedNotice from "./CampaignEndedNotice";
 import { createClient } from "@/lib/supabase/server";
@@ -5,7 +6,7 @@ import { isCampaignOver } from "@/lib/date/campaign-end";
 import { PUBLIC_PROJECT_COLUMNS } from "@/lib/project/public-columns";
 import type { Project } from "@/types";
 
-// 掲載中(active)の実プロジェクト＋リターンを取得（見つからなければ null → デモ扱い）
+// 掲載中(active)の実プロジェクト＋リターンを取得（見つからなければ null → 404）
 async function getRealProject(slugOrId: string): Promise<Project | null> {
   try {
     const supabase = await createClient();
@@ -47,18 +48,18 @@ export default async function BackingPage({
   const { reward } = await searchParams;
 
   const project = await getRealProject(projectId);
+  if (!project) notFound();
 
   // 直リンクで来ても締切後は入口を閉じる（決済側でも弾いてはいる）
-  if (project && isCampaignOver(project.end_date)) {
+  if (isCampaignOver(project.end_date)) {
     return <CampaignEndedNotice projectSlug={project.slug} />;
   }
 
   return (
     <BackingClient
-      projectSlug={projectId}
       selectedRewardId={reward}
-      allowFreeAmount={project ? project.allow_free_amount !== false : true}
-      realProject={project}
+      allowFreeAmount={project.allow_free_amount !== false}
+      project={project}
     />
   );
 }

@@ -14,14 +14,9 @@ import {
   MapPin,
   MessageSquare,
   Package,
-  Smartphone,
   Star,
   User,
   Check,
-  CircleCheck,
-  CreditCard,
-  Smartphone as ApplePay,
-  Globe,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -37,7 +32,6 @@ import {
   splitMilestones,
 } from "@/lib/project/goals";
 import { toast } from "sonner";
-import { getMockProjectBySlug, getAllMockProjects } from "@/lib/data/mockProjects";
 import type { Reward, Project } from "@/types";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { paymentMethodBadges } from "@/lib/config/payment-methods";
@@ -63,30 +57,17 @@ const steps = [
   { id: 4, key: "stepDone" as const },
 ];
 
-const paymentMethods = [
-  { id: "apple_pay", label: "Apple Pay", desc: "対応端末でそのまま支払い" },
-  { id: "google_pay", label: "Google Pay", desc: "Googleアカウントで支払い" },
-  { id: "card", label: "クレジットカード", desc: "Visa / Mastercard / AMEX" },
-  { id: "paypal", label: "PayPal", desc: "海外からも利用できます" },
-];
-
 export default function BackingClient({
-  projectSlug,
   selectedRewardId,
   allowFreeAmount = true,
-  realProject = null,
+  project,
 }: {
-  projectSlug: string;
   selectedRewardId?: string;
   allowFreeAmount?: boolean;
-  realProject?: Project | null;
+  project: Project;
 }) {
-  // 実プロジェクトがあれば実データ＋実決済、なければモック＋デモ決済
   const { t, locale, pick } = useLocale();
   const { user, signUpWithEmail } = useAuth();
-  const isReal = !!realProject;
-  const project =
-    realProject || getMockProjectBySlug(projectSlug) || getAllMockProjects()[0];
   const rewards = project.rewards || [];
 
   const [step, setStep] = useState(1);
@@ -95,7 +76,6 @@ export default function BackingClient({
     selectedRewardId ? { [selectedRewardId]: 1 } : {}
   );
   const [freeAmount, setFreeAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("apple_pay");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
@@ -291,15 +271,7 @@ export default function BackingClient({
   const handlePayment = async () => {
     setIsProcessing(true);
 
-    // デモ（モックプロジェクト）は疑似決済のまま
-    if (!isReal) {
-      await new Promise((r) => setTimeout(r, 2000));
-      setIsProcessing(false);
-      setStep(4);
-      return;
-    }
-
-    // 実プロジェクトは Stripe Checkout へ遷移
+    // Stripe Checkout へ遷移
     try {
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
@@ -854,51 +826,25 @@ export default function BackingClient({
                     {t.backing.paymentTitle}
                   </h2>
 
-                  {isReal ? (
-                    // 実決済では Stripe の安全な決済ページで支払い方法を選ぶ
-                    <div className="p-4 rounded-xl border border-line bg-cream-50">
-                      <p className="text-sm font-bold text-ink mb-1">
-                        {t.backing.paymentNote}
-                      </p>
-                      <p className="text-xs text-ink-muted mb-3">
-                        {t.backing.paymentNote2}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {paymentMethodBadges(locale).map((m) => (
-                          <span
-                            key={m}
-                            className="px-2 py-1 rounded-md text-xs font-semibold bg-white border border-line text-ink-soft"
-                          >
-                            {m}
-                          </span>
-                        ))}
-                      </div>
+                  {/* 支払い方法は Stripe の安全な決済ページで選ぶ */}
+                  <div className="p-4 rounded-xl border border-line bg-cream-50">
+                    <p className="text-sm font-bold text-ink mb-1">
+                      {t.backing.paymentNote}
+                    </p>
+                    <p className="text-xs text-ink-muted mb-3">
+                      {t.backing.paymentNote2}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {paymentMethodBadges(locale).map((m) => (
+                        <span
+                          key={m}
+                          className="px-2 py-1 rounded-md text-xs font-semibold bg-white border border-line text-ink-soft"
+                        >
+                          {m}
+                        </span>
+                      ))}
                     </div>
-                  ) : (
-                  <div className="space-y-3">
-                    {paymentMethods.map((method) => (
-                      <button
-                        key={method.id}
-                        onClick={() => setPaymentMethod(method.id)}
-                        className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-xl border transition-colors text-left",
-                          paymentMethod === method.id ? "border-ink bg-cream-50" : "border-line hover:border-line-strong bg-white"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                          paymentMethod === method.id ? "border-ink bg-ink" : "border-line-strong"
-                        )}>
-                          {paymentMethod === method.id && <Check size={12} className="text-white" />}
-                        </div>
-                        <div>
-                          <p className="font-bold text-ink">{method.label}</p>
-                          <p className="text-xs text-ink-muted">{method.desc}</p>
-                        </div>
-                      </button>
-                    ))}
                   </div>
-                  )}
 
                   <div className="mt-4 flex items-center gap-2 text-xs text-ink-muted">
                     <Lock size={12} />
@@ -957,58 +903,6 @@ export default function BackingClient({
                   {formatCurrency(total)}{t.backing.payButton}
                 </Button>
               </div>
-            )}
-
-            {/* STEP 4: 完了 */}
-            {step === 4 && (
-              <Card>
-                <div className="text-center py-8">
-                  <CircleCheck
-                    size={32}
-                    strokeWidth={1.75}
-                    className="mx-auto mb-4 text-emerald-700"
-                  />
-                  <h2
-                    className="text-2xl font-bold text-ink mb-3"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    {t.backing.thanks}
-                  </h2>
-                  <p className="text-ink-soft leading-relaxed mb-2">
-                    決済確認メールを <strong className="text-ink">{guestInfo.email}</strong> に送りました。
-                  </p>
-                  <p className="text-ink-muted text-sm mb-8">
-                    リターンは各リターンに記載のお届け予定時期にお届けします。
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link href={`/projects/${projectSlug}`}>
-                      <Button variant="outline" fullWidth>
-                        プロジェクトに戻る
-                      </Button>
-                    </Link>
-                    <Link href="/projects">
-                      <Button fullWidth>
-                        他のプロジェクトを見る
-                      </Button>
-                    </Link>
-                  </div>
-
-                  <div className="mt-8 pt-6 border-t border-line">
-                    <p className="text-sm text-ink-muted mb-3">SNSでシェアする</p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {["Twitter", "LINE", "Facebook"].map((sns) => (
-                        <button
-                          key={sns}
-                          className="h-9 px-3.5 rounded-lg border border-line bg-white text-xs font-bold text-ink-soft hover:bg-cream-100 transition-colors"
-                        >
-                          {sns}でシェア
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Card>
             )}
         </div>
 

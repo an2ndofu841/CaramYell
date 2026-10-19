@@ -2,12 +2,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProjectDetailClient from "./ProjectDetailClient";
 import { createClient } from "@/lib/supabase/server";
-import { getMockProjectBySlug } from "@/lib/data/mockProjects";
 import { PUBLIC_PROJECT_COLUMNS } from "@/lib/project/public-columns";
 import { Project } from "@/types";
 
 async function getProject(slugOrId: string): Promise<Project | null> {
-  // 1. Supabase の実データ（ダッシュボードで作成したプロジェクト）を優先
   try {
     const supabase = await createClient();
     const isUuid =
@@ -34,15 +32,10 @@ async function getProject(slugOrId: string): Promise<Project | null> {
       : query.eq("slug", slugOrId)
     ).maybeSingle();
 
-    if (data) {
-      return data as unknown as Project;
-    }
+    return (data as unknown as Project) || null;
   } catch {
-    // Supabase未設定などの場合はモックにフォールバック
+    return null;
   }
-
-  // 2. デモ用モックデータ
-  return getMockProjectBySlug(slugOrId);
 }
 
 export async function generateMetadata({
