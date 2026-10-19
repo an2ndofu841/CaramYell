@@ -190,7 +190,7 @@ export default function DigitalDeliveryPanel({
         <>
           <div className="grid grid-cols-3 gap-2 mb-3">
             {[
-              { label: "送付対象", value: recipients.length },
+              { label: "送付対象（1人1通）", value: recipients.length },
               { label: "送付済み", value: recipients.length - unsent.length },
               { label: "未送付", value: unsent.length },
             ].map((s) => (
@@ -230,13 +230,13 @@ export default function DigitalDeliveryPanel({
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-gray-800 truncate">
                           {r.name || "（お名前未入力）"}
-                          {r.quantity > 1 && (
-                            <span className="text-xs font-bold text-caramel-600 ml-1">
-                              ×{r.quantity}
-                            </span>
-                          )}
                         </p>
                         <p className="text-xs text-gray-400 truncate">{r.email}</p>
+                        {r.backerIds.length > 1 && (
+                          <p className="text-xs text-caramel-600">
+                            {r.backerIds.length}件の支援を1通にまとめて送付
+                          </p>
+                        )}
                       </div>
                       {r.sentAt ? (
                         <Badge color="mint" size="sm">

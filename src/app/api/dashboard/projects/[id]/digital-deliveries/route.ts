@@ -74,7 +74,7 @@ async function loadPaidBackers(supabase: Supabase, projectId: string) {
       .from("backers")
       .select(
         `
-        id, reward_id, guest_email, guest_nickname, status, created_at,
+        id, reward_id, guest_email, guest_nickname, amount, status, created_at,
         rewards(id, title, reward_type),
         backer_items(id, reward_id, reward_title, unit_amount, quantity, needs_address)
       `

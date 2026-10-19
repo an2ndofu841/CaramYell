@@ -10,11 +10,10 @@ export interface RewardDelivery {
 /** 1通のメールの宛先。同じアドレスの支援は何回分でも1通にまとめる */
 export interface DigitalRecipient {
   email: string;
-  /** 宛名に使う名前（最新の支援のお名前）。未入力なら空文字 */
+  /** 宛名に使う名前（合計額が最も多いお名前。同額なら新しい方）。未入力なら空文字 */
   name: string;
+  /** 1通にまとめた支援。複数あっても送るのは1通だけ */
   backerIds: string[];
-  /** 受け取る個数（複数回の支援・上位プランに含まれる分を合算） */
-  quantity: number;
   /** まとめた支援すべてに送付済みなら、最後に送った日時 */
   sentAt: string | null;
 }
@@ -45,7 +44,7 @@ export function collectDigitalRecipients(
     deliveries.filter((d) => d.reward_id === rewardId).map((d) => [d.backer_id, d.sent_at])
   );
 
-  const groups = new Map<string, { backers: Backer[]; quantity: number }>();
+  const groups = new Map<string, { backers: Backer[] }>();
   let missingEmailCount = 0;
 
   for (const b of backers) {
@@ -58,23 +57,31 @@ export function collectDigitalRecipients(
       continue;
     }
     const key = normalizeEmail(email);
-    const group = groups.get(key) ?? { backers: [], quantity: 0 };
+    const group = groups.get(key) ?? { backers: [] };
     group.backers.push(b);
-    group.quantity += line.quantity;
     groups.set(key, group);
   }
 
   const recipients = [...groups.entries()].map(([email, group]): DigitalRecipient => {
-    const newestFirst = [...group.backers].sort((a, b) =>
-      b.created_at.localeCompare(a.created_at)
-    );
+    const byName = new Map<string, { total: number; latest: string }>();
+    for (const b of group.backers) {
+      const name = b.guest_nickname?.trim();
+      if (!name) continue;
+      const entry = byName.get(name) ?? { total: 0, latest: "" };
+      entry.total += b.amount || 0;
+      if (b.created_at > entry.latest) entry.latest = b.created_at;
+      byName.set(name, entry);
+    }
+    const name =
+      [...byName.entries()].sort(
+        ([, a], [, b]) => b.total - a.total || b.latest.localeCompare(a.latest)
+      )[0]?.[0] ?? "";
     const sentTimes = group.backers.map((b) => sentAtByBacker.get(b.id));
     const allSent = sentTimes.every(Boolean);
     return {
       email,
-      name: newestFirst.find((b) => b.guest_nickname?.trim())?.guest_nickname?.trim() || "",
+      name,
       backerIds: group.backers.map((b) => b.id),
-      quantity: group.quantity,
       sentAt: allSent
         ? (sentTimes as string[]).reduce((max, t) => (t > max ? t : max))
         : null,
