@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import { ORGANIZER_FEATURES } from "@/components/home/FeaturesSection";
 import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
+import CaramelGlow from "@/components/decor/CaramelGlow";
+import CaramelDrip from "@/components/decor/CaramelDrip";
+import { CaramelMark } from "@/components/layout/Logo";
 
 export const metadata: Metadata = {
   title: "事務所・レーベルの方へ",
@@ -93,16 +96,20 @@ export default function ForAgenciesPage() {
   return (
     <div>
       {/* ヒーロー */}
-      <section className="pt-32 pb-16 sm:pt-40 sm:pb-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="eyebrow mb-6">For agencies &amp; labels</p>
+      <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 bg-cream-gradient">
+        <CaramelGlow />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="inline-flex items-center gap-2 mb-6 pl-1.5 pr-3.5 py-1.5 rounded-full bg-white/80 border border-line shadow-soft eyebrow">
+            <CaramelMark className="w-5 h-5" />
+            For agencies &amp; labels
+          </p>
           <h1
             className="text-[32px] leading-[1.3] sm:text-5xl sm:leading-[1.2] font-bold text-ink max-w-3xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
             所属アーティストの企画を、
             <br />
-            ファンと一緒に実現する。
+            <span className="text-gradient-caramel">ファンと一緒に実現する。</span>
           </h1>
           <p className="mt-6 text-base sm:text-lg text-ink-soft leading-relaxed max-w-2xl">
             CaramYell は、芸能事務所・レーベル・運営チームからのプロジェクト掲載を受け付けています。
@@ -112,14 +119,14 @@ export default function ForAgenciesPage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
             <Link
               href="/apply"
-              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-ink text-white text-[15px] font-bold hover:bg-ink-soft transition-colors"
+              className="btn-caramel inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full text-[15px] font-bold"
             >
               掲載を申し込む
               <ArrowRight size={16} />
             </Link>
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center h-12 px-6 rounded-lg border border-line-strong bg-white text-ink text-[15px] font-bold hover:bg-cream-100 transition-colors"
+              className="inline-flex items-center justify-center h-12 px-7 rounded-full border border-line-strong bg-white text-ink text-[15px] font-bold hover:bg-caramel-50 hover:border-caramel-300 transition-colors"
             >
               まずは相談する
             </Link>
@@ -129,9 +136,10 @@ export default function ForAgenciesPage() {
 
       {/* 向いている企画 */}
       <Section eyebrow="Use cases" title="こんな企画に使われています">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {USE_CASES.map((u) => (
-            <div key={u.title} className="bg-white p-6 sm:p-8">
+            <div key={u.title} className="bg-white rounded-3xl border border-line shadow-soft p-6 sm:p-8">
+              <CaramelMark className="w-7 h-7 mb-4" />
               <h3 className="font-bold text-ink text-lg">{u.title}</h3>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">{u.description}</p>
             </div>
@@ -143,7 +151,7 @@ export default function ForAgenciesPage() {
       <Section eyebrow="Features" title="運営の手間を減らす機能" tinted>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8">
           {[...ORGANIZER_FEATURES, ...EXTRA_FEATURES].map((f) => (
-            <div key={f.title} className="border-t border-line-strong pt-5">
+            <div key={f.title} className="border-t-2 border-dashed border-caramel-200 pt-5">
               <h3 className="font-bold text-ink">{f.title}</h3>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">{f.description}</p>
             </div>
@@ -161,13 +169,13 @@ export default function ForAgenciesPage() {
             </p>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-1 text-sm font-bold text-ink hover:text-caramel-600 transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-bold text-caramel-700 hover:text-caramel-600 transition-colors"
             >
               手数料の詳しい仕組み
               <ArrowRight size={14} />
             </Link>
           </div>
-          <div className="rounded-xl border border-line bg-white">
+          <div className="rounded-3xl border border-line bg-white shadow-soft overflow-hidden">
             <p className="px-6 pt-5 pb-3 text-xs font-bold text-ink-muted">
               {example.baseText}円のリターンが選ばれた場合
             </p>
@@ -181,11 +189,11 @@ export default function ForAgenciesPage() {
 
       {/* 流れ */}
       <Section eyebrow="Process" title="掲載までの流れ" tinted>
-        <ol className="grid grid-cols-1 md:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden">
+        <ol className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="bg-white p-6">
-              <span className="text-sm font-bold text-caramel-600 tabular-nums">
-                {String(i + 1).padStart(2, "0")}
+            <li key={s.title} className="bg-cream-50 rounded-3xl border border-line p-6">
+              <span className="candy-number w-10 h-10 rounded-2xl inline-flex items-center justify-center text-sm font-bold tabular-nums">
+                {i + 1}
               </span>
               <h3 className="mt-3 font-bold text-ink">{s.title}</h3>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">{s.description}</p>
@@ -207,7 +215,7 @@ export default function ForAgenciesPage() {
       </Section>
 
       {/* 申し込み */}
-      <section className="bg-ink text-white">
+      <section className="caramel-panel relative text-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
             <h2
@@ -216,18 +224,19 @@ export default function ForAgenciesPage() {
             >
               掲載のお申し込み
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-white/70 leading-relaxed max-w-xl">
+            <p className="mt-3 text-sm sm:text-base text-white/80 leading-relaxed max-w-xl">
               フォームの入力は5分ほどで終わります。内容を確認して、ご登録のメールアドレスにご連絡します。
             </p>
           </div>
           <Link
             href="/apply"
-            className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-white text-ink text-[15px] font-bold hover:bg-cream-100 transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-white text-caramel-800 text-[15px] font-bold shadow-[0_6px_16px_rgba(46,31,21,0.25)] hover:bg-cream-50 transition-colors"
           >
             申し込みフォームへ
             <ArrowRight size={16} />
           </Link>
         </div>
+        <CaramelDrip color="#7A3F17" className="absolute top-full inset-x-0 z-10" />
       </section>
     </div>
   );
@@ -245,7 +254,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className={tinted ? "py-16 sm:py-20 bg-white border-y border-line" : "py-16 sm:py-20"}>
+    <section className={tinted ? "py-16 sm:py-20 bg-white" : "py-16 sm:py-20"}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="eyebrow mb-3">{eyebrow}</p>
         <h2

@@ -105,7 +105,7 @@ export default function ApplyClient() {
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <Link
             href="/auth/login?mode=signup&redirect=/apply"
-            className="inline-flex items-center justify-center h-11 px-5 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
+            className="inline-flex items-center justify-center h-11 px-5 rounded-full text-sm font-bold btn-caramel"
           >
             アカウントを作成する
           </Link>
@@ -128,7 +128,7 @@ export default function ApplyClient() {
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <Link
             href="/projects/create"
-            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full text-sm font-bold btn-caramel"
           >
             プロジェクトを作成する
             <ArrowRight size={15} />
@@ -189,7 +189,7 @@ export default function ApplyClient() {
                     required
                     checked={form.organizationType === t.id}
                     onChange={() => set("organizationType", t.id)}
-                    className="accent-[#1C1917]"
+                    className="accent-[#A85D22]"
                   />
                   {t.label}
                 </label>

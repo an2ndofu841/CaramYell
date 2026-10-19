@@ -227,7 +227,7 @@ export default function GuidePage() {
         <div className="mt-6">
           <Link
             href="/projects"
-            className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full text-sm font-bold btn-caramel"
           >
             プロジェクトを探す
             <ArrowRight size={15} />
@@ -269,7 +269,7 @@ export default function GuidePage() {
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <Link
             href="/apply"
-            className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full text-sm font-bold btn-caramel"
           >
             掲載を申し込む
             <ArrowRight size={15} />

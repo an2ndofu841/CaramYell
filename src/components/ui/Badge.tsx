@@ -20,8 +20,8 @@ export default function Badge({
   className,
 }: BadgeProps) {
   const colors = {
-    pink: "bg-caramel-50 text-caramel-700 ring-caramel-200",
-    caramel: "bg-caramel-50 text-caramel-700 ring-caramel-200",
+    pink: "bg-caramel-100/70 text-caramel-700 ring-caramel-200",
+    caramel: "bg-caramel-100/70 text-caramel-700 ring-caramel-200",
     mint: "bg-emerald-50 text-emerald-800 ring-emerald-200",
     lavender: "bg-cream-100 text-ink-soft ring-line",
     lemon: "bg-amber-50 text-amber-800 ring-amber-200",
@@ -32,14 +32,14 @@ export default function Badge({
   };
 
   const sizes = {
-    sm: "px-2 py-0.5 text-[11px]",
-    md: "px-2.5 py-1 text-xs",
+    sm: "px-2.5 py-0.5 text-[11px]",
+    md: "px-3 py-1 text-xs",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 font-semibold rounded-md ring-1 ring-inset",
+        "inline-flex items-center gap-1 font-semibold rounded-full ring-1 ring-inset",
         colors[color],
         sizes[size],
         className

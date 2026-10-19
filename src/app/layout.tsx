@@ -60,7 +60,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -76,10 +76,10 @@ export default function RootLayout({
             toastOptions={{
               style: {
                 background: "white",
-                color: "#1C1917",
-                border: "1px solid #E7E2DC",
-                borderRadius: "10px",
-                boxShadow: "0 8px 24px rgba(28, 25, 23, 0.08)",
+                color: "#2E1F15",
+                border: "1px solid #EFDFCB",
+                borderRadius: "14px",
+                boxShadow: "0 12px 28px rgba(134, 71, 26, 0.12)",
                 fontFamily: "Noto Sans JP, sans-serif",
                 fontWeight: "500",
               },

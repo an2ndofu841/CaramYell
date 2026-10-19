@@ -1,15 +1,17 @@
 import type { Config } from "tailwindcss";
 
 /**
- * 配色は「温かみのある無彩色 + キャラメル1色」に絞っている。
+ * 配色は「とろけるキャラメル」。CaramYell = キャラメル + エールなので、
+ * 地はミルクキャラメルのクリーム色、文字は焦がしキャラメルの濃い茶、
+ * 強調はキャラメルソースの艶のあるグラデーションにしている。
  *
- * 以前はピンク・ミント・ラベンダーなどのキャンディ色とグラデーションを
- * 多用していたが、画面ごとに色が散って落ち着かなかった。既存のクラス名
- * （candy-pink / coral / mint / cocoa など）は各画面に大量に残っているので、
- * 名前はそのままに値だけを新しいパレットへ寄せている。
+ * 色数そのものはキャラメルの階調に絞り、ピンク・ミント・ラベンダーのような
+ * 別系統のキャンディ色は使わない（画面ごとに色が散って落ち着かなかったため）。
+ * 既存のクラス名（candy-pink / coral / mint / cocoa など）は各画面に大量に
+ * 残っているので、名前はそのままに値だけをこのパレットへ寄せている。
  * - candy-pink / coral / honey など強調系 → キャラメルの濃い色
  * - mint → 達成を示す落ち着いた緑
- * - cocoa → 本文の墨色
+ * - ink / cocoa → 本文の焦がしキャラメル色
  * - cream → ページの地色
  */
 const config: Config = {
@@ -22,54 +24,55 @@ const config: Config = {
     extend: {
       colors: {
         ink: {
-          DEFAULT: "#1C1917",
-          soft: "#44403C",
-          muted: "#78716C",
-          faint: "#A8A29E",
+          DEFAULT: "#2E1F15",
+          soft: "#4F3B2D",
+          muted: "#7E6857",
+          faint: "#B19C8A",
         },
         line: {
-          DEFAULT: "#E7E2DC",
-          strong: "#D6CFC7",
+          DEFAULT: "#EFDFCB",
+          strong: "#E2C9AC",
         },
         caramel: {
-          50: "#FBF6F0",
-          100: "#F5EADD",
-          200: "#EBD5BC",
-          300: "#DDB78F",
-          400: "#CC9161",
-          500: "#B9703A",
-          600: "#9A5A2A",
-          700: "#7C4721",
-          800: "#5F361A",
-          900: "#432613",
+          50: "#FFF5E8",
+          100: "#FDE8CF",
+          200: "#F8D2A6",
+          300: "#F0B475",
+          400: "#E39549",
+          500: "#CC7630",
+          600: "#A85D22",
+          700: "#86471A",
+          800: "#643416",
+          900: "#452412",
         },
         candy: {
-          pink: "#9A5A2A",
-          peach: "#B9703A",
+          pink: "#A85D22",
+          peach: "#CC7630",
           mint: "#3E7C5E",
-          lavender: "#78716C",
-          lemon: "#F3E7CC",
+          lavender: "#7E6857",
+          lemon: "#FCEBC8",
           sky: "#4A6A8F",
         },
-        honey: "#B9703A",
-        apricot: "#EBD5BC",
-        peach: "#F5EADD",
-        coral: "#9A5A2A",
+        honey: "#CC7630",
+        apricot: "#F8D2A6",
+        peach: "#FDE8CF",
+        coral: "#A85D22",
         mint: "#3E7C5E",
-        latte: "#78716C",
+        latte: "#7E6857",
         cocoa: {
-          500: "#57534E",
-          700: "#1C1917",
-          900: "#0C0A09",
+          500: "#5E4838",
+          700: "#2E1F15",
+          900: "#1C120B",
         },
         cream: {
-          50: "#FAF8F5",
-          100: "#F4F1EC",
-          200: "#EAE5DE",
+          50: "#FFF9F1",
+          100: "#FCF0E1",
+          200: "#F6E4CE",
         },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "sans-serif"],
+        // 見出しは丸ゴシック。キャラメルの角の取れた形に合わせる
         display: ["var(--font-display)", "sans-serif"],
       },
       fontWeight: {
@@ -78,11 +81,12 @@ const config: Config = {
         extrabold: "700",
       },
       borderRadius: {
-        // 角丸は控えめに。テーマ配下の rounded-3xl は --pt-radius で上書きされる
-        "2xl": "0.75rem",
-        "3xl": "1rem",
-        "4xl": "1.25rem",
-        "5xl": "1.5rem",
+        // キャラメルの粒のように角を大きく丸める。
+        // テーマ配下の rounded-3xl は --pt-radius で上書きされる
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+        "4xl": "1.75rem",
+        "5xl": "2rem",
       },
       letterSpacing: {
         tightish: "-0.01em",
@@ -107,18 +111,20 @@ const config: Config = {
         },
       },
       backgroundImage: {
-        // 旧グラデーションのクラス名は単色に置き換える
-        "candy-gradient": "linear-gradient(#9A5A2A, #9A5A2A)",
-        "caramel-gradient": "linear-gradient(#9A5A2A, #9A5A2A)",
-        "yell-gradient": "linear-gradient(#9A5A2A, #9A5A2A)",
-        "cream-gradient": "linear-gradient(#FAF8F5, #FAF8F5)",
+        // キャラメルソースの艶。明るい飴色から焦がしキャラメルへ流す。
+        // 白文字を載せるので、文字が乗る中央より先は十分に濃くしてある
+        "caramel-gradient": "linear-gradient(135deg, #E39549 0%, #B96626 48%, #8E4C1C 100%)",
+        "candy-gradient": "linear-gradient(135deg, #E39549 0%, #B96626 48%, #8E4C1C 100%)",
+        "yell-gradient": "linear-gradient(135deg, #E39549 0%, #B96626 48%, #8E4C1C 100%)",
+        "cream-gradient": "linear-gradient(180deg, #FFF9F1 0%, #FCEEDC 100%)",
         "hero-pattern": "none",
       },
       boxShadow: {
-        candy: "0 1px 2px rgba(28, 25, 23, 0.08)",
-        caramel: "0 1px 2px rgba(28, 25, 23, 0.08)",
-        soft: "0 1px 2px rgba(28, 25, 23, 0.04), 0 0 0 1px rgba(28, 25, 23, 0.06)",
-        "soft-lg": "0 8px 24px rgba(28, 25, 23, 0.08), 0 0 0 1px rgba(28, 25, 23, 0.06)",
+        // 影は墨ではなくキャラメル色を薄く落として、温かみを残す
+        candy: "0 6px 16px rgba(168, 93, 34, 0.28)",
+        caramel: "0 6px 16px rgba(168, 93, 34, 0.28)",
+        soft: "0 2px 10px rgba(134, 71, 26, 0.06), 0 0 0 1px rgba(134, 71, 26, 0.06)",
+        "soft-lg": "0 16px 36px rgba(134, 71, 26, 0.12), 0 0 0 1px rgba(134, 71, 26, 0.07)",
       },
     },
   },

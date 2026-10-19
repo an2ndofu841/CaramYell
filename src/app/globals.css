@@ -1,7 +1,7 @@
 /* @tailwind より前に置く。後ろだと Tailwind の展開で数千行うしろに送られ、
    「@import は他のルールより先」という CSS の決まりに引っかかる。
-   丸ゴシック（Zen Maru Gothic）は掲載者テーマで選ばれたときだけ読み込む。 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap');
+   見出しの丸ゴシック（Zen Maru Gothic）はサイト共通で使う。 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,17 +9,20 @@
 
 :root {
   --font-sans: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-  --font-display: 'Zen Kaku Gothic New', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  /* 見出しは角の取れた丸ゴシック。キャラメルの粒の柔らかさに合わせる */
+  --font-display: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Noto Sans JP', sans-serif;
 
   /* サイト共通の配色。tailwind.config.ts と同じ値 */
-  --ink: #1C1917;
-  --ink-soft: #44403C;
-  --ink-muted: #78716C;
-  --line: #E7E2DC;
-  --accent: #9A5A2A;
-  --accent-strong: #7C4721;
-  --accent-soft: #F5EADD;
-  --page: #FAF8F5;
+  --ink: #2E1F15;
+  --ink-soft: #4F3B2D;
+  --ink-muted: #7E6857;
+  --line: #EFDFCB;
+  --accent: #A85D22;
+  --accent-strong: #86471A;
+  --accent-soft: #FDE8CF;
+  --page: #FFF9F1;
+  /* キャラメルソースの艶。ボタン・進捗バー・数字の強調に使う */
+  --caramel-sauce: linear-gradient(135deg, #E39549 0%, #B96626 48%, #8E4C1C 100%);
 }
 
 * {
@@ -65,29 +68,50 @@ h2 {
 
 /* テキスト選択色 */
 ::selection {
-  background-color: rgba(154, 90, 42, 0.18);
+  background-color: rgba(227, 149, 73, 0.28);
   color: var(--ink);
 }
 
 @layer utilities {
-  /* 旧来のグラデーション文字は単色の強調に置き換える */
+  /* キャラメルソースの色を文字に流す。対応していない環境では単色になる */
   .text-gradient-candy,
   .text-gradient-caramel {
     color: var(--accent);
+    background-image: linear-gradient(120deg, #D9853A 0%, #A85D22 55%, #7A4018 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* 主ボタン。キャラメルソースの面に、上辺だけ艶の照り返しを入れる */
+  .btn-caramel {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%),
+      var(--caramel-sauce);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(168, 93, 34, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .btn-caramel:hover {
+    filter: brightness(1.06);
+    box-shadow: 0 8px 22px rgba(168, 93, 34, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .btn-caramel:active {
+    transform: translateY(1px);
   }
 
   .glass {
-    background: rgba(250, 248, 245, 0.88);
+    background: rgba(255, 249, 241, 0.88);
     backdrop-filter: saturate(140%) blur(12px);
     -webkit-backdrop-filter: saturate(140%) blur(12px);
   }
 
-  /* カードのホバーは浮かせず、枠の色だけを変える */
+  /* カードはホバーでほんの少しだけ持ち上げ、キャラメル色の影を落とす */
   .card-hover {
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   }
   .card-hover:hover {
-    box-shadow: 0 6px 20px rgba(28, 25, 23, 0.08), 0 0 0 1px rgba(28, 25, 23, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(134, 71, 26, 0.12), 0 0 0 1px rgba(134, 71, 26, 0.08);
   }
 
   .btn-pop {
@@ -110,6 +134,22 @@ h2 {
     100% { background-position: 200% 0; }
   }
 
+  /* 濃いキャラメルの面（掲載の呼びかけなど）。下端の色は CaramelDrip の色と揃える */
+  .caramel-panel {
+    background-color: #7A3F17;
+    background-image: radial-gradient(90% 120% at 12% 0%, rgba(240, 174, 99, 0.35), rgba(240, 174, 99, 0) 60%),
+      linear-gradient(180deg, #A35A22 0%, #7A3F17 100%);
+  }
+
+  /* 手順の番号。キャラメルの粒に見立てた飴色のバッジ */
+  .candy-number {
+    color: #fff;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 50%),
+      var(--caramel-sauce);
+    box-shadow: 0 4px 10px rgba(168, 93, 34, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    font-family: var(--font-display);
+  }
+
   /* 小見出しの上に置くラベル（例: FOR AGENCIES） */
   .eyebrow {
     font-size: 0.75rem;
@@ -121,13 +161,14 @@ h2 {
   }
 }
 
-/* プログレスバー */
+/* プログレスバー。溝にキャラメルソースが流れ込むように見せる */
 .progress-bar {
   position: relative;
-  height: 8px;
-  background: #EEE8E1;
+  height: 10px;
+  background: #F8E6D0;
   border-radius: 999px;
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(134, 71, 26, 0.1);
 }
 
 .progress-bar-fill {
@@ -136,6 +177,19 @@ h2 {
   border-radius: 999px;
   transition: width 1s ease;
   position: relative;
+}
+
+/* ソースの上辺の照り返し。テーマの単色でも艶だけは乗る */
+.progress-bar-fill::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 2px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
 }
 
 /* ページ遷移 */
@@ -178,7 +232,7 @@ img {
    ページ本体のスクロールバーと二本並んで目立つ。 */
 .sidebar-scroll {
   scrollbar-width: thin;
-  scrollbar-color: var(--pt-border, #E7E2DC) transparent;
+  scrollbar-color: var(--pt-border, #EFDFCB) transparent;
 }
 .sidebar-scroll::-webkit-scrollbar {
   width: 6px;
@@ -187,7 +241,7 @@ img {
   background: transparent;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background-color: var(--pt-border, #E7E2DC);
+  background-color: var(--pt-border, #EFDFCB);
   border-radius: 9999px;
 }
 
@@ -276,6 +330,14 @@ img {
 }
 .project-theme .bg-candy-pink {
   background-color: var(--pt-accent);
+}
+/* キャラメルの主ボタンもテーマ配下ではテーマのボタン色に従う */
+.project-theme .btn-caramel {
+  background: var(--pt-gradient);
+  box-shadow: var(--pt-button-shadow);
+}
+.project-theme .candy-number {
+  background: var(--pt-gradient);
 }
 
 /* 新しい配色トークン（ink / line / cream）もテーマの変数に読み替える。
@@ -378,12 +440,16 @@ html[data-project-theme="dark"] .site-header .chrome-text {
 html[data-project-theme="dark"] .site-header .chrome-muted {
   color: var(--pt-chrome-muted);
 }
+html[data-project-theme="dark"] .site-header .chrome-active {
+  background: rgba(255, 255, 255, 0.1);
+}
 html[data-project-theme="dark"] .site-header .chrome-hover:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 html[data-project-theme="dark"] .site-header .chrome-solid {
   background: #FFFFFF;
-  color: #1C1917;
+  color: #2E1F15;
+  box-shadow: none;
 }
 html[data-project-theme="dark"] .site-header .chrome-pill {
   background: rgba(255, 255, 255, 0.08);

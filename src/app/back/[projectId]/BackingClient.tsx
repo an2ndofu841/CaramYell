@@ -497,7 +497,7 @@ export default function BackingClient({
                                 type="button"
                                 onClick={() => setQty(reward, qty + 1)}
                                 disabled={soldOut || atMax}
-                                className="w-8 h-8 rounded-lg bg-ink text-white font-bold flex items-center justify-center disabled:opacity-30 hover:bg-ink-soft transition-colors"
+                                className="w-8 h-8 rounded-full font-bold flex items-center justify-center disabled:opacity-30 btn-caramel"
                                 aria-label="増やす"
                               >
                                 ＋

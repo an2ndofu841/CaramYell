@@ -37,29 +37,31 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         "text-white font-bold hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed",
       secondary:
-        "text-caramel-700 font-bold bg-caramel-50 hover:bg-caramel-100 disabled:opacity-50",
+        "text-caramel-700 font-bold bg-caramel-100/70 hover:bg-caramel-100 disabled:opacity-50",
       outline:
-        "text-ink font-bold border border-line-strong bg-white hover:bg-cream-100 disabled:opacity-50",
+        "text-ink font-bold border border-line-strong bg-white hover:bg-caramel-50 hover:border-caramel-300 disabled:opacity-50",
       ghost:
-        "text-ink-soft font-semibold hover:bg-cream-100 disabled:opacity-50",
+        "text-ink-soft font-semibold hover:bg-caramel-50 disabled:opacity-50",
       danger:
         "text-white font-bold bg-red-600 hover:bg-red-700 disabled:opacity-50",
     };
 
     const sizes = {
-      sm: "h-8 px-3 text-xs rounded-md",
-      md: "h-10 px-4 text-sm rounded-lg",
-      lg: "h-12 px-6 text-[15px] rounded-lg",
-      xl: "h-14 px-8 text-base rounded-lg",
+      // キャラメルの粒のように角の取れた丸いボタンにする
+      sm: "h-8 px-3.5 text-xs rounded-full",
+      md: "h-10 px-5 text-sm rounded-full",
+      lg: "h-12 px-7 text-[15px] rounded-full",
+      xl: "h-14 px-9 text-base rounded-full",
     };
 
     // プロジェクトページのテーマ配下では --pt-* が定義される。
-    // それ以外の画面では変数が無いのでフォールバックの標準配色になる。
+    // それ以外の画面では変数が無いのでフォールバックのキャラメルソース色になる。
     const primaryStyle =
       variant === "primary"
         ? {
-            background: "var(--pt-gradient, #1C1917)",
-            boxShadow: "var(--pt-button-shadow, none)",
+            background: "var(--pt-gradient, var(--caramel-sauce))",
+            boxShadow:
+              "var(--pt-button-shadow, 0 6px 16px rgba(168, 93, 34, 0.28))",
           }
         : {};
 

@@ -19,7 +19,7 @@ export default function LocaleSwitcher({
   return (
     <div
       className={cn(
-        "chrome-pill flex items-center p-0.5 rounded-md border border-line bg-white",
+        "chrome-pill flex items-center p-0.5 rounded-full border border-line bg-white",
         className
       )}
       role="group"
@@ -31,9 +31,9 @@ export default function LocaleSwitcher({
           onClick={() => setLocale(l)}
           aria-pressed={locale === l}
           className={cn(
-            "rounded text-xs font-bold transition-colors px-2 py-1",
+            "rounded-full text-xs font-bold transition-colors px-2.5 py-1",
             locale === l
-              ? "chrome-solid bg-ink text-white"
+              ? "chrome-solid bg-caramel-600 text-white"
               : "chrome-muted text-ink-muted hover:text-ink"
           )}
         >

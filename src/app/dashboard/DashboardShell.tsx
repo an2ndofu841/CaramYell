@@ -34,7 +34,7 @@ export default function DashboardShell({
   ];
 
   return (
-    <div className="min-h-screen bg-cream-50 pt-24">
+    <div className="min-h-screen bg-cream-50 pt-24 bg-[linear-gradient(180deg,#FCEEDC_0,#FFF9F1_220px)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -65,10 +65,10 @@ export default function DashboardShell({
                   key={tab.href}
                   href={tab.href}
                   className={cn(
-                    "px-3 py-2 -mb-px text-sm border-b-2 transition-colors",
+                    "px-3.5 py-2 -mb-px text-sm border-b-[3px] rounded-t-xl transition-colors",
                     active
-                      ? "border-ink text-ink font-bold"
-                      : "border-transparent text-ink-muted hover:text-ink"
+                      ? "border-caramel-500 text-caramel-700 font-bold bg-caramel-50"
+                      : "border-transparent text-ink-muted hover:text-ink hover:bg-caramel-50/60"
                   )}
                 >
                   {tab.label}

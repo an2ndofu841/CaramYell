@@ -7,6 +7,7 @@ import { Clock, Users } from "lucide-react";
 import { Project } from "@/types";
 import { calcProjectStats, cn, formatCurrency, formatNumber } from "@/lib/utils";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { CaramelMark } from "@/components/layout/Logo";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   nextUnreached,
@@ -59,10 +60,10 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group block h-full rounded-xl overflow-hidden bg-white border border-line hover:border-line-strong hover:shadow-soft-lg transition-[box-shadow,border-color] duration-200"
+      className="group block h-full rounded-3xl overflow-hidden bg-white border border-line shadow-soft hover:border-caramel-200 hover:shadow-soft-lg hover:-translate-y-0.5 transition-[box-shadow,border-color,transform] duration-200"
     >
       {/* 画像 */}
-      <div className="relative bg-cream-100">
+      <div className="relative bg-cream-gradient">
         <div className={cn("relative", featured ? "aspect-[16/9]" : "aspect-[16/10]")}>
           {project.main_image_url ? (
             <Image
@@ -73,8 +74,8 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
               className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-sm font-bold text-ink-faint">
-              CaramYell
+            <div className="w-full h-full flex items-center justify-center">
+              <CaramelMark className="w-12 h-12 opacity-80" />
             </div>
           )}
         </div>
@@ -140,7 +141,7 @@ export default function ProjectCard({ project, featured = false }: ProjectCardPr
           </p>
         )}
 
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-line text-xs text-ink-muted">
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-dashed border-line-strong text-xs text-ink-muted">
           <span className="flex items-center gap-1.5">
             <Users size={13} />
             {formatNumber(project.backer_count)}人
@@ -163,13 +164,13 @@ function StatusLabel({
   children: React.ReactNode;
 }) {
   const tones = {
-    dark: "bg-ink text-white",
+    dark: "btn-caramel",
     success: "bg-emerald-700 text-white",
     muted: "bg-white/90 text-ink-muted",
-    light: "bg-white/90 text-ink",
+    light: "bg-white/90 text-caramel-700",
   };
   return (
-    <span className={cn("px-2 py-1 rounded-md text-[11px] font-bold backdrop-blur", tones[tone])}>
+    <span className={cn("px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur shadow-sm", tones[tone])}>
       {children}
     </span>
   );

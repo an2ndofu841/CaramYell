@@ -270,7 +270,7 @@ export default function FaqPage() {
           </div>
           <Link
             href="/contact"
-            className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors flex-shrink-0"
+            className="inline-flex items-center justify-center h-11 px-6 rounded-full text-sm font-bold btn-caramel flex-shrink-0"
           >
             お問い合わせ
           </Link>

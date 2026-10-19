@@ -20,7 +20,7 @@ type Invitation = {
 const ROLE_LABEL = { owner: "オーナー", staff: "スタッフ" } as const;
 
 const primaryLink =
-  "inline-flex items-center justify-center h-11 px-5 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors";
+  "inline-flex items-center justify-center h-11 px-5 rounded-full text-sm font-bold btn-caramel";
 const secondaryLink =
   "inline-flex items-center justify-center h-11 px-5 rounded-lg border border-line-strong bg-white text-ink text-sm font-bold hover:bg-cream-100 transition-colors";
 

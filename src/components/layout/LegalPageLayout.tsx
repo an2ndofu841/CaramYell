@@ -46,7 +46,7 @@ export default function LegalPageLayout({
         <div className="flex flex-col sm:flex-row gap-3 mt-12 pt-8 border-t border-line">
           <Link
             href="/"
-            className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
+            className="inline-flex items-center justify-center h-11 px-6 rounded-full text-sm font-bold btn-caramel"
           >
             トップへ戻る
           </Link>

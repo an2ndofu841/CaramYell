@@ -18,7 +18,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="py-16 sm:py-24">
+    <section className="relative py-16 sm:py-24 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
           <div>
@@ -35,14 +35,18 @@ export default function HowItWorksSection() {
             </p>
           </div>
 
-          <ol className="lg:col-span-2 divide-y divide-line border-y border-line">
+          <ol className="lg:col-span-2 space-y-3">
             {steps.map((step, i) => (
-              <li key={step.title} className="py-6 flex gap-6">
+              <li
+                key={step.title}
+                className="p-5 sm:p-6 flex gap-5 rounded-3xl bg-cream-50 border border-line"
+              >
+                {/* 番号はキャラメルの粒に見立てた丸い飴色のバッジ */}
                 <span
-                  className="text-sm font-bold text-caramel-600 tabular-nums pt-0.5"
+                  className="candy-number flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold tabular-nums"
                   aria-hidden
                 >
-                  {String(i + 1).padStart(2, "0")}
+                  {i + 1}
                 </span>
                 <div>
                   <h3 className="font-bold text-ink">{step.title}</h3>

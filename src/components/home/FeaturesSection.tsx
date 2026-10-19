@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { CaramelMark } from "@/components/layout/Logo";
 
 /**
  * 掲載者向けの機能紹介。生誕祭や周年企画で実際に手間がかかる作業
@@ -41,7 +42,7 @@ export const ORGANIZER_FEATURES = [
 
 export default function FeaturesSection() {
   return (
-    <section className="py-16 sm:py-24 bg-white border-t border-line">
+    <section className="py-16 sm:py-24 bg-cream-gradient">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
           <div>
@@ -57,16 +58,17 @@ export default function FeaturesSection() {
           </div>
           <Link
             href="/for-agencies"
-            className="inline-flex items-center gap-1 text-sm font-bold text-ink hover:text-caramel-600 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1 h-9 px-4 rounded-full bg-white border border-line text-sm font-bold text-caramel-700 hover:border-caramel-300 transition-colors whitespace-nowrap self-start sm:self-auto"
           >
             掲載について詳しく
             <ArrowRight size={14} />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line border border-line rounded-xl overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {ORGANIZER_FEATURES.map((f) => (
-            <div key={f.title} className="bg-white p-6 sm:p-7">
+            <div key={f.title} className="bg-white rounded-3xl border border-line shadow-soft p-6 sm:p-7">
+              <CaramelMark className="w-7 h-7 mb-4" />
               <h3 className="font-bold text-ink">{f.title}</h3>
               <p className="mt-2 text-sm text-ink-muted leading-relaxed">{f.description}</p>
             </div>

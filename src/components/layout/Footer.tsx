@@ -9,7 +9,7 @@ export default function Footer() {
   const t = useT();
   return (
     <footer className="mt-auto border-t border-line bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-14 sm:pt-20">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
           <div className="col-span-2">
             <Link href="/" className="inline-block text-ink">
@@ -20,7 +20,7 @@ export default function Footer() {
             </p>
             <Link
               href="/for-agencies"
-              className="mt-6 inline-flex items-center h-9 px-3.5 rounded-md border border-line-strong text-sm font-bold text-ink hover:bg-cream-100 transition-colors"
+              className="mt-6 inline-flex items-center h-9 px-4 rounded-full border border-line-strong text-sm font-bold text-caramel-700 hover:bg-caramel-50 hover:border-caramel-300 transition-colors"
             >
               {t.common.forAgencies}
             </Link>
@@ -69,7 +69,7 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <li>
-      <Link href={href} className="text-sm text-ink-muted hover:text-ink transition-colors">
+      <Link href={href} className="text-sm text-ink-muted hover:text-caramel-600 transition-colors">
         {children}
       </Link>
     </li>

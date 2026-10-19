@@ -55,8 +55,8 @@ export default function ProgressBar({
 
   const gradients = {
     // 既定色はプロジェクトページのテーマ変数に追従する
-    candy: "var(--pt-gradient, #9A5A2A)",
-    caramel: "#9A5A2A",
+    candy: "var(--pt-gradient, linear-gradient(90deg, #EBA35A 0%, #C46E2B 55%, #9A521F 100%))",
+    caramel: "linear-gradient(90deg, #EBA35A 0%, #C46E2B 55%, #9A521F 100%)",
     mint: "#3E7C5E",
   };
 
@@ -91,7 +91,7 @@ export default function ProgressBar({
                 left: `${extFrom}%`,
                 width: `${extended ? extWidth : 0}%`,
                 background:
-                  "repeating-linear-gradient(135deg, var(--pt-accent, #9A5A2A) 0 5px, rgba(255,255,255,0.55) 5px 10px)",
+                  "repeating-linear-gradient(135deg, var(--pt-accent, #A85D22) 0 5px, rgba(255,255,255,0.55) 5px 10px)",
                 borderRadius: "0 999px 999px 0",
                 transition: animated
                   ? "width 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s"

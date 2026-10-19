@@ -76,10 +76,10 @@ export default function Header() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="chrome-hover flex items-center gap-2 h-9 pl-1 pr-2 rounded-md hover:bg-cream-100 transition-colors"
+                  className="chrome-hover flex items-center gap-2 h-9 pl-1 pr-2.5 rounded-full hover:bg-caramel-50 transition-colors"
                   aria-expanded={showUserMenu}
                 >
-                  <span className="chrome-solid w-7 h-7 rounded-full bg-ink text-white flex items-center justify-center text-xs font-bold">
+                  <span className="chrome-solid w-7 h-7 rounded-full btn-caramel flex items-center justify-center text-xs font-bold">
                     {displayName.charAt(0).toUpperCase()}
                   </span>
                   <span className="chrome-text text-sm font-medium text-ink max-w-[120px] truncate">
@@ -89,7 +89,7 @@ export default function Header() {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg border border-line shadow-soft-lg py-1.5 z-50">
+                  <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl border border-line shadow-soft-lg py-1.5 z-50">
                     <div className="px-4 py-2.5 border-b border-line">
                       <p className="text-sm font-bold text-ink truncate">{displayName}</p>
                       <p className="text-xs text-ink-muted truncate">{user.email}</p>
@@ -121,13 +121,13 @@ export default function Header() {
               <>
                 <Link
                   href="/auth/login"
-                  className="chrome-text chrome-hover h-9 px-3 inline-flex items-center rounded-md text-sm font-medium text-ink hover:bg-cream-100 transition-colors"
+                  className="chrome-text chrome-hover h-9 px-3.5 inline-flex items-center rounded-full text-sm font-medium text-ink hover:bg-caramel-50 transition-colors"
                 >
                   {t.common.login}
                 </Link>
                 <Link
                   href="/auth/login?mode=signup"
-                  className="chrome-solid h-9 px-4 inline-flex items-center rounded-md text-sm font-bold bg-ink text-white hover:bg-ink-soft transition-colors"
+                  className="chrome-solid btn-caramel h-9 px-4 inline-flex items-center rounded-full text-sm font-bold"
                 >
                   {t.common.signup}
                 </Link>
@@ -137,7 +137,7 @@ export default function Header() {
             <CreatorOnly>
               <Link
                 href="/projects/create"
-                className="chrome-solid h-9 px-3.5 inline-flex items-center gap-1.5 rounded-md text-sm font-bold bg-ink text-white hover:bg-ink-soft transition-colors"
+                className="chrome-solid btn-caramel h-9 px-4 inline-flex items-center gap-1.5 rounded-full text-sm font-bold"
               >
                 <Plus size={15} />
                 {t.common.createProject}
@@ -176,7 +176,7 @@ export default function Header() {
               {user ? (
                 <button
                   onClick={handleSignOut}
-                  className="flex-1 h-10 rounded-md text-sm font-bold text-ink border border-line-strong"
+                  className="flex-1 h-10 rounded-full text-sm font-bold text-ink border border-line-strong"
                 >
                   {t.common.logout}
                 </button>
@@ -184,13 +184,13 @@ export default function Header() {
                 <>
                   <Link
                     href="/auth/login"
-                    className="flex-1 h-10 inline-flex items-center justify-center rounded-md text-sm font-bold text-ink border border-line-strong"
+                    className="flex-1 h-10 inline-flex items-center justify-center rounded-full text-sm font-bold text-ink border border-line-strong"
                   >
                     {t.common.login}
                   </Link>
                   <Link
                     href="/auth/login?mode=signup"
-                    className="flex-1 h-10 inline-flex items-center justify-center rounded-md text-sm font-bold bg-ink text-white"
+                    className="flex-1 h-10 inline-flex items-center justify-center rounded-full text-sm font-bold btn-caramel"
                   >
                     {t.common.signup}
                   </Link>
@@ -217,8 +217,8 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "chrome-hover h-9 px-3 inline-flex items-center rounded-md text-sm transition-colors hover:bg-cream-100",
-        active ? "chrome-text font-bold text-ink" : "chrome-muted font-medium text-ink-soft"
+        "chrome-hover h-9 px-3.5 inline-flex items-center rounded-full text-sm transition-colors hover:bg-caramel-50",
+        active ? "chrome-text chrome-active font-bold text-caramel-700 bg-caramel-50" : "chrome-muted font-medium text-ink-soft"
       )}
     >
       {children}
@@ -238,7 +238,7 @@ function MenuLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-4 py-2 text-sm text-ink-soft hover:bg-cream-100 hover:text-ink transition-colors"
+      className="flex items-center gap-3 px-4 py-2 text-sm text-ink-soft hover:bg-caramel-50 hover:text-ink transition-colors"
     >
       <span className="text-ink-muted">{icon}</span>
       {children}
