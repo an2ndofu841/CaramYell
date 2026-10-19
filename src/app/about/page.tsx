@@ -4,7 +4,7 @@ import AboutClient from "./AboutClient";
 export const metadata: Metadata = {
   title: "CaramYellとは",
   description:
-    "CaramYellは手数料0%で誰でも簡単に使えるクラウドファンディングサービスです。AIサポート・アカウント不要出資・最短30分掲載で、夢を叶える人と応援する人をつなぎます。",
+    "CaramYellは、アーティスト・アイドルの生誕祭や周年企画、作品づくりのためのクラウドファンディングです。芸能事務所・レーベルからの掲載を受け付けています。掲載者の手数料は0%です。",
 };
 
 export default function AboutPage() {

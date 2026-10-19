@@ -69,7 +69,7 @@ export default function DesignTab({ project, onSaved }: DesignTabProps) {
           デザインを保存
         </Button>
         {dirty && (
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-ink-muted">
             保存するまで公開ページは変わりません
           </span>
         )}

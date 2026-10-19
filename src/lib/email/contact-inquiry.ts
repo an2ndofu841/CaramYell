@@ -9,6 +9,12 @@ export type ContactInquiry = {
   message: string;
 };
 
+// メールの配色。白地・墨色の文字に絞る（運営向けなのでアクセント色は使わない）
+const INK = "#1C1917";
+const INK_SOFT = "#44403C";
+const INK_MUTED = "#78716C";
+const LINE = "#E7E2DC";
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -34,22 +40,22 @@ function renderHtml(inquiry: ContactInquiry): string {
     .map(
       ([label, value]) => `
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#8A7767;font-size:13px;white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
-          <td style="padding:6px 0;color:#5C4A3A;font-size:14px;">${escapeHtml(value)}</td>
+          <td style="padding:6px 12px 6px 0;color:${INK_MUTED};font-size:13px;white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
+          <td style="padding:6px 0;color:${INK};font-size:14px;word-break:break-all;">${escapeHtml(value)}</td>
         </tr>`,
     )
     .join("");
 
   return `<!DOCTYPE html>
 <html lang="ja">
-<body style="margin:0;padding:24px;background:#FFF8F0;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;padding:24px;">
-    <p style="margin:0 0 16px;font-size:16px;font-weight:bold;color:#5C4A3A;">お問い合わせが届きました</p>
+<body style="margin:0;padding:24px;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid ${LINE};border-radius:12px;padding:24px;">
+    <p style="margin:0 0 16px;font-size:16px;font-weight:bold;color:${INK};">お問い合わせが届きました</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">${table}</table>
-    <div style="margin-top:18px;padding-top:16px;border-top:1px solid #FFDFAE;">
-      <p style="margin:0;color:#5C4A3A;font-size:14px;line-height:1.9;white-space:pre-wrap;">${escapeHtml(inquiry.message)}</p>
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid ${LINE};">
+      <p style="margin:0;color:${INK_SOFT};font-size:14px;line-height:1.9;white-space:pre-wrap;">${escapeHtml(inquiry.message)}</p>
     </div>
-    <p style="margin:20px 0 0;color:#A89685;font-size:12px;">このメールに返信すると、送信者に直接返信できます。</p>
+    <p style="margin:20px 0 0;color:${INK_MUTED};font-size:12px;">このメールに返信すると、送信者に直接返信できます。</p>
   </div>
 </body>
 </html>`;

@@ -35,7 +35,7 @@ export default function MobileTabBar() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-caramel-100 tabbar-safe"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-line tabbar-safe"
       aria-label="モバイルナビゲーション"
     >
       <div className="flex items-stretch justify-around">

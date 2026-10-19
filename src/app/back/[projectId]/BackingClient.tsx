@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +18,7 @@ import {
   Star,
   User,
   Check,
+  CircleCheck,
   CreditCard,
   Smartphone as ApplePay,
   Globe,
@@ -57,17 +57,17 @@ const MIN_AMOUNT = 100;
 const MIN_PASSWORD = 8;
 
 const steps = [
-  { id: 1, key: "stepReward" as const, icon: "🎁" },
-  { id: 2, key: "stepInfo" as const, icon: "👤" },
-  { id: 3, key: "stepPayment" as const, icon: "💳" },
-  { id: 4, key: "stepDone" as const, icon: "🎉" },
+  { id: 1, key: "stepReward" as const },
+  { id: 2, key: "stepInfo" as const },
+  { id: 3, key: "stepPayment" as const },
+  { id: 4, key: "stepDone" as const },
 ];
 
 const paymentMethods = [
-  { id: "apple_pay", label: "Apple Pay", icon: "🍎", desc: "タッチひとつで支払い完了" },
-  { id: "google_pay", label: "Google Pay", icon: "🔵", desc: "Googleアカウントで簡単決済" },
-  { id: "card", label: "クレジットカード", icon: "💳", desc: "Visa / Mastercard / AMEX" },
-  { id: "paypal", label: "PayPal", icon: "🅿️", desc: "海外からもOK" },
+  { id: "apple_pay", label: "Apple Pay", desc: "対応端末でそのまま支払い" },
+  { id: "google_pay", label: "Google Pay", desc: "Googleアカウントで支払い" },
+  { id: "card", label: "クレジットカード", desc: "Visa / Mastercard / AMEX" },
+  { id: "paypal", label: "PayPal", desc: "海外からも利用できます" },
 ];
 
 export default function BackingClient({
@@ -331,12 +331,12 @@ export default function BackingClient({
   };
 
   return (
-    <div className="min-h-screen pt-20 pb-tabbar" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
+    <div className="min-h-screen bg-cream-50 pt-20 pb-tabbar">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* 戻るリンク */}
         <Link
           href={`/projects/${project.slug}`}
-          className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-caramel-600 transition-colors font-medium py-4"
+          className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink transition-colors font-medium py-4"
         >
           <ChevronLeft size={16} />
           {t.backing.backToProject}
@@ -345,7 +345,7 @@ export default function BackingClient({
         {/* プロジェクト概要 */}
         <Card className="mb-6">
           <div className="flex gap-4 items-start">
-            <div className="w-20 h-16 rounded-2xl overflow-hidden bg-caramel-100 flex-shrink-0">
+            <div className="w-20 h-16 rounded-lg overflow-hidden bg-cream-100 flex-shrink-0">
               <img
                 src={project.main_image_url}
                 alt={project.title}
@@ -353,7 +353,7 @@ export default function BackingClient({
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800 line-clamp-2 mb-2">
+              <p className="text-sm font-bold text-ink line-clamp-2 mb-2">
                 {pick(project.title, project.title_en)}
               </p>
               {stretchChallenging ? (
@@ -369,16 +369,16 @@ export default function BackingClient({
                       { position: 100, reached: false, final: true },
                     ]}
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    <span className="inline-block text-[10px] font-bold text-white bg-caramel-500 rounded-full px-1.5 py-px mr-1.5 align-middle">
+                  <p className="text-xs text-ink-muted mt-1">
+                    <span className="inline-block text-[10px] font-bold text-white bg-ink rounded px-1.5 py-px mr-1.5 align-middle">
                       {t.detail.stretchRibbonBadge}
                     </span>
-                    <span className="font-bold text-caramel-600">
+                    <span className="font-bold text-caramel-700 tabular-nums">
                       {stats.progressUncapped}% · {t.detail.stretchRibbonTitle}
                     </span>
                     <span className="whitespace-nowrap"> · 残り{stats.daysLeft}日</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-ink-muted mt-0.5">
                     {t.detail.stretchNextPrefix}
                     {formatCurrency(nextStretch.amount - project.current_amount)}
                     {t.detail.stretchNextSuffix}「{nextStretch.title}」
@@ -388,7 +388,7 @@ export default function BackingClient({
               ) : (
                 <>
                   <ProgressBar percentage={stats.progress} />
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-ink-muted mt-1 tabular-nums">
                     {stats.progress}% 達成 · 残り{stats.daysLeft}日
                   </p>
                 </>
@@ -399,40 +399,53 @@ export default function BackingClient({
 
         {/* ステッパー */}
         {step < 4 && (
-          <div className="flex items-center justify-between mb-8 relative">
-            <div className="absolute left-0 right-0 top-5 h-0.5 bg-caramel-100 -z-10" />
+          <ol className="grid grid-cols-4 gap-2 mb-8">
             {steps.map((s) => (
-              <div key={s.id} className="flex flex-col items-center gap-1.5">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all",
-                  s.id < step ? "text-white" : s.id === step ? "text-white shadow-candy" : "bg-white text-gray-400 border-2 border-caramel-100"
-                )}
-                  style={s.id <= step ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" } : {}}
+              <li
+                key={s.id}
+                aria-current={s.id === step ? "step" : undefined}
+                className="min-w-0"
+              >
+                <div
+                  className={cn(
+                    "h-1 rounded-full transition-colors",
+                    s.id <= step ? "bg-ink" : "bg-line"
+                  )}
+                />
+                <p
+                  className={cn(
+                    "mt-2 flex items-center gap-1 text-xs font-bold",
+                    s.id === step
+                      ? "text-ink"
+                      : s.id < step
+                      ? "text-ink-soft"
+                      : "text-ink-faint"
+                  )}
                 >
-                  {s.id < step ? <Check size={16} /> : s.icon}
-                </div>
-                <span className={cn("text-xs font-semibold hidden sm:block", s.id === step ? "text-caramel-600" : "text-gray-400")}>
-                  {t.backing[s.key]}
-                </span>
-              </div>
+                  {s.id < step ? (
+                    <Check size={12} className="flex-shrink-0" />
+                  ) : (
+                    <span className="tabular-nums flex-shrink-0">{s.id}</span>
+                  )}
+                  <span className="truncate">{t.backing[s.key]}</span>
+                </p>
+              </li>
             ))}
-          </div>
+          </ol>
         )}
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
+        <div key={step} className="page-enter">
             {/* STEP 1: リターン選択 */}
             {step === 1 && (
               <div className="space-y-4">
                 <Card>
-                  <h2 className="text-xl font-bold text-gray-800 mb-1">🎁 {t.backing.chooseSupport}</h2>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <h2
+                    className="text-xl font-bold text-ink mb-1"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {t.backing.chooseSupport}
+                  </h2>
+                  <p className="text-sm text-ink-muted mb-4">
                     {t.backing.chooseSupportNote}
                   </p>
 
@@ -447,43 +460,43 @@ export default function BackingClient({
                         <div
                           key={reward.id}
                           className={cn(
-                            "p-4 rounded-2xl border-2 transition-all",
+                            "p-4 rounded-xl border transition-colors",
                             qty > 0
-                              ? "border-candy-pink bg-candy-pink/5"
-                              : "border-caramel-100 bg-white",
+                              ? "border-ink bg-cream-50"
+                              : "border-line bg-white",
                             soldOut && "opacity-50"
                           )}
                         >
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-lg font-bold text-caramel-600">
+                              <span className="text-lg font-bold text-ink tabular-nums">
                                 {formatCurrency(reward.amount)}
                               </span>
-                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-caramel-100 text-caramel-700">
-                                {reward.reward_type === "digital" ? "📱 デジタル" : reward.reward_type === "physical" ? "📦 物品" : "⭐ 体験"}
+                              <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-cream-100 text-ink-soft">
+                                {reward.reward_type === "digital" ? "デジタル" : reward.reward_type === "physical" ? "物品" : "体験"}
                               </span>
                               {!reward.needs_address && (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                                <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-cream-100 text-ink-soft">
                                   {t.backing.addressNotRequired}
                                 </span>
                               )}
                               {stock != null && (
-                                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                                <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-800 tabular-nums">
                                   {soldOut ? "完売" : `残り${stock}`}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm font-bold text-gray-800">
+                            <p className="text-sm font-bold text-ink">
                               {pick(reward.title, reward.title_en)}
                             </p>
                             {pick(reward.description, reward.description_en) && (
-                              <p className="text-xs text-gray-500 leading-relaxed mt-1.5 whitespace-pre-line">
+                              <p className="text-xs text-ink-soft leading-relaxed mt-1.5 whitespace-pre-line">
                                 {pick(reward.description, reward.description_en)}
                               </p>
                             )}
                             {reward.estimated_delivery_date && (
-                              <p className="text-xs text-gray-400 mt-2">
-                                📅 {t.backing.estimatedDelivery}:{" "}
+                              <p className="text-xs text-ink-muted mt-2">
+                                {t.backing.estimatedDelivery}:{" "}
                                 {new Date(
                                   reward.estimated_delivery_date
                                 ).toLocaleDateString(
@@ -496,24 +509,23 @@ export default function BackingClient({
 
                           {/* 数量ステッパー */}
                           <div className="flex items-center justify-end gap-3 mt-3">
-                            <span className="text-xs text-gray-400">{t.backing.quantity}</span>
+                            <span className="text-xs text-ink-muted">{t.backing.quantity}</span>
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => setQty(reward, qty - 1)}
                                 disabled={qty <= 0}
-                                className="w-8 h-8 rounded-full border-2 border-caramel-200 text-caramel-600 font-bold flex items-center justify-center disabled:opacity-30 hover:bg-caramel-50 transition-colors"
+                                className="w-8 h-8 rounded-lg border border-line-strong bg-white text-ink font-bold flex items-center justify-center disabled:opacity-30 hover:bg-cream-100 transition-colors"
                                 aria-label="減らす"
                               >
                                 −
                               </button>
-                              <span className="w-8 text-center font-bold text-gray-800">{qty}</span>
+                              <span className="w-8 text-center font-bold text-ink tabular-nums">{qty}</span>
                               <button
                                 type="button"
                                 onClick={() => setQty(reward, qty + 1)}
                                 disabled={soldOut || atMax}
-                                className="w-8 h-8 rounded-full text-white font-bold flex items-center justify-center disabled:opacity-30 transition-colors"
-                                style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+                                className="w-8 h-8 rounded-lg bg-ink text-white font-bold flex items-center justify-center disabled:opacity-30 hover:bg-ink-soft transition-colors"
                                 aria-label="増やす"
                               >
                                 ＋
@@ -527,12 +539,12 @@ export default function BackingClient({
 
                   {/* 自由金額（掲載者が許可した場合のみ・上乗せ可） */}
                   {allowFreeAmount && (
-                    <div className="mt-4 p-4 rounded-2xl border-2 border-caramel-100">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Heart size={20} className="text-candy-pink flex-shrink-0" />
+                    <div className="mt-4 p-4 rounded-xl border border-line">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Heart size={18} className="text-ink-muted flex-shrink-0" />
                         <div>
-                          <p className="font-bold text-gray-800">{t.backing.freeAmountTitle}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="font-bold text-ink">{t.backing.freeAmountTitle}</p>
+                          <p className="text-xs text-ink-muted">
                             {t.backing.freeAmountNote}
                           </p>
                         </div>
@@ -540,13 +552,13 @@ export default function BackingClient({
                       {/* number 入力は既定の幅を持ち、flex の min-width:auto では
                           縮まないので min-w-0 が無いとカードの外へはみ出す */}
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-500">¥</span>
+                        <span className="font-bold text-ink-muted">¥</span>
                         <input
                           type="number"
                           value={freeAmount || ""}
                           onChange={(e) => setFreeAmount(parseInt(e.target.value) || 0)}
                           placeholder={String(MIN_AMOUNT)}
-                          className="flex-1 min-w-0 py-2 px-3 rounded-xl border-2 border-caramel-200 font-bold text-lg outline-none focus:border-candy-pink"
+                          className="flex-1 min-w-0 h-11 px-3.5 rounded-lg border border-line-strong bg-white text-ink font-bold text-lg tabular-nums outline-none hover:border-ink-faint focus:border-ink focus:ring-2 focus:ring-ink/10 transition-colors"
                           min={MIN_AMOUNT}
                         />
                       </div>
@@ -554,7 +566,7 @@ export default function BackingClient({
                       {rewardsTotal === 0 &&
                         effectiveFree > 0 &&
                         effectiveFree < MIN_AMOUNT && (
-                          <p className="text-xs font-semibold text-candy-pink mt-2">
+                          <p className="text-xs font-semibold text-red-600 mt-2">
                             {t.backing.freeAmountMin}
                           </p>
                         )}
@@ -568,32 +580,32 @@ export default function BackingClient({
                     <div className="space-y-2">
                       {selectedItems.map((it) => (
                         <div key={it.reward.id} className="flex justify-between text-sm">
-                          <span className="text-gray-500 truncate max-w-[70%]">
+                          <span className="text-ink-soft truncate max-w-[70%]">
                             {pick(it.reward.title, it.reward.title_en)}{" "}
-                            <span className="text-gray-400">× {it.qty}</span>
+                            <span className="text-ink-muted">× {it.qty}</span>
                           </span>
-                          <span className="font-semibold">
+                          <span className="font-semibold text-ink tabular-nums">
                             {formatCurrency(it.reward.amount * it.qty)}
                           </span>
                         </div>
                       ))}
                       {effectiveFree > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">{t.backing.freeSupport}</span>
-                          <span className="font-semibold">{formatCurrency(effectiveFree)}</span>
+                          <span className="text-ink-soft">{t.backing.freeSupport}</span>
+                          <span className="font-semibold text-ink tabular-nums">{formatCurrency(effectiveFree)}</span>
                         </div>
                       )}
-                      <div className="border-t border-caramel-100 pt-2 flex justify-between text-sm">
-                        <span className="text-gray-500">{t.backing.subtotal}</span>
-                        <span className="font-semibold">{formatCurrency(amount)}</span>
+                      <div className="border-t border-line pt-2 flex justify-between text-sm">
+                        <span className="text-ink-soft">{t.backing.subtotal}</span>
+                        <span className="font-semibold text-ink tabular-nums">{formatCurrency(amount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">{t.backing.fee}</span>
-                        <span className="font-semibold">{formatCurrency(fee)}</span>
+                        <span className="text-ink-soft">{t.backing.fee}</span>
+                        <span className="font-semibold text-ink tabular-nums">{formatCurrency(fee)}</span>
                       </div>
-                      <div className="border-t border-caramel-100 pt-2 flex justify-between">
-                        <span className="font-bold">{t.backing.total}</span>
-                        <span className="text-xl font-bold text-caramel-600">{formatCurrency(total)}</span>
+                      <div className="border-t border-line pt-2 flex justify-between items-baseline">
+                        <span className="font-bold text-ink">{t.backing.total}</span>
+                        <span className="text-xl font-bold text-ink tabular-nums">{formatCurrency(total)}</span>
                       </div>
                     </div>
                   </Card>
@@ -604,8 +616,13 @@ export default function BackingClient({
             {/* STEP 2: ゲスト情報入力 */}
             {step === 2 && (
               <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">👤 {t.backing.yourInfo}</h2>
-                <p className="text-sm text-gray-500 mb-6">
+                <h2
+                  className="text-xl font-bold text-ink mb-1"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {t.backing.yourInfo}
+                </h2>
+                <p className="text-sm text-ink-muted mb-6">
                   {t.backing.yourInfoNote}
                 </p>
 
@@ -647,26 +664,26 @@ export default function BackingClient({
                       onChange={(e) => setIsAnonymous(e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-sm text-gray-600 font-medium">
+                    <span className="text-sm text-ink-soft font-medium">
                       {t.backing.anonymous}
                     </span>
                   </label>
 
                   {/* ついでの会員登録。支援自体はゲストのままでもできる */}
                   {!user && (
-                    <div className="pt-3 border-t border-caramel-100">
+                    <div className="pt-4 border-t border-line">
                       {registeredEmail ? (
-                        <div className="flex items-start gap-2 rounded-2xl bg-green-50 border-2 border-green-100 px-4 py-3">
+                        <div className="flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
                           <Check
                             size={16}
-                            className="text-green-500 flex-shrink-0 mt-0.5"
+                            className="text-emerald-700 flex-shrink-0 mt-0.5"
                           />
                           <div>
-                            <p className="text-sm font-bold text-gray-700">
+                            <p className="text-sm font-bold text-emerald-800">
                               {t.backing.accountConfirmSent}
                             </p>
                             {registeredEmail !== guestInfo.email && (
-                              <p className="text-xs text-candy-pink font-semibold mt-1">
+                              <p className="text-xs text-amber-800 font-semibold mt-1">
                                 {t.backing.accountEmailChanged.replace(
                                   "{email}",
                                   registeredEmail
@@ -687,10 +704,10 @@ export default function BackingClient({
                               className="rounded mt-0.5"
                             />
                             <span>
-                              <span className="block text-sm text-gray-700 font-bold">
+                              <span className="block text-sm text-ink font-bold">
                                 {t.backing.createAccount}
                               </span>
-                              <span className="block text-xs text-gray-500 mt-0.5 leading-relaxed">
+                              <span className="block text-xs text-ink-muted mt-0.5 leading-relaxed">
                                 {t.backing.createAccountNote}
                               </span>
                             </span>
@@ -714,7 +731,7 @@ export default function BackingClient({
                                 type="button"
                                 onClick={() => setShowPassword((v) => !v)}
                                 aria-label={t.auth.password}
-                                className="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600"
+                                className="absolute right-4 top-[38px] text-ink-muted hover:text-ink"
                               >
                                 {showPassword ? (
                                   <EyeOff size={16} />
@@ -731,15 +748,15 @@ export default function BackingClient({
 
                   {/* 住所入力（物品リターンを含む場合） */}
                   {needsAddress && (
-                    <div className="space-y-3 pt-2 border-t border-caramel-100">
-                      <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                        <MapPin size={16} className="text-caramel-500" />
+                    <div className="space-y-3 pt-4 border-t border-line">
+                      <p className="text-sm font-bold text-ink flex items-center gap-2">
+                        <MapPin size={16} className="text-ink-muted" />
                         {t.backing.shippingTitle}
                       </p>
 
                       {/* 配送先の国（選ぶと住所欄がその国の形式に切り替わります） */}
                       <div className="flex flex-col gap-1.5 w-full">
-                        <label className="text-sm font-semibold text-gray-700">
+                        <label className="text-sm font-bold text-ink">
                           {t.backing.country}
                         </label>
                         <select
@@ -759,7 +776,7 @@ export default function BackingClient({
                               },
                             }))
                           }
-                          className="w-full px-4 py-3 rounded-2xl border-2 border-caramel-100 bg-white text-gray-800 outline-none focus:border-candy-pink transition-colors"
+                          className="w-full h-11 px-3.5 rounded-lg border border-line-strong bg-white text-ink outline-none hover:border-ink-faint focus:border-ink focus:ring-2 focus:ring-ink/10 transition-colors"
                         >
                           {COUNTRIES.map((c) => (
                             <option key={c.code} value={c.code}>
@@ -830,22 +847,27 @@ export default function BackingClient({
             {step === 3 && (
               <div className="space-y-4">
                 <Card>
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">💳 {t.backing.paymentTitle}</h2>
+                  <h2
+                    className="text-xl font-bold text-ink mb-4"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {t.backing.paymentTitle}
+                  </h2>
 
                   {isReal ? (
                     // 実決済では Stripe の安全な決済ページで支払い方法を選ぶ
-                    <div className="p-4 rounded-2xl border-2 border-caramel-100 bg-caramel-50/50">
-                      <p className="text-sm font-bold text-gray-700 mb-1">
+                    <div className="p-4 rounded-xl border border-line bg-cream-50">
+                      <p className="text-sm font-bold text-ink mb-1">
                         {t.backing.paymentNote}
                       </p>
-                      <p className="text-xs text-gray-500 mb-3">
+                      <p className="text-xs text-ink-muted mb-3">
                         {t.backing.paymentNote2}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {paymentMethodBadges(locale).map((m) => (
                           <span
                             key={m}
-                            className="px-3 py-1.5 rounded-full text-xs font-bold bg-white border-2 border-caramel-100 text-gray-600"
+                            className="px-2 py-1 rounded-md text-xs font-semibold bg-white border border-line text-ink-soft"
                           >
                             {m}
                           </span>
@@ -859,28 +881,26 @@ export default function BackingClient({
                         key={method.id}
                         onClick={() => setPaymentMethod(method.id)}
                         className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left",
-                          paymentMethod === method.id ? "border-candy-pink" : "border-caramel-100 hover:border-caramel-200 bg-white"
+                          "w-full flex items-center gap-4 p-4 rounded-xl border transition-colors text-left",
+                          paymentMethod === method.id ? "border-ink bg-cream-50" : "border-line hover:border-line-strong bg-white"
                         )}
-                        style={paymentMethod === method.id ? { background: "rgba(242, 128, 123, 0.03)" } : {}}
                       >
                         <div className={cn(
-                          "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                          paymentMethod === method.id ? "border-candy-pink bg-candy-pink" : "border-gray-300"
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                          paymentMethod === method.id ? "border-ink bg-ink" : "border-line-strong"
                         )}>
-                          {paymentMethod === method.id && <Check size={14} className="text-white" />}
+                          {paymentMethod === method.id && <Check size={12} className="text-white" />}
                         </div>
-                        <span className="text-2xl">{method.icon}</span>
                         <div>
-                          <p className="font-bold text-gray-800">{method.label}</p>
-                          <p className="text-xs text-gray-400">{method.desc}</p>
+                          <p className="font-bold text-ink">{method.label}</p>
+                          <p className="text-xs text-ink-muted">{method.desc}</p>
                         </div>
                       </button>
                     ))}
                   </div>
                   )}
 
-                  <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                  <div className="mt-4 flex items-center gap-2 text-xs text-ink-muted">
                     <Lock size={12} />
                     <span>{t.backing.secureNote}</span>
                   </div>
@@ -888,17 +908,17 @@ export default function BackingClient({
 
                 {/* 最終確認 */}
                 <Card variant="outlined">
-                  <p className="font-bold text-gray-700 mb-3">{t.backing.confirmTitle}</p>
+                  <p className="font-bold text-ink mb-3">{t.backing.confirmTitle}</p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">{t.backing.project}</span>
-                      <span className="font-semibold text-right max-w-[60%] line-clamp-1">
+                      <span className="text-ink-muted">{t.backing.project}</span>
+                      <span className="font-semibold text-ink text-right max-w-[60%] line-clamp-1">
                         {pick(project.title, project.title_en)}
                       </span>
                     </div>
                     <div className="flex justify-between gap-2">
-                      <span className="text-gray-500 flex-shrink-0">{t.backing.reward}</span>
-                      <span className="font-semibold text-right">
+                      <span className="text-ink-muted flex-shrink-0">{t.backing.reward}</span>
+                      <span className="font-semibold text-ink text-right">
                         {selectedItems.length === 0 ? (
                           effectiveFree > 0 ? "応援のみ（リターンなし）" : "-"
                         ) : (
@@ -910,19 +930,19 @@ export default function BackingClient({
                               </span>
                             ))}
                             {effectiveFree > 0 && (
-                              <span className="block text-gray-500">＋自由応援 {formatCurrency(effectiveFree)}</span>
+                              <span className="block text-ink-muted tabular-nums">＋自由応援 {formatCurrency(effectiveFree)}</span>
                             )}
                           </>
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">{t.backing.emailShort}</span>
-                      <span className="font-semibold">{guestInfo.email}</span>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-ink-muted flex-shrink-0">{t.backing.emailShort}</span>
+                      <span className="font-semibold text-ink truncate">{guestInfo.email}</span>
                     </div>
-                    <div className="border-t border-caramel-100 pt-2 flex justify-between">
-                      <span className="font-bold">{t.backing.total}</span>
-                      <span className="text-xl font-bold text-caramel-600">{formatCurrency(total)}</span>
+                    <div className="border-t border-line pt-2 flex justify-between items-baseline">
+                      <span className="font-bold text-ink">{t.backing.total}</span>
+                      <span className="text-xl font-bold text-ink tabular-nums">{formatCurrency(total)}</span>
                     </div>
                   </div>
                 </Card>
@@ -943,80 +963,54 @@ export default function BackingClient({
             {step === 4 && (
               <Card>
                 <div className="text-center py-8">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                    className="text-8xl mb-4"
-                  >
-                    🎉
-                  </motion.div>
-                  <motion.h2
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-2xl font-bold text-gray-800 mb-3"
+                  <CircleCheck
+                    size={32}
+                    strokeWidth={1.75}
+                    className="mx-auto mb-4 text-emerald-700"
+                  />
+                  <h2
+                    className="text-2xl font-bold text-ink mb-3"
+                    style={{ fontFamily: "var(--font-display)" }}
                   >
                     {t.backing.thanks}
-                  </motion.h2>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="text-gray-500 mb-2"
-                  >
-                    決済確認メールを <strong>{guestInfo.email}</strong> に送りました。
-                  </motion.p>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7 }}
-                    className="text-gray-400 text-sm mb-8"
-                  >
-                    プロジェクトが成功したら、リターンをお届けします 🎁
-                  </motion.p>
+                  </h2>
+                  <p className="text-ink-soft leading-relaxed mb-2">
+                    決済確認メールを <strong className="text-ink">{guestInfo.email}</strong> に送りました。
+                  </p>
+                  <p className="text-ink-muted text-sm mb-8">
+                    リターンは各リターンに記載のお届け予定時期にお届けします。
+                  </p>
 
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="flex flex-col sm:flex-row gap-3 justify-center"
-                  >
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link href={`/projects/${projectSlug}`}>
-                      <Button variant="secondary">
+                      <Button variant="outline" fullWidth>
                         プロジェクトに戻る
                       </Button>
                     </Link>
                     <Link href="/projects">
-                      <Button>
+                      <Button fullWidth>
                         他のプロジェクトを見る
                       </Button>
                     </Link>
-                  </motion.div>
+                  </div>
 
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="mt-6 pt-6 border-t border-caramel-100"
-                  >
-                    <p className="text-sm text-gray-400 mb-3">SNSでシェアして、もっと広めよう！</p>
-                    <div className="flex gap-2 justify-center">
+                  <div className="mt-8 pt-6 border-t border-line">
+                    <p className="text-sm text-ink-muted mb-3">SNSでシェアする</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
                       {["Twitter", "LINE", "Facebook"].map((sns) => (
                         <button
                           key={sns}
-                          className="px-4 py-2 rounded-full text-xs font-bold bg-caramel-50 text-caramel-600 hover:bg-caramel-100 transition-colors"
+                          className="h-9 px-3.5 rounded-lg border border-line bg-white text-xs font-bold text-ink-soft hover:bg-cream-100 transition-colors"
                         >
                           {sns}でシェア
                         </button>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               </Card>
             )}
-          </motion.div>
-        </AnimatePresence>
+        </div>
 
         {/* ナビゲーション */}
         {step < 4 && (

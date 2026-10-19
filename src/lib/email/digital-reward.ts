@@ -21,6 +21,14 @@ export type DigitalRewardSendResult = {
 const BATCH_SIZE = 100;
 const MAX_ATTEMPTS = 3;
 
+// メールの配色。サイトと同じく白地・墨色の文字・アクセントはキャラメル1色に絞る
+const INK = "#1C1917";
+const INK_SOFT = "#44403C";
+const INK_MUTED = "#78716C";
+const LINE = "#E7E2DC";
+const SURFACE = "#FAF8F5";
+const ACCENT = "#9A5A2A";
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -45,7 +53,7 @@ function linkify(escaped: string): string {
     (match) => {
       const url = match.replace(/[.,!?)']+$/, "");
       const rest = match.slice(url.length);
-      return `<a href="${url}" style="color:#C96A1B;word-break:break-all;">${url}</a>${rest}`;
+      return `<a href="${url}" style="color:${ACCENT};word-break:break-all;">${url}</a>${rest}`;
     }
   );
 }
@@ -56,39 +64,39 @@ function renderHtml(e: DigitalRewardEmail): string {
 
   return `<!DOCTYPE html>
 <html lang="ja">
-<body style="margin:0;padding:0;background:#FFF8F0;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFF8F0;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:20px;overflow:hidden;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${LINE};border-radius:12px;">
           <tr>
-            <td style="background:linear-gradient(135deg,#F2807B,#F5A34B);padding:28px 28px 24px;text-align:center;">
-              <div style="font-size:34px;line-height:1;">🎁</div>
-              <div style="color:#ffffff;font-size:19px;font-weight:bold;padding-top:10px;">リターンのお届け</div>
+            <td style="padding:24px 28px 20px;border-bottom:1px solid ${LINE};">
+              <div style="color:${INK};font-size:15px;font-weight:bold;letter-spacing:-0.01em;">${escapeHtml(SITE_NAME)}</div>
+              <div style="color:${INK};font-size:20px;font-weight:bold;padding-top:14px;">リターンのお届け</div>
             </td>
           </tr>
           <tr>
-            <td style="padding:28px;">
-              <p style="margin:0 0 18px;color:#5C4A3A;font-size:15px;line-height:1.8;">
+            <td style="padding:24px 28px 28px;">
+              <p style="margin:0 0 20px;color:${INK_SOFT};font-size:15px;line-height:1.8;">
                 ${e.nickname ? `${escapeHtml(e.nickname)} さん<br />` : ""}
                 「${escapeHtml(e.projectTitle)}」へのご支援ありがとうございました。<br />
                 リターン「${escapeHtml(e.rewardTitle)}」をお届けします。
               </p>
 
-              <div style="background:#FFF8F0;border-radius:14px;padding:18px;color:#5C4A3A;font-size:14px;line-height:1.9;">${body}</div>
+              <div style="background:${SURFACE};border:1px solid ${LINE};border-radius:8px;padding:18px;color:${INK};font-size:14px;line-height:1.9;">${body}</div>
 
-              <p style="margin:22px 0 0;text-align:center;">
-                <a href="${projectUrl}" style="display:inline-block;background:linear-gradient(135deg,#F2807B,#F5A34B);color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:13px 30px;border-radius:999px;">プロジェクトを見る</a>
+              <p style="margin:24px 0 0;">
+                <a href="${projectUrl}" style="display:inline-block;background:${INK};color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 24px;border-radius:8px;">プロジェクトを見る</a>
               </p>
 
-              <p style="margin:22px 0 0;color:#A89685;font-size:12px;line-height:1.8;">
+              <p style="margin:24px 0 0;color:${INK_MUTED};font-size:12px;line-height:1.8;">
                 このメールは、プロジェクトの掲載者が ${escapeHtml(SITE_NAME)} から支援者の皆さまへお送りしています。<br />
                 このメールは送信専用です。リターンについてのお問い合わせはプロジェクトページからお願いします。
               </p>
             </td>
           </tr>
         </table>
-        <p style="margin:18px 0 0;color:#BFAE9C;font-size:12px;">${escapeHtml(SITE_NAME)}</p>
+        <p style="margin:18px 0 0;color:${INK_MUTED};font-size:12px;">${escapeHtml(SITE_NAME)}</p>
       </td>
     </tr>
   </table>

@@ -1,29 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Plus, LogIn, UserPlus, Sparkles, LayoutDashboard, LogOut, User, ShieldCheck } from "lucide-react";
+import { Menu, X, Plus, LayoutDashboard, LogOut, User, ShieldCheck, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import CreatorOnly from "@/components/auth/CreatorOnly";
 import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import { useT } from "@/components/i18n/LocaleProvider";
+import Logo from "@/components/layout/Logo";
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, profile, isAdmin, loading, signOut } = useAuth();
   const t = useT();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -35,6 +30,12 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ページを移ったらメニューは閉じる
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setShowUserMenu(false);
+  }, [pathname]);
+
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
@@ -43,101 +44,73 @@ export default function Header() {
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "";
 
-  return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        scrolled
-          ? "glass border-b border-white/50 shadow-soft py-2"
-          : "bg-transparent py-4"
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-2xl bg-yell-gradient flex items-center justify-center shadow-caramel group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-bold text-lg" style={{ fontFamily: "var(--font-display)" }}>C</span>
-            </div>
-            <span
-              className="text-xl font-black text-gradient-candy hidden sm:block"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              CaramYell
-            </span>
-          </Link>
+  const navItems = [
+    { href: "/projects", label: t.common.findProjects },
+    { href: "/for-agencies", label: t.common.forAgencies },
+    { href: "/about", label: t.common.about },
+  ];
 
-          <nav className="hidden md:flex items-center gap-1">
-            <NavLink href="/projects">{t.common.findProjects}</NavLink>
-            <CreatorOnly>
-              <NavLink href="/projects/create">
-                <span className="flex items-center gap-1">
-                  <Sparkles size={14} />
-                  {t.common.start}
-                </span>
-              </NavLink>
-            </CreatorOnly>
-            <NavLink href="/about">{t.common.about}</NavLink>
-          </nav>
+  return (
+    <header className="site-header fixed top-0 left-0 right-0 z-50 h-16 border-b border-line bg-cream-50/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8">
+        <div className="flex h-full items-center justify-between gap-6">
+          <div className="flex items-center gap-8">
+            <Link href="/" aria-label="CaramYell トップへ" className="chrome-text text-ink">
+              <Logo />
+            </Link>
+
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => (
+                <NavLink key={item.href} href={item.href} active={pathname.startsWith(item.href)}>
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
 
           <div className="hidden md:flex items-center gap-2">
             <LocaleSwitcher />
             {loading ? (
-              <div className="w-8 h-8 rounded-full bg-caramel-100 animate-pulse" />
+              <div className="w-24 h-9 rounded-md bg-cream-100 animate-pulse" />
             ) : user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-caramel-50 transition-colors"
+                  className="chrome-hover flex items-center gap-2 h-9 pl-1 pr-2 rounded-md hover:bg-cream-100 transition-colors"
+                  aria-expanded={showUserMenu}
                 >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                    style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
-                  >
+                  <span className="chrome-solid w-7 h-7 rounded-full bg-ink text-white flex items-center justify-center text-xs font-bold">
                     {displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700 max-w-[100px] truncate">
+                  </span>
+                  <span className="chrome-text text-sm font-medium text-ink max-w-[120px] truncate">
                     {displayName}
                   </span>
+                  <ChevronDown size={14} className="chrome-muted text-ink-muted" />
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-soft-lg border border-caramel-100 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-caramel-50">
-                      <p className="text-sm font-bold text-gray-800 truncate">{displayName}</p>
-                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg border border-line shadow-soft-lg py-1.5 z-50">
+                    <div className="px-4 py-2.5 border-b border-line">
+                      <p className="text-sm font-bold text-ink truncate">{displayName}</p>
+                      <p className="text-xs text-ink-muted truncate">{user.email}</p>
                     </div>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-caramel-50 transition-colors"
-                    >
-                      <LayoutDashboard size={16} />
+                    <MenuLink href="/dashboard" icon={<LayoutDashboard size={15} />}>
                       {t.common.dashboard}
-                    </Link>
-                    <Link
-                      href="/dashboard/settings"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-caramel-50 transition-colors"
-                    >
-                      <User size={16} />
+                    </MenuLink>
+                    <MenuLink href="/dashboard/settings" icon={<User size={15} />}>
                       {t.common.profileSettings}
-                    </Link>
+                    </MenuLink>
                     {isAdmin && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors"
-                      >
-                        <ShieldCheck size={16} />
+                      <MenuLink href="/admin" icon={<ShieldCheck size={15} />}>
                         運営CMS
-                      </Link>
+                      </MenuLink>
                     )}
-                    <div className="border-t border-caramel-50 mt-1 pt-1">
+                    <div className="border-t border-line mt-1.5 pt-1.5">
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-ink-soft hover:bg-cream-100 transition-colors"
                       >
-                        <LogOut size={16} />
+                        <LogOut size={15} />
                         {t.common.logout}
                       </button>
                     </div>
@@ -148,20 +121,14 @@ export default function Header() {
               <>
                 <Link
                   href="/auth/login"
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-caramel-600 hover:bg-caramel-50 transition-colors duration-200"
+                  className="chrome-text chrome-hover h-9 px-3 inline-flex items-center rounded-md text-sm font-medium text-ink hover:bg-cream-100 transition-colors"
                 >
-                  <LogIn size={16} />
                   {t.common.login}
                 </Link>
                 <Link
                   href="/auth/login?mode=signup"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
-                  style={{
-                    background: "linear-gradient(135deg, #F2807B, #E8842C)",
-                    boxShadow: "0 4px 15px rgba(232, 132, 44, 0.4)",
-                  }}
+                  className="chrome-solid h-9 px-4 inline-flex items-center rounded-md text-sm font-bold bg-ink text-white hover:bg-ink-soft transition-colors"
                 >
-                  <UserPlus size={16} />
                   {t.common.signup}
                 </Link>
               </>
@@ -170,95 +137,61 @@ export default function Header() {
             <CreatorOnly>
               <Link
                 href="/projects/create"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white btn-pop"
-                style={{
-                  background: "linear-gradient(135deg, #F2807B, #E8842C)",
-                  boxShadow: "0 4px 15px rgba(232, 132, 44, 0.4)",
-                }}
+                className="chrome-solid h-9 px-3.5 inline-flex items-center gap-1.5 rounded-md text-sm font-bold bg-ink text-white hover:bg-ink-soft transition-colors"
               >
-                <Plus size={16} />
+                <Plus size={15} />
                 {t.common.createProject}
               </Link>
             </CreatorOnly>
           </div>
 
-          <div className="md:hidden flex items-center gap-1">
+          <div className="md:hidden flex items-center gap-2">
             <LocaleSwitcher compact />
             <button
-              className="p-2 rounded-xl hover:bg-caramel-50 transition-colors"
+              className="chrome-text chrome-hover p-2 -mr-2 rounded-md text-ink hover:bg-cream-100 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="メニュー"
+              aria-expanded={isMenuOpen}
             >
-              {isMenuOpen ? (
-                <X size={24} className="text-caramel-600" />
-              ) : (
-                <Menu size={24} className="text-caramel-600" />
-              )}
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
       </div>
 
-      <div
-        className={cn(
-          "md:hidden transition-all duration-300 overflow-hidden",
-          isMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-        )}
-      >
-        <div className="glass border-t border-white/50 mx-4 mt-2 rounded-3xl p-4 shadow-soft-lg">
-          <nav className="flex flex-col gap-1">
-            <MobileNavLink href="/projects" onClick={() => setIsMenuOpen(false)}>
-              {t.common.viewProjects}
-            </MobileNavLink>
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-16 inset-x-0 bg-white border-b border-line shadow-soft-lg">
+          <nav className="px-4 py-3 flex flex-col">
+            {navItems.map((item) => (
+              <MobileNavLink key={item.href} href={item.href}>
+                {item.label}
+              </MobileNavLink>
+            ))}
             <CreatorOnly>
-              <MobileNavLink href="/projects/create" onClick={() => setIsMenuOpen(false)}>
-                掲載する（AI支援あり）
-              </MobileNavLink>
+              <MobileNavLink href="/projects/create">{t.common.createProject}</MobileNavLink>
             </CreatorOnly>
-            <MobileNavLink href="/about" onClick={() => setIsMenuOpen(false)}>
-              {t.common.about}
-            </MobileNavLink>
-            {user && (
-              <MobileNavLink href="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                {t.common.dashboard}
-              </MobileNavLink>
-            )}
-            <div className="border-t border-caramel-100 mt-2 pt-2 flex gap-2">
+            {user && <MobileNavLink href="/dashboard">{t.common.dashboard}</MobileNavLink>}
+            {isAdmin && <MobileNavLink href="/admin">運営CMS</MobileNavLink>}
+            <div className="border-t border-line mt-2 pt-3 pb-1 flex gap-2">
               {user ? (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <LayoutDashboard size={16} />
-                    管理画面
-                  </Link>
-                  <button
-                    onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
-                  >
-                    <LogOut size={16} />
-                    {t.common.logout}
-                  </button>
-                </>
+                <button
+                  onClick={handleSignOut}
+                  className="flex-1 h-10 rounded-md text-sm font-bold text-ink border border-line-strong"
+                >
+                  {t.common.logout}
+                </button>
               ) : (
                 <>
                   <Link
                     href="/auth/login"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold text-caramel-600 bg-caramel-50 hover:bg-caramel-100 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
+                    className="flex-1 h-10 inline-flex items-center justify-center rounded-md text-sm font-bold text-ink border border-line-strong"
                   >
-                    <LogIn size={16} />
                     {t.common.login}
                   </Link>
                   <Link
                     href="/auth/login?mode=signup"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white"
-                    style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
-                    onClick={() => setIsMenuOpen(false)}
+                    className="flex-1 h-10 inline-flex items-center justify-center rounded-md text-sm font-bold bg-ink text-white"
                   >
-                    <UserPlus size={16} />
                     {t.common.signup}
                   </Link>
                 </>
@@ -266,28 +199,58 @@ export default function Header() {
             </div>
           </nav>
         </div>
-      </div>
+      )}
     </header>
   );
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
-      className="px-4 py-2 rounded-full text-sm font-semibold text-gray-700 hover:text-caramel-600 hover:bg-caramel-50 transition-all duration-200"
+      className={cn(
+        "chrome-hover h-9 px-3 inline-flex items-center rounded-md text-sm transition-colors hover:bg-cream-100",
+        active ? "chrome-text font-bold text-ink" : "chrome-muted font-medium text-ink-soft"
+      )}
     >
       {children}
     </Link>
   );
 }
 
-function MobileNavLink({ href, children, onClick }: { href: string; children: React.ReactNode; onClick: () => void }) {
+function MenuLink({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
-      className="flex items-center px-4 py-3 rounded-2xl text-sm font-semibold text-gray-700 hover:bg-caramel-50 hover:text-caramel-600 transition-colors"
-      onClick={onClick}
+      className="flex items-center gap-3 px-4 py-2 text-sm text-ink-soft hover:bg-cream-100 hover:text-ink transition-colors"
+    >
+      <span className="text-ink-muted">{icon}</span>
+      {children}
+    </Link>
+  );
+}
+
+function MobileNavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center py-3 text-[15px] font-medium text-ink border-b border-line last:border-b-0"
     >
       {children}
     </Link>

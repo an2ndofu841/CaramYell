@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Clock, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { ProjectTheme } from "@/lib/theme/project-theme";
 import ProjectThemeScope from "./ProjectThemeScope";
 import { formatCurrency } from "@/lib/utils";
@@ -37,7 +37,7 @@ export default function ProjectThemePreview({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 space-y-4">
           <div
-            className="relative aspect-square rounded-4xl overflow-hidden bg-caramel-100 shadow-soft-lg"
+            className="relative aspect-square rounded-3xl overflow-hidden bg-caramel-100"
             style={
               imageUrl
                 ? {
@@ -58,30 +58,30 @@ export default function ProjectThemePreview({
             </p>
           </div>
 
-          <div className="flex gap-1 p-1 bg-white rounded-2xl shadow-soft">
+          {/* 実ページと同じ下線式のタブ。border-candy-pink がテーマの強調色に読み替わる */}
+          <div className="flex gap-6 border-b border-line">
             {["ストーリー", "リターン", "活動報告"].map((label, i) => (
               <span
                 key={label}
                 className={
                   i === 0
-                    ? "flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center text-white"
-                    : "flex-1 py-2 px-3 rounded-xl text-xs font-semibold text-center text-gray-500"
+                    ? "-mb-px py-2.5 border-b-2 border-candy-pink text-xs font-bold text-gray-800"
+                    : "-mb-px py-2.5 border-b-2 border-transparent text-xs font-bold text-gray-500"
                 }
-                style={i === 0 ? { background: "var(--pt-gradient)" } : undefined}
               >
                 {label}
               </span>
             ))}
           </div>
 
-          <div className="bg-white shadow-soft rounded-3xl p-5">
+          <div className="bg-white border border-line rounded-3xl p-5">
             <p className="text-sm text-gray-700 leading-relaxed">
               プロジェクトの本文はこの面と文字色で表示されます。長い文章でも読みやすいか、背景とのコントラストを確かめてください。
             </p>
           </div>
 
           <div
-            className="w-full text-left p-4 rounded-3xl border-2 border-candy-pink shadow-candy"
+            className="w-full text-left p-4 rounded-3xl border border-candy-pink"
             style={{ background: "var(--pt-surface-soft)" }}
           >
             <div className="flex items-start gap-3">
@@ -89,7 +89,7 @@ export default function ProjectThemePreview({
                 <Check size={12} className="text-white" />
               </div>
               <div>
-                <span className="text-lg font-bold text-caramel-600">
+                <span className="text-lg font-bold text-gray-800 tabular-nums">
                   {formatCurrency(5000)}
                 </span>
                 <h3 className="font-bold text-gray-800 text-sm">
@@ -104,13 +104,18 @@ export default function ProjectThemePreview({
         </div>
 
         <div className="md:col-span-1">
-          <div className="bg-white shadow-soft rounded-3xl p-5">
-            <span className="text-2xl font-bold text-caramel-600">
-              {formatCurrency(currentAmount)}
-            </span>
-            <p className="text-xs text-gray-400 mb-3">
-              目標 {formatCurrency(goalAmount)} の
-              <span className="font-bold text-caramel-500"> {percentage}%</span>
+          <div className="bg-white border border-line rounded-3xl p-5">
+            <p className="text-[11px] font-bold text-gray-500 mb-1">現在の支援総額</p>
+            <div className="flex items-baseline flex-wrap gap-x-2 mb-1">
+              <span className="text-2xl font-bold text-gray-800 tabular-nums">
+                {formatCurrency(currentAmount)}
+              </span>
+              <span className="text-base font-bold text-caramel-600 tabular-nums">
+                {percentage}%
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mb-3 tabular-nums">
+              目標金額 {formatCurrency(goalAmount)}
             </p>
 
             <div className="progress-bar mb-4">
@@ -120,31 +125,29 @@ export default function ProjectThemePreview({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="text-center p-2 rounded-2xl bg-caramel-50">
-                <Users size={14} className="mx-auto mb-1 text-caramel-500" />
-                <p className="text-sm font-bold text-gray-800">{backerCount}</p>
-                <p className="text-[10px] text-gray-400">応援</p>
+            <dl className="grid grid-cols-2 gap-2 mb-4">
+              <div className="p-2 rounded-xl bg-cream-100">
+                <dt className="text-[10px] text-gray-500">支援者</dt>
+                <dd className="text-sm font-bold text-gray-800 tabular-nums">{backerCount}人</dd>
               </div>
-              <div className="text-center p-2 rounded-2xl bg-caramel-50">
-                <Clock size={14} className="mx-auto mb-1 text-caramel-500" />
-                <p className="text-sm font-bold text-gray-800">30日</p>
-                <p className="text-[10px] text-gray-400">残り</p>
+              <div className="p-2 rounded-xl bg-cream-100">
+                <dt className="text-[10px] text-gray-500">残り</dt>
+                <dd className="text-sm font-bold text-gray-800 tabular-nums">30日</dd>
               </div>
-            </div>
+            </dl>
 
             <span
-              className="block w-full text-center px-5 py-2.5 text-sm rounded-full text-white font-bold"
+              className="block w-full text-center px-5 py-2.5 text-sm rounded-lg text-white font-bold"
               style={{
                 background: "var(--pt-gradient)",
-                boxShadow: "0 4px 20px var(--pt-glow)",
+                boxShadow: "var(--pt-button-shadow, none)",
               }}
             >
               このプロジェクトを応援する
             </span>
 
-            <div className="border-t border-caramel-100 mt-4 pt-3">
-              <p className="text-[10px] text-gray-400 text-center">
+            <div className="border-t border-line mt-4 pt-3">
+              <p className="text-[10px] text-gray-500 text-center">
                 支援者手数料 0%
               </p>
             </div>

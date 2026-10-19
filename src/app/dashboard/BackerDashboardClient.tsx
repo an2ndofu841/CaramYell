@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-  Heart,
-  DollarSign,
+  ImageIcon,
   Package,
   Truck,
   CheckCircle2,
@@ -14,11 +12,9 @@ import {
   Loader2,
   ChevronRight,
 } from "lucide-react";
-import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
-import AnimatedSection from "@/components/animations/AnimatedSection";
 import DashboardShell from "./DashboardShell";
 import { formatCurrency, formatNumber, timeAgo } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +40,7 @@ const SHIPPING_META: Record<
 
 export default function BackerDashboardClient() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, isCreator, loading: authLoading } = useAuth();
   const [backings, setBackings] = useState<Backing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,10 +70,10 @@ export default function BackerDashboardClient() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-cream-50">
         <div className="text-center">
-          <Loader2 size={32} className="animate-spin text-candy-pink mx-auto mb-4" />
-          <p className="text-gray-500 font-semibold">読み込み中...</p>
+          <Loader2 size={24} className="animate-spin text-ink-muted mx-auto mb-3" />
+          <p className="text-sm text-ink-muted">読み込み中...</p>
         </div>
       </div>
     );
@@ -93,24 +89,9 @@ export default function BackerDashboardClient() {
   ).length;
 
   const summary = [
-    {
-      label: "応援した金額",
-      value: formatCurrency(totalBacked),
-      icon: <DollarSign size={20} />,
-      color: "#F2807B",
-    },
-    {
-      label: "応援したプロジェクト",
-      value: `${formatNumber(projectCount)}件`,
-      icon: <Heart size={20} />,
-      color: "#F5A34B",
-    },
-    {
-      label: "お届け待ち",
-      value: `${formatNumber(awaitingDelivery)}件`,
-      icon: <Package size={20} />,
-      color: "#8FD4C4",
-    },
+    { label: "応援した金額", value: formatCurrency(totalBacked) },
+    { label: "応援したプロジェクト", value: `${formatNumber(projectCount)}件` },
+    { label: "お届け待ち", value: `${formatNumber(awaitingDelivery)}件` },
   ];
 
   return (
@@ -118,57 +99,68 @@ export default function BackerDashboardClient() {
       title="マイページ"
       description="応援したプロジェクトとリターンのお届け状況"
     >
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {summary.map((item, i) => (
-          <AnimatedSection key={item.label} animation="scale" delay={i * 80}>
-            <Card>
-              <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white mb-3"
-                style={{ background: item.color }}
-              >
-                {item.icon}
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-800">
-                {item.value}
-              </p>
-              <p className="text-xs text-gray-400 font-medium mt-1">{item.label}</p>
-            </Card>
-          </AnimatedSection>
+      <dl className="grid grid-cols-3 rounded-xl border border-line bg-white divide-x divide-line mb-8">
+        {summary.map((item) => (
+          <div key={item.label} className="px-3 sm:px-6 py-4 sm:py-5 min-w-0">
+            <dt className="text-[11px] sm:text-xs font-bold text-ink-muted mb-1 truncate">
+              {item.label}
+            </dt>
+            <dd className="text-lg sm:text-2xl font-bold text-ink tabular-nums truncate">
+              {item.value}
+            </dd>
+          </div>
         ))}
-      </div>
+      </dl>
 
       {backings.length === 0 ? (
-        <AnimatedSection animation="fade-up">
-          <Card>
-            <div className="text-center py-12">
-              <div className="text-5xl mb-4">🍬</div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">
-                気になるプロジェクトを応援しよう
-              </h2>
-              <p className="text-gray-500 mb-6">
-                応援するとここに履歴が並び、リターンのお届け状況も確認できます。
-              </p>
-              <Link href="/projects">
-                <Button size="lg">プロジェクトを見る</Button>
-              </Link>
-            </div>
-          </Card>
-        </AnimatedSection>
+        <div className="rounded-xl border border-line bg-white px-6 py-14 text-center">
+          <h2
+            className="text-lg font-bold text-ink mb-2"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            まだ応援したプロジェクトはありません
+          </h2>
+          <p className="text-sm text-ink-muted leading-relaxed mb-6">
+            応援するとここに履歴が並び、リターンのお届け状況も確認できます。
+          </p>
+          <Link href="/projects">
+            <Button variant="outline">プロジェクトを見る</Button>
+          </Link>
+        </div>
       ) : (
-        <AnimatedSection animation="fade-up">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">応援した履歴</h2>
-          <div className="space-y-4">
-            {backings.map((backing, i) => (
-              <BackingCard key={backing.id} backing={backing} index={i} />
+        <section>
+          <h2 className="text-xs font-bold text-ink-muted mb-3">応援した履歴</h2>
+          <div className="space-y-3">
+            {backings.map((backing) => (
+              <BackingCard key={backing.id} backing={backing} />
             ))}
           </div>
-        </AnimatedSection>
+        </section>
+      )}
+
+      {/* 掲載権限のない人にだけ、事務所・レーベル向けの掲載申し込みを案内する */}
+      {profile && !isCreator && (
+        <aside className="mt-10 rounded-xl border border-line bg-white px-5 sm:px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-ink">事務所・レーベルの方へ</p>
+            <p className="text-sm text-ink-muted mt-0.5">
+              所属アーティストの企画を掲載できます。
+            </p>
+          </div>
+          <Link
+            href="/apply"
+            className="inline-flex items-center gap-1 text-sm font-bold text-ink underline underline-offset-4 decoration-line-strong hover:decoration-ink flex-shrink-0"
+          >
+            掲載を申し込む
+            <ChevronRight size={14} />
+          </Link>
+        </aside>
       )}
     </DashboardShell>
   );
 }
 
-function BackingCard({ backing, index }: { backing: Backing; index: number }) {
+function BackingCard({ backing }: { backing: Backing }) {
   const [showDetail, setShowDetail] = useState(false);
   const project = backing.projects;
   const items = backing.backer_items || [];
@@ -185,14 +177,10 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
     : 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.08, 0.4) }}
-    >
-      <Card>
+    <article className="rounded-xl border border-line bg-white">
+      <div className="p-4 sm:p-5">
         <div className="flex gap-4">
-          <div className="w-20 h-16 rounded-2xl overflow-hidden bg-caramel-100 flex-shrink-0 flex items-center justify-center text-3xl">
+          <div className="w-20 h-16 rounded-lg overflow-hidden bg-cream-100 flex-shrink-0 flex items-center justify-center text-ink-faint">
             {project?.main_image_url ? (
               <img
                 src={project.main_image_url}
@@ -200,28 +188,26 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              project?.categories?.icon || "📋"
+              <ImageIcon size={18} />
             )}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h3 className="font-bold text-gray-800 text-sm line-clamp-2 leading-snug">
+              <h3 className="font-bold text-ink text-sm line-clamp-2 leading-snug">
                 {project?.title || "（削除されたプロジェクト）"}
               </h3>
               {needsShipping && (
-                <Badge color={shipping.color} size="sm">
-                  <span className="flex items-center gap-1">
-                    {shipping.icon}
-                    {shipping.label}
-                  </span>
+                <Badge color={shipping.color} size="sm" className="flex-shrink-0">
+                  {shipping.icon}
+                  {shipping.label}
                 </Badge>
               )}
             </div>
 
-            <p className="text-xs text-gray-400 mb-2">
+            <p className="text-xs text-ink-muted mb-2">
               {timeAgo(backing.created_at)}に応援 ·{" "}
-              <strong className="text-caramel-600">
+              <strong className="font-bold text-ink tabular-nums">
                 {formatCurrency(backing.total_amount)}
               </strong>
             </p>
@@ -229,7 +215,7 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
             {project && (
               <>
                 <ProgressBar percentage={progress} className="mb-1.5" />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-ink-muted tabular-nums">
                   {formatCurrency(amount)} / {formatCurrency(project.goal_amount)}（
                   {progress}%）
                 </p>
@@ -239,61 +225,36 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
         </div>
 
         {items.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-caramel-100 space-y-1.5">
+          <ul className="mt-3 pt-3 border-t border-line space-y-1">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 text-xs">
-                <span className="text-gray-600 font-medium">{item.reward_title}</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-caramel-50 text-caramel-600 font-bold">
-                  ×{item.quantity}
-                </span>
-              </div>
+              <li key={item.id} className="flex items-center gap-2 text-xs">
+                <span className="text-ink-soft">{item.reward_title}</span>
+                <span className="text-ink-muted tabular-nums">×{item.quantity}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
 
         {backing.tracking_number && (
-          <p className="mt-3 text-xs text-gray-500">
+          <p className="mt-3 text-xs text-ink-muted">
             追跡番号:{" "}
-            <span className="font-bold text-gray-700">{backing.tracking_number}</span>
+            <span className="font-bold text-ink tabular-nums">{backing.tracking_number}</span>
             {backing.shipping_carrier && `（${backing.shipping_carrier}）`}
           </p>
         )}
 
-        <div className="flex gap-2 mt-4 pt-3 border-t border-caramel-100">
-          <button
-            onClick={() => setShowDetail((v) => !v)}
-            className="flex-1 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors"
-          >
-            {showDetail ? "内訳を閉じる" : "内訳を見る"}
-          </button>
-          {project && (
-            <Link
-              href={`/projects/${project.slug || project.id}`}
-              className="flex-1"
-            >
-              <button
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white transition-colors"
-                style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
-              >
-                活動報告を見る
-                <ChevronRight size={14} />
-              </button>
-            </Link>
-          )}
-        </div>
-
         {showDetail && (
-          <div className="mt-3 pt-3 border-t border-caramel-100 text-xs text-gray-500 space-y-1.5">
+          <div className="mt-3 pt-3 border-t border-line text-xs text-ink-muted space-y-1.5">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between gap-3">
                 <span className="min-w-0">
                   {item.reward_title}
-                  <span className="text-gray-400">
+                  <span className="text-ink-faint tabular-nums">
                     {" "}
                     {formatCurrency(item.unit_amount)} × {item.quantity}
                   </span>
                 </span>
-                <span className="font-semibold text-gray-700 whitespace-nowrap">
+                <span className="font-semibold text-ink whitespace-nowrap tabular-nums">
                   {formatCurrency(item.unit_amount * item.quantity)}
                 </span>
               </div>
@@ -302,26 +263,44 @@ function BackingCard({ backing, index }: { backing: Backing; index: number }) {
             {backing.amount > itemsTotal && (
               <div className="flex justify-between">
                 <span>{items.length > 0 ? "追加の応援金額" : "応援金額"}</span>
-                <span className="font-semibold text-gray-700">
+                <span className="font-semibold text-ink tabular-nums">
                   {formatCurrency(backing.amount - itemsTotal)}
                 </span>
               </div>
             )}
             <div className="flex justify-between">
               <span>手数料</span>
-              <span className="font-semibold text-gray-700">
+              <span className="font-semibold text-ink tabular-nums">
                 {formatCurrency(backing.fee_amount)}
               </span>
             </div>
-            <div className="flex justify-between pt-1.5 border-t border-caramel-50">
-              <span className="font-bold text-gray-700">お支払い合計</span>
-              <span className="font-bold text-caramel-600">
+            <div className="flex justify-between pt-1.5 border-t border-line">
+              <span className="font-bold text-ink">お支払い合計</span>
+              <span className="font-bold text-ink tabular-nums">
                 {formatCurrency(backing.total_amount)}
               </span>
             </div>
           </div>
         )}
-      </Card>
-    </motion.div>
+      </div>
+
+      <div className="flex border-t border-line divide-x divide-line text-xs font-semibold">
+        <button
+          onClick={() => setShowDetail((v) => !v)}
+          className="flex-1 py-2.5 text-ink-muted hover:bg-cream-50 hover:text-ink transition-colors rounded-bl-xl"
+        >
+          {showDetail ? "内訳を閉じる" : "内訳を見る"}
+        </button>
+        {project && (
+          <Link
+            href={`/projects/${project.slug || project.id}`}
+            className="flex-1 flex items-center justify-center gap-1 py-2.5 text-ink hover:bg-cream-50 transition-colors rounded-br-xl"
+          >
+            活動報告を見る
+            <ChevronRight size={14} />
+          </Link>
+        )}
+      </div>
+    </article>
   );
 }

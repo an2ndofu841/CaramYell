@@ -1,117 +1,46 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, UserPlus } from "lucide-react";
-import AnimatedSection from "@/components/animations/AnimatedSection";
-import Button from "@/components/ui/Button";
-import CreatorOnly from "@/components/auth/CreatorOnly";
-import { useAuth } from "@/hooks/useAuth";
+import { ArrowRight } from "lucide-react";
 
+/** 事務所・レーベルへの掲載の呼びかけ。トップと紹介ページの末尾に置く */
 export default function CTASection() {
-  const { user, loading } = useAuth();
-
   return (
-    <section className="py-20 relative overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(135deg, #4A2C17 0%, #31200E 100%)",
-        }}
-      />
-
-      {/* 装飾 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {["🍬", "⭐", "🎀", "✨", "🍭", "💫", "🌸"].map((emoji, i) => (
-          <motion.span
-            key={i}
-            className="absolute text-2xl opacity-30 select-none"
-            style={{
-              left: `${5 + i * 15}%`,
-              top: `${20 + Math.sin(i * 1.2) * 40}%`,
-            }}
-            animate={{
-              y: [0, -15, 0],
-              rotate: [-10, 10, -10],
-            }}
-            transition={{
-              duration: 3 + i * 0.3,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.5,
-            }}
-          >
-            {emoji}
-          </motion.span>
-        ))}
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-        <AnimatedSection animation="scale">
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-            style={{
-              background: "rgba(242, 128, 123, 0.2)",
-              border: "1px solid rgba(242, 128, 123, 0.4)",
-            }}
-          >
-            <Sparkles size={16} className="text-candy-pink" />
-            <span className="text-sm font-bold text-candy-pink">
-              今すぐ始めよう
-            </span>
-          </div>
-
-          <h2
-            className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            あなたの夢を、
-            <br />
-            <span
-              style={{
-                background: "linear-gradient(135deg, #F2807B, #F5A34B, #FFE0A8)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
+    <section className="bg-ink text-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-end">
+          <div className="lg:col-span-3">
+            <p className="text-xs font-bold tracking-[0.12em] uppercase text-caramel-300 mb-4">
+              For agencies &amp; labels
+            </p>
+            <h2
+              className="text-2xl sm:text-4xl font-bold leading-snug"
+              style={{ fontFamily: "var(--font-display)" }}
             >
-              世界中で応援してもらおう
-            </span>
-          </h2>
-
-          <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto">
-            手数料0%・最短30分掲載・AIサポートで、
-            <br />
-            夢を形にするのはこれまで以上にかんたんです。
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <CreatorOnly>
-              <Link href="/projects/create">
-                <Button size="xl" icon={<Sparkles size={20} />}>
-                  無料でプロジェクトを作る
-                </Button>
-              </Link>
-            </CreatorOnly>
-            {!loading && !user && (
-              <Link href="/auth/login?mode=signup">
-                <Button size="xl" icon={<UserPlus size={20} />}>
-                  無料でアカウントを作る
-                </Button>
-              </Link>
-            )}
-            <Link href="/projects">
-              <button className="flex items-center gap-2 px-8 py-4 rounded-full text-lg font-bold text-white/80 border-2 border-white/20 hover:bg-white/10 hover:text-white transition-all duration-200">
-                プロジェクトを見る
-                <ArrowRight size={20} />
-              </button>
+              所属アーティストの企画を、
+              <br />
+              CaramYellで始めませんか。
+            </h2>
+            <p className="mt-5 text-sm sm:text-base text-white/70 leading-relaxed max-w-xl">
+              芸能事務所・レーベル・運営チームからの掲載を受け付けています。
+              申し込み後、運営が内容を確認して掲載用のアカウントを有効にします。
+              掲載者の手数料はかかりません。
+            </p>
+          </div>
+          <div className="lg:col-span-2 flex flex-col sm:flex-row lg:justify-end gap-3">
+            <Link
+              href="/apply"
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-white text-ink text-[15px] font-bold hover:bg-cream-100 transition-colors"
+            >
+              掲載を申し込む
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/for-agencies"
+              className="inline-flex items-center justify-center h-12 px-6 rounded-lg border border-white/25 text-white text-[15px] font-bold hover:bg-white/10 transition-colors"
+            >
+              詳しく見る
             </Link>
           </div>
-
-          <p className="text-sm text-white/30 mt-6">
-            クレジットカード不要 · アカウント登録なしで応援可能 · 掲載者の手数料0%
-          </p>
-        </AnimatedSection>
+        </div>
       </div>
     </section>
   );

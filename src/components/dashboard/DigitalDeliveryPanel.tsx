@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown, Mail, Send, Smartphone } from "lucide-react";
+import { ChevronDown, Mail, Send } from "lucide-react";
 import { toast } from "sonner";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -155,13 +155,12 @@ export default function DigitalDeliveryPanel({
   const canSend = emailConfigured && subject.trim() !== "" && message.trim() !== "" && !sending;
 
   return (
-    <Card>
+    <Card className="rounded-xl">
       <div className="mb-4">
-        <h3 className="flex items-center gap-1.5 font-bold text-gray-800">
-          <Smartphone size={16} className="text-caramel-500" />
+        <h3 className="font-bold text-ink">
           デジタルリターンのメール送付
         </h3>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-ink-muted mt-0.5">
           受け取る支援者のメールアドレスへ一括で送ります。上位プランの支援者も含み、同じアドレスへは1通にまとめます。送った相手は記録されるので、あとから支援した人だけに追加で送れます
         </p>
       </div>
@@ -174,10 +173,10 @@ export default function DigitalDeliveryPanel({
               type="button"
               onClick={() => selectReward(r)}
               className={cn(
-                "px-3 py-2 rounded-2xl text-xs font-bold border-2 transition-all",
+                "h-8 px-3 rounded-md text-xs font-bold border transition-colors",
                 r.id === rewardId
-                  ? "border-candy-pink text-caramel-700 bg-caramel-50"
-                  : "border-caramel-100 text-gray-500 hover:border-caramel-200"
+                  ? "border-ink bg-ink text-white"
+                  : "border-line-strong bg-white text-ink-soft hover:bg-cream-50"
               )}
             >
               {r.title}
@@ -188,24 +187,24 @@ export default function DigitalDeliveryPanel({
 
       {reward && (
         <>
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          <dl className="grid grid-cols-3 rounded-lg border border-line divide-x divide-line mb-3">
             {[
               { label: "送付対象（1人1通）", value: recipients.length },
               { label: "送付済み", value: recipients.length - unsent.length },
               { label: "未送付", value: unsent.length },
             ].map((s) => (
-              <div key={s.label} className="p-3 rounded-2xl bg-caramel-50">
-                <p className="text-xs font-bold text-gray-500">{s.label}</p>
-                <p className="text-xl font-bold text-gray-800">
+              <div key={s.label} className="px-3 py-2.5 min-w-0">
+                <dt className="text-[11px] sm:text-xs font-bold text-ink-muted truncate">{s.label}</dt>
+                <dd className="text-xl font-bold text-ink tabular-nums">
                   {s.value}
-                  <span className="text-xs font-semibold text-gray-400 ml-1">人</span>
-                </p>
+                  <span className="text-xs font-semibold text-ink-muted ml-1">人</span>
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
 
           {missingEmailCount > 0 && (
-            <p className="text-xs text-amber-600 mb-3">
+            <p className="text-xs text-amber-700 mb-3">
               メールアドレスが無い支援（現地支援など）が{missingEmailCount}件あります。この方々には別の方法でお届けください
             </p>
           )}
@@ -215,7 +214,7 @@ export default function DigitalDeliveryPanel({
               <button
                 type="button"
                 onClick={() => setShowList((v) => !v)}
-                className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-gray-700"
+                className="flex items-center gap-1 text-xs font-bold text-ink-muted hover:text-ink"
               >
                 <ChevronDown
                   size={14}
@@ -224,16 +223,16 @@ export default function DigitalDeliveryPanel({
                 送付先を{showList ? "閉じる" : "見る"}
               </button>
               {showList && (
-                <ul className="mt-2 max-h-64 overflow-y-auto divide-y divide-caramel-50 rounded-2xl border-2 border-caramel-100">
+                <ul className="mt-2 max-h-64 overflow-y-auto divide-y divide-line rounded-lg border border-line">
                   {recipients.map((r) => (
                     <li key={r.email} className="flex items-center gap-3 px-4 py-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800 truncate">
+                        <p className="text-sm font-bold text-ink truncate">
                           {r.name || "（お名前未入力）"}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">{r.email}</p>
+                        <p className="text-xs text-ink-muted truncate">{r.email}</p>
                         {r.backerIds.length > 1 && (
-                          <p className="text-xs text-caramel-600">
+                          <p className="text-xs text-ink-muted">
                             {r.backerIds.length}件の支援を1通にまとめて送付
                           </p>
                         )}
@@ -283,7 +282,7 @@ export default function DigitalDeliveryPanel({
           </div>
 
           {!emailConfigured && (
-            <p className="text-xs text-red-500 mb-3">
+            <p className="text-xs text-red-600 mb-3">
               メール送信の設定が完了していないため、現在は送信できません
             </p>
           )}

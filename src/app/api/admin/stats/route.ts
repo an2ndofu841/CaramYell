@@ -26,6 +26,11 @@ export async function GET() {
     .from("profiles")
     .select("id", { count: "exact", head: true });
 
+  const { count: pendingApplications } = await supabase
+    .from("creator_applications")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+
   // 流通総額（掲載中/達成/完了の現在額合計）
   const { data: liveProjects } = await supabase
     .from("projects")
@@ -49,6 +54,7 @@ export async function GET() {
       completed,
       draft,
       users: usersCount ?? 0,
+      pendingApplications: pendingApplications ?? 0,
       gmv,
       totalBackers,
     },

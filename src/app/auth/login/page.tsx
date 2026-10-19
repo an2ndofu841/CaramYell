@@ -3,11 +3,10 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, MailCheck } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, MailCheck, ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import Card from "@/components/ui/Card";
+import Logo from "@/components/layout/Logo";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/components/i18n/LocaleProvider";
@@ -90,7 +89,7 @@ function LoginForm() {
           router.push(`/auth/mfa?next=${encodeURIComponent(redirectTo)}`);
           return;
         }
-        toast.success("ログインしました！");
+        toast.success("ログインしました");
         router.push(redirectTo);
         return;
       }
@@ -103,7 +102,7 @@ function LoginForm() {
       const outcome = await signUpWithEmail(form.email, form.password);
       switch (outcome.result) {
         case "signed_in":
-          toast.success("アカウントを作成しました！");
+          toast.success("アカウントを作成しました");
           router.push(redirectTo);
           break;
         case "already_registered":
@@ -156,134 +155,106 @@ function LoginForm() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4"
-      style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}
-    >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-20 right-20 w-64 h-64 rounded-full opacity-20"
-          style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
-          animate={{ scale: [1, 1.1, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-20 left-20 w-48 h-48 rounded-full opacity-15"
-          style={{ background: "linear-gradient(135deg, #8FD4C4, #A8D8CB)" }}
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 8, repeat: Infinity, delay: 2 }}
-        />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div
-            className="w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-white shadow-candy"
-            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", fontFamily: "var(--font-display)" }}
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8">
+          <Logo className="text-ink text-[22px] mb-6" />
+          <h1
+            className="text-2xl font-bold text-ink"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            C
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {isLogin ? t.auth.welcomeBack : t.auth.hello}
+            {isLogin ? t.auth.tabLogin : t.auth.tabSignup}
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-ink-muted text-sm mt-1">
             {isLogin ? t.auth.loginTo : t.auth.signupTo}
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card>
-            <div className="flex p-1 bg-caramel-50 rounded-2xl mb-6">
-              {[t.auth.tabLogin, t.auth.tabSignup].map((tab, i) => (
+        <div className="rounded-xl border border-line bg-white p-6 sm:p-8">
+          <div className="flex gap-1 mb-6 border-b border-line">
+            {[t.auth.tabLogin, t.auth.tabSignup].map((tab, i) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setIsLogin(i === 0)}
+                className={`px-3 py-2 -mb-px text-sm border-b-2 transition-colors ${
+                  isLogin === (i === 0)
+                    ? "border-ink text-ink font-bold"
+                    : "border-transparent text-ink-muted hover:text-ink"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label={t.auth.email}
+              type="email"
+              placeholder="caramel@example.com"
+              value={form.email}
+              onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))}
+              icon={<Mail size={16} />}
+              fullWidth
+              required
+            />
+
+            <Input
+              label={t.auth.password}
+              type={showPassword ? "text" : "password"}
+              placeholder={t.auth.passwordPlaceholder}
+              value={form.password}
+              onChange={(e) => setForm(p => ({ ...p, password: e.target.value }))}
+              icon={<Lock size={16} />}
+              rightElement={
                 <button
-                  key={tab}
-                  onClick={() => setIsLogin(i === 0)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
-                    isLogin === (i === 0)
-                      ? "text-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  style={
-                    isLogin === (i === 0)
-                      ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
-                      : {}
-                  }
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-ink-muted hover:text-ink"
                 >
-                  {tab}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
-              ))}
-            </div>
+              }
+              fullWidth
+              required
+            />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label={t.auth.email}
-                type="email"
-                placeholder="caramel@example.com"
-                value={form.email}
-                onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))}
-                icon={<Mail size={16} />}
-                fullWidth
-                required
-              />
+            {isLogin && (
+              <div className="text-right">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs text-ink-soft hover:text-ink underline underline-offset-2"
+                >
+                  {t.auth.forgot}
+                </Link>
+              </div>
+            )}
 
-              <Input
-                label={t.auth.password}
-                type={showPassword ? "text" : "password"}
-                placeholder={t.auth.passwordPlaceholder}
-                value={form.password}
-                onChange={(e) => setForm(p => ({ ...p, password: e.target.value }))}
-                icon={<Lock size={16} />}
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                }
-                fullWidth
-                required
-              />
+            <Button fullWidth size="lg" loading={isLoading} type="submit">
+              {isLogin ? t.auth.loginButton : t.auth.signupButton}
+            </Button>
+          </form>
 
-              {isLogin && (
-                <div className="text-right">
-                  <Link href="/auth/forgot-password" className="text-xs text-caramel-500 hover:text-caramel-600 font-semibold">
-                    {t.auth.forgot}
-                  </Link>
-                </div>
-              )}
+          <p className="text-xs text-ink-muted leading-relaxed mt-6">
+            {t.auth.agreeNote1}
+            <Link href="/terms" className="text-ink underline underline-offset-2">{t.auth.terms}</Link>
+            {t.auth.agreeNote2}
+            <Link href="/privacy" className="text-ink underline underline-offset-2">{t.auth.privacy}</Link>
+            {t.auth.agreeNote3}
+          </p>
+        </div>
 
-              <Button fullWidth size="lg" loading={isLoading} type="submit">
-                {isLogin ? t.auth.loginButton : t.auth.signupButton}
-              </Button>
-            </form>
-
-            <p className="text-xs text-center text-gray-400 mt-6">
-              {t.auth.agreeNote1}
-              <Link href="/terms" className="text-caramel-500 hover:underline">{t.auth.terms}</Link>
-              {t.auth.agreeNote2}
-              <Link href="/privacy" className="text-caramel-500 hover:underline">{t.auth.privacy}</Link>
-              {t.auth.agreeNote3}
-            </p>
-          </Card>
-        </motion.div>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          <span className="font-semibold">{t.auth.canBackWithoutAccount}</span>
-          <br />
-          <Link href="/projects" className="text-caramel-500 hover:text-caramel-600 font-semibold">
-            {t.common.viewProjects} →
+        <div className="mt-6 text-sm text-ink-muted">
+          <p>{t.auth.canBackWithoutAccount}</p>
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-1 mt-1 font-bold text-ink hover:text-caramel-600 transition-colors"
+          >
+            {t.common.viewProjects}
+            <ArrowRight size={14} />
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
@@ -303,52 +274,35 @@ function ConfirmEmailNotice({
   const t = useT();
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4"
-      style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <Card>
-          <div className="text-center py-4">
-            <div
-              className="w-16 h-16 rounded-3xl mx-auto mb-5 flex items-center justify-center text-white shadow-candy"
-              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
-            >
-              <MailCheck size={30} />
-            </div>
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-12 px-4">
+      <div className="w-full max-w-md rounded-xl border border-line bg-white p-6 sm:p-8">
+        <MailCheck size={24} className="text-ink-muted mb-4" />
 
-            <h1 className="text-xl font-bold text-gray-800 mb-3">
-              {t.auth.confirmTitle}
-            </h1>
-            <p className="text-sm text-gray-500 leading-relaxed mb-4">
-              {t.auth.confirmBody}
-            </p>
+        <h1
+          className="text-xl font-bold text-ink mb-3"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {t.auth.confirmTitle}
+        </h1>
+        <p className="text-sm text-ink-soft leading-relaxed mb-4">{t.auth.confirmBody}</p>
 
-            <p className="inline-block px-4 py-2 rounded-xl bg-caramel-50 text-sm font-bold text-gray-700 break-all mb-6">
-              {email}
-            </p>
+        <p className="px-4 py-3 rounded-lg bg-cream-100 text-sm font-bold text-ink break-all mb-4">
+          {email}
+        </p>
 
-            <p className="text-xs text-gray-400 leading-relaxed mb-6">
-              {t.auth.confirmSpamNote}
-            </p>
+        <p className="text-xs text-ink-muted leading-relaxed mb-6">{t.auth.confirmSpamNote}</p>
 
-            <Button fullWidth size="lg" loading={isLoading} onClick={onResend}>
-              {t.auth.confirmResend}
-            </Button>
+        <Button fullWidth size="lg" loading={isLoading} onClick={onResend}>
+          {t.auth.confirmResend}
+        </Button>
 
-            <button
-              onClick={onBack}
-              className="mt-4 text-sm text-caramel-500 hover:text-caramel-600 font-semibold"
-            >
-              {t.auth.confirmBackToLogin}
-            </button>
-          </div>
-        </Card>
-      </motion.div>
+        <button
+          onClick={onBack}
+          className="mt-4 w-full text-center text-sm text-ink-soft hover:text-ink font-semibold"
+        >
+          {t.auth.confirmBackToLogin}
+        </button>
+      </div>
     </div>
   );
 }

@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Loader2, Search, Star, Eye, ExternalLink } from "lucide-react";
-import Card from "@/components/ui/Card";
+import { Loader2, Search, Star, Eye, ExternalLink, ImageIcon } from "lucide-react";
 import Badge from "@/components/ui/Badge";
-import { formatCurrency, getStatusLabel } from "@/lib/utils";
+import { Input } from "@/components/ui/Input";
+import { cn, formatCurrency, getStatusLabel } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Project, Category, Profile } from "@/types";
 
@@ -25,8 +24,9 @@ const filters = [
   { key: "cancelled", label: "却下/中止" },
 ];
 
+// getStatusLabel の色名を Badge の色に読み替える。達成は緑、審査中は注意色、掲載中はアクセント色
 const statusColorMap: Record<string, "pink" | "caramel" | "mint" | "lemon" | "sky" | "gray"> = {
-  pink: "pink", green: "mint", yellow: "lemon", blue: "sky", red: "pink", gray: "gray",
+  pink: "mint", green: "caramel", yellow: "lemon", blue: "sky", red: "gray", gray: "gray",
 };
 
 export default function AdminProjectsPage() {
@@ -77,38 +77,34 @@ export default function AdminProjectsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">プロジェクト管理</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <h1 className="text-2xl font-bold text-ink mb-1">プロジェクト</h1>
+      <p className="text-sm text-ink-muted mb-6">
         全プロジェクトの検索・ステータス変更・特集設定
       </p>
 
       {/* 検索 */}
-      <div className="relative mb-4">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
+      <div className="mb-4">
+        <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="タイトルで検索"
-          className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-caramel-100 text-sm outline-none focus:border-candy-pink transition-colors"
+          icon={<Search size={16} />}
+          fullWidth
         />
       </div>
 
       {/* フィルタ */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="flex gap-1 mb-6 border-b border-line overflow-x-auto">
         {filters.map((f) => (
           <button
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+            className={cn(
+              "px-3 py-2 -mb-px text-sm whitespace-nowrap border-b-2 transition-colors",
               statusFilter === f.key
-                ? "text-white shadow-sm"
-                : "bg-white text-gray-500 hover:bg-caramel-50 border-2 border-caramel-100"
-            }`}
-            style={
-              statusFilter === f.key
-                ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
-                : {}
-            }
+                ? "border-ink text-ink font-bold"
+                : "border-transparent text-ink-muted hover:text-ink"
+            )}
           >
             {f.label}
           </button>
@@ -116,101 +112,95 @@ export default function AdminProjectsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16">
-          <Loader2 size={28} className="animate-spin text-candy-pink mx-auto" />
+        <div className="py-16 flex justify-center">
+          <Loader2 size={24} className="animate-spin text-ink-muted" />
         </div>
       ) : projects.length === 0 ? (
-        <Card>
-          <p className="text-center py-12 font-bold text-gray-500">
-            該当するプロジェクトはありません
-          </p>
-        </Card>
+        <div className="rounded-xl border border-line bg-white py-16 text-center text-sm text-ink-muted">
+          該当するプロジェクトはありません
+        </div>
       ) : (
-        <div className="space-y-3">
-          {projects.map((project, i) => {
+        <div className="rounded-xl border border-line bg-white divide-y divide-line">
+          {projects.map((project) => {
             const { label, color } = getStatusLabel(project.status);
+            const isPublic = ["active", "funded", "completed"].includes(project.status);
             return (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i * 0.03, 0.3) }}
-              >
-                <Card>
-                  <div className="flex items-start gap-3">
-                    <div className="w-14 h-12 rounded-xl overflow-hidden bg-caramel-100 flex-shrink-0 flex items-center justify-center text-xl">
-                      {project.main_image_url ? (
-                        <img src={project.main_image_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        project.categories?.icon || "📋"
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <Badge color={statusColorMap[color] || "gray"} size="sm">
-                          {label}
+              <div key={project.id} className="p-4 sm:px-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-14 h-11 rounded-md overflow-hidden bg-cream-100 flex-shrink-0 flex items-center justify-center">
+                    {project.main_image_url ? (
+                      <img src={project.main_image_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon size={16} className="text-ink-faint" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <Badge color={statusColorMap[color] || "gray"} size="sm">
+                        {label}
+                      </Badge>
+                      {project.featured && (
+                        <Badge color="new" size="sm">
+                          <Star size={10} className="fill-current" />
+                          特集
                         </Badge>
-                        {project.featured && (
-                          <Badge color="lemon" size="sm">★ 特集</Badge>
-                        )}
-                        <span className="text-xs text-gray-400">
-                          {project.profiles?.display_name || "—"}
-                        </span>
-                      </div>
-                      <p className="font-bold text-gray-800 text-sm line-clamp-1">
-                        {project.title}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {formatCurrency(project.current_amount || 0)} / {formatCurrency(project.goal_amount)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-caramel-100">
-                    <Link
-                      href={
-                        ["active", "funded", "completed"].includes(project.status)
-                          ? `/projects/${project.slug || project.id}`
-                          : `/projects/preview/${project.preview_token}`
-                      }
-                      target="_blank"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-caramel-50 transition-colors"
-                    >
-                      {["active", "funded", "completed"].includes(project.status) ? (
-                        <><Eye size={13} /> 表示</>
-                      ) : (
-                        <><ExternalLink size={13} /> プレビュー</>
                       )}
-                    </Link>
-
-                    <button
-                      onClick={() => patch(project, { featured: !project.featured })}
-                      disabled={busyId === project.id}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
-                        project.featured
-                          ? "text-amber-600 bg-amber-50"
-                          : "text-gray-500 hover:bg-caramel-50"
-                      }`}
-                    >
-                      <Star size={13} className={project.featured ? "fill-amber-500 text-amber-500" : ""} />
-                      {project.featured ? "特集を解除" : "特集にする"}
-                    </button>
-
-                    <select
-                      value={project.status}
-                      disabled={busyId === project.id}
-                      onChange={(e) => patch(project, { status: e.target.value })}
-                      className="ml-auto text-xs font-semibold border-2 border-caramel-100 rounded-lg px-2 py-1.5 outline-none focus:border-candy-pink bg-white disabled:opacity-50"
-                    >
-                      {["draft", "reviewing", "active", "funded", "failed", "completed", "cancelled"].map((s) => (
-                        <option key={s} value={s}>
-                          {getStatusLabel(s).label}
-                        </option>
-                      ))}
-                    </select>
+                      <span className="text-xs text-ink-muted">
+                        {project.profiles?.display_name || "—"}
+                      </span>
+                    </div>
+                    <p className="font-bold text-ink text-sm line-clamp-1">{project.title}</p>
+                    <p className="text-xs text-ink-muted mt-0.5 tabular-nums">
+                      {formatCurrency(project.current_amount || 0)} / {formatCurrency(project.goal_amount)}
+                    </p>
                   </div>
-                </Card>
-              </motion.div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 mt-3 sm:pl-[4.25rem]">
+                  <Link
+                    href={
+                      isPublic
+                        ? `/projects/${project.slug || project.id}`
+                        : `/projects/preview/${project.preview_token}`
+                    }
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-semibold text-ink-soft hover:bg-cream-100 transition-colors"
+                  >
+                    {isPublic ? (
+                      <><Eye size={13} /> 表示</>
+                    ) : (
+                      <><ExternalLink size={13} /> プレビュー</>
+                    )}
+                  </Link>
+
+                  <button
+                    onClick={() => patch(project, { featured: !project.featured })}
+                    disabled={busyId === project.id}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-50",
+                      project.featured
+                        ? "text-ink bg-cream-100 hover:bg-cream-200"
+                        : "text-ink-soft hover:bg-cream-100"
+                    )}
+                  >
+                    <Star size={13} className={project.featured ? "fill-current" : ""} />
+                    {project.featured ? "特集を解除" : "特集にする"}
+                  </button>
+
+                  <select
+                    value={project.status}
+                    disabled={busyId === project.id}
+                    onChange={(e) => patch(project, { status: e.target.value })}
+                    className="ml-auto h-8 text-xs font-semibold text-ink border border-line-strong rounded-md px-2 outline-none focus:border-ink bg-white disabled:opacity-50"
+                  >
+                    {["draft", "reviewing", "active", "funded", "failed", "completed", "cancelled"].map((s) => (
+                      <option key={s} value={s}>
+                        {getStatusLabel(s).label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             );
           })}
         </div>

@@ -14,7 +14,6 @@ import type { Locale } from "@/lib/i18n/dictionaries";
 type PaymentMethodCopy = {
   /** Stripe の payment_method 種別 */
   id: string;
-  emoji: string;
   /** バッジ用の短い名前 */
   short: { ja: string; en: string };
   /** 文章中で使う正式な名前 */
@@ -26,28 +25,24 @@ type PaymentMethodCopy = {
 const PAYMENT_METHODS: PaymentMethodCopy[] = [
   {
     id: "card",
-    emoji: "💳",
     short: { ja: "カード", en: "Card" },
     label: { ja: "クレジットカード", en: "Credit card" },
     enabled: true,
   },
   {
     id: "apple_pay",
-    emoji: "🍎",
     short: { ja: "Apple Pay", en: "Apple Pay" },
     label: { ja: "Apple Pay", en: "Apple Pay" },
     enabled: true,
   },
   {
     id: "google_pay",
-    emoji: "🔵",
     short: { ja: "Google Pay", en: "Google Pay" },
     label: { ja: "Google Pay", en: "Google Pay" },
     enabled: true,
   },
   {
     id: "paypay",
-    emoji: "🅿️",
     short: { ja: "PayPay", en: "PayPay" },
     label: { ja: "PayPay", en: "PayPay" },
     // Stripe ダッシュボードで有効化するまでは案内しない
@@ -55,7 +50,6 @@ const PAYMENT_METHODS: PaymentMethodCopy[] = [
   },
   {
     id: "link",
-    emoji: "🔗",
     short: { ja: "Link", en: "Link" },
     label: { ja: "Link", en: "Link" },
     enabled: true,
@@ -64,9 +58,9 @@ const PAYMENT_METHODS: PaymentMethodCopy[] = [
 
 const ENABLED = PAYMENT_METHODS.filter((m) => m.enabled);
 
-/** 「💳 カード」のようなバッジ文字列。支援画面・詳細ページで使う */
+/** 「カード」「Apple Pay」のようなバッジ用の短い名前。支援画面・詳細ページで使う */
 export function paymentMethodBadges(locale: Locale = "ja"): string[] {
-  return ENABLED.map((m) => `${m.emoji} ${m.short[locale]}`);
+  return ENABLED.map((m) => m.short[locale]);
 }
 
 /**

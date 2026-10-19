@@ -38,7 +38,7 @@ export const THEME_FONTS: Record<ThemeFontKey, ThemeFont> = {
   rounded: {
     label: "まるゴシック",
     stack: "'Zen Maru Gothic', 'Noto Sans JP', sans-serif",
-    googleFamily: null,
+    googleFamily: "Zen+Maru+Gothic:wght@500;700;900",
     displayWeight: 900,
   },
   modern: {
@@ -100,19 +100,19 @@ export const THEME_PRESETS: ThemePreset[] = [
   {
     id: "caramel",
     name: "キャラメル",
-    description: "CaramYell 標準。やわらかく明るい、誰にでも合う配色。",
+    description: "CaramYell 標準。生成りの地にキャラメル1色の、落ち着いた配色。",
     theme: {
-      bg: "#FFFBF5",
+      bg: "#FAF8F5",
       surface: "#FFFFFF",
-      surfaceSoft: "#FFF8F0",
-      border: "#FFEFD6",
-      text: "#1F2937",
-      textMuted: "#6B7280",
-      accent: "#C96A1B",
-      gradient: "linear-gradient(135deg, #F2807B 0%, #E8842C 60%, #F5A34B 100%)",
-      glow: "rgba(232, 132, 44, 0.35)",
+      surfaceSoft: "#F4F1EC",
+      border: "#E7E2DC",
+      text: "#1C1917",
+      textMuted: "#78716C",
+      accent: "#9A5A2A",
+      gradient: "linear-gradient(135deg, #9A5A2A 0%, #9A5A2A 100%)",
+      glow: "rgba(28, 25, 23, 0.08)",
       font: "sans",
-      radius: "1.5rem",
+      radius: "1rem",
     },
   },
   {
@@ -293,6 +293,8 @@ export function themeToCssVars(theme: ProjectTheme): React.CSSProperties {
     "--pt-accent": theme.accent,
     "--pt-gradient": theme.gradient,
     "--pt-glow": theme.glow,
+    // 支援ボタンなどの主ボタンに、テーマの光彩色で影を付ける
+    "--pt-button-shadow": `0 4px 20px ${theme.glow}`,
     "--pt-font-display": THEME_FONTS[theme.font].stack,
     "--pt-font-display-weight": THEME_FONTS[theme.font].displayWeight,
     "--pt-radius": theme.radius,

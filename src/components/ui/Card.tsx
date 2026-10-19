@@ -24,9 +24,9 @@ export default function Card({
   };
 
   const variants = {
-    default: "bg-white shadow-soft",
-    glass: "glass border border-white/60",
-    outlined: "bg-white border-2 border-caramel-100",
+    default: "bg-white border border-line",
+    glass: "bg-white/90 border border-line",
+    outlined: "bg-white border border-line",
   };
 
   return (

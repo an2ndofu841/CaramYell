@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   FolderKanban,
   Users,
+  Building2,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 const nav = [
   { href: "/admin", label: "概要", icon: LayoutGrid, exact: true },
-  { href: "/admin/review", label: "審査", icon: ShieldCheck, exact: false },
+  { href: "/admin/applications", label: "掲載申請", icon: Building2, exact: false },
+  { href: "/admin/review", label: "プロジェクト審査", icon: ShieldCheck, exact: false },
   { href: "/admin/projects", label: "プロジェクト", icon: FolderKanban, exact: false },
   { href: "/admin/users", label: "ユーザー", icon: Users, exact: false },
 ];
@@ -37,23 +39,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   if (loading || !user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-candy-pink" />
+        <Loader2 size={28} className="animate-spin text-ink-muted" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-16" style={{ background: "#FFFBF5" }}>
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* サイドバー */}
-          <aside className="md:w-56 flex-shrink-0">
+    <div className="min-h-screen pt-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          <aside className="md:w-52 flex-shrink-0">
             <div className="md:sticky md:top-24">
-              <div className="flex items-center gap-2 px-3 py-2 mb-2">
-                <ShieldCheck size={18} className="text-caramel-500" />
-                <span className="font-black text-gray-800">運営CMS</span>
-              </div>
-              <nav className="flex md:flex-col gap-1 overflow-x-auto">
+              <p className="px-3 mb-3 text-xs font-bold text-ink-muted tracking-wide">運営CMS</p>
+              <nav className="flex md:flex-col gap-0.5 overflow-x-auto -mx-1 px-1">
                 {nav.map((item) => {
                   const active = item.exact
                     ? pathname === item.href
@@ -64,18 +62,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-sm font-bold whitespace-nowrap transition-colors",
+                        "flex items-center gap-2.5 px-3 h-9 rounded-md text-sm whitespace-nowrap transition-colors",
                         active
-                          ? "text-white shadow-sm"
-                          : "text-gray-600 hover:bg-caramel-50"
+                          ? "bg-white border border-line text-ink font-bold"
+                          : "text-ink-soft hover:bg-cream-100 border border-transparent"
                       )}
-                      style={
-                        active
-                          ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
-                          : {}
-                      }
                     >
-                      <Icon size={16} />
+                      <Icon size={15} className={active ? "text-ink" : "text-ink-muted"} />
                       {item.label}
                     </Link>
                   );
@@ -84,7 +77,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
           </aside>
 
-          {/* コンテンツ */}
           <main className="flex-1 min-w-0">{children}</main>
         </div>
       </div>

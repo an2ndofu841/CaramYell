@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowRight, Plus } from "lucide-react";
 import LegalPageLayout from "@/components/layout/LegalPageLayout";
 import { BACKER_FEE_PERCENT, feeExample } from "@/lib/config/fees";
 import { paymentMethodList } from "@/lib/config/payment-methods";
@@ -21,7 +22,6 @@ type FaqItem = {
 
 type FaqGroup = {
   id: string;
-  emoji: string;
   title: string;
   items: FaqItem[];
 };
@@ -29,7 +29,6 @@ type FaqGroup = {
 const GROUPS: FaqGroup[] = [
   {
     id: "backing",
-    emoji: "💛",
     title: "応援するとき",
     items: [
       {
@@ -60,7 +59,6 @@ const GROUPS: FaqGroup[] = [
   },
   {
     id: "payment",
-    emoji: "💳",
     title: "お支払いと手数料",
     items: [
       {
@@ -92,7 +90,6 @@ const GROUPS: FaqGroup[] = [
   },
   {
     id: "reward",
-    emoji: "🎁",
     title: "リターンについて",
     items: [
       {
@@ -121,7 +118,6 @@ const GROUPS: FaqGroup[] = [
   },
   {
     id: "cancel",
-    emoji: "🔁",
     title: "キャンセル・返金",
     items: [
       {
@@ -146,7 +142,6 @@ const GROUPS: FaqGroup[] = [
   },
   {
     id: "account",
-    emoji: "👤",
     title: "アカウント",
     items: [
       {
@@ -171,13 +166,17 @@ const GROUPS: FaqGroup[] = [
   },
   {
     id: "creator",
-    emoji: "🚀",
     title: "プロジェクトを掲載したい方へ",
     items: [
       {
         q: "誰でもプロジェクトを掲載できますか？",
-        a: "アカウント登録に加えて、掲載者としての利用の承認が必要です。承認後にプロジェクトを作成し、内容の審査を経てから公開されます。",
-        link: { href: "/guide", label: "掲載の流れを見る" },
+        a: "掲載には運営の承認が必要です。アカウントを登録したうえで、掲載申し込みフォームから事務所・団体名や予定している企画の内容をお送りください。承認後にプロジェクトを作成でき、掲載内容の確認を経てから公開されます。",
+        link: { href: "/apply", label: "掲載を申し込む" },
+      },
+      {
+        q: "どんな人・団体が申し込めますか？",
+        a: "芸能事務所・レーベル・アーティストの運営チームからの申し込みを受け付けています。個人で活動しているアーティストも申し込めます。生誕祭や周年企画、作品やグッズの制作など、アーティストの活動に関わる企画が対象です。",
+        link: { href: "/for-agencies", label: "事務所・レーベルの方へ" },
       },
       {
         q: "掲載に費用はかかりますか？",
@@ -185,7 +184,8 @@ const GROUPS: FaqGroup[] = [
       },
       {
         q: "公開までどれくらいかかりますか？",
-        a: "プロジェクトを作成して申請いただいたあと、内容を確認する審査があります。審査が完了しだい公開されます。内容に確認が必要な場合はご連絡することがあります。",
+        a: "掲載の申し込みが承認されたあと、プロジェクトを作成して申請いただくと、運営が掲載内容を確認します。確認が完了しだい公開されます。内容に確認が必要な場合はご連絡することがあります。",
+        link: { href: "/guide#creator", label: "掲載の流れを見る" },
       },
       {
         q: "公開したあとに内容を変更できますか？",
@@ -227,36 +227,32 @@ export default function FaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <LegalPageLayout
-        badge="❓ よくある質問"
+        eyebrow="FAQ"
         title="よくある質問"
-        lead="応援するとき、掲載するときによくいただく質問をまとめました。解決しない場合はお気軽にお問い合わせください。"
+        lead="応援するとき、掲載するときによくいただく質問をまとめました。解決しない場合はお問い合わせください。"
       >
-        <nav className="flex flex-wrap justify-center gap-2 mb-8">
+        <nav className="flex flex-wrap gap-x-5 gap-y-2 mb-10 text-sm">
           {GROUPS.map((group) => (
             <a
               key={group.id}
               href={`#${group.id}`}
-              className="px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-white border-2 border-caramel-100 text-gray-600 hover:border-caramel-300 hover:text-caramel-600 transition-colors"
+              className="font-bold text-ink-soft underline-offset-4 hover:text-ink hover:underline"
             >
-              <span className="mr-1.5">{group.emoji}</span>
               {group.title}
             </a>
           ))}
         </nav>
 
-        <div className="space-y-10">
+        <div className="space-y-12">
           {GROUPS.map((group) => (
             <section key={group.id} id={group.id} className="scroll-mt-28">
-              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span
-                  className="w-9 h-9 rounded-2xl flex items-center justify-center text-base"
-                  style={{ background: "rgba(245, 163, 75, 0.15)" }}
-                >
-                  {group.emoji}
-                </span>
+              <h2
+                className="text-xl font-bold text-ink mb-4"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
                 {group.title}
               </h2>
-              <div className="space-y-3">
+              <div className="rounded-xl border border-line bg-white divide-y divide-line">
                 {group.items.map((item) => (
                   <FaqEntry key={item.q} item={item} />
                 ))}
@@ -265,21 +261,16 @@ export default function FaqPage() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-3xl border-2 border-caramel-100 bg-caramel-50/50 p-6 sm:p-8 text-center">
-          <p className="text-2xl mb-2">📮</p>
-          <h2 className="text-base font-bold text-gray-800 mb-2">
-            解決しませんでしたか？
-          </h2>
-          <p className="text-sm text-gray-600 leading-relaxed mb-5">
-            {"ご不明な点は、お問い合わせ窓口からご連絡ください。内容を確認のうえご返信します。"}
-          </p>
+        <div className="mt-12 rounded-xl border border-line bg-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div>
+            <h2 className="text-base font-bold text-ink mb-1">解決しませんでしたか？</h2>
+            <p className="text-sm text-ink-soft leading-relaxed">
+              ご不明な点は、お問い合わせ窓口からご連絡ください。内容を確認のうえご返信します。
+            </p>
+          </div>
           <Link
             href="/contact"
-            className="inline-block px-8 py-3 rounded-full text-white font-bold btn-pop"
-            style={{
-              background: "linear-gradient(135deg, #F2807B, #F5A34B)",
-              boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)",
-            }}
+            className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors flex-shrink-0"
           >
             お問い合わせ
           </Link>
@@ -291,24 +282,23 @@ export default function FaqPage() {
 
 function FaqEntry({ item }: { item: FaqItem }) {
   return (
-    <details className="group rounded-2xl bg-white border-2 border-caramel-100 overflow-hidden">
-      <summary className="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-4 list-none [&::-webkit-details-marker]:hidden">
-        <span className="text-sm font-bold text-gray-800 pr-4">{item.q}</span>
-        <span
-          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-transform duration-300 group-open:rotate-45"
-          style={{ background: "rgba(245, 163, 75, 0.15)", color: "#F5A34B" }}
-        >
-          +
-        </span>
+    <details className="group">
+      <summary className="flex items-start justify-between gap-4 cursor-pointer px-5 sm:px-6 py-4 list-none [&::-webkit-details-marker]:hidden">
+        <span className="text-sm font-bold text-ink leading-relaxed">{item.q}</span>
+        <Plus
+          size={16}
+          className="flex-shrink-0 mt-0.5 text-ink-muted transition-transform duration-200 group-open:rotate-45"
+        />
       </summary>
       <div className="px-5 sm:px-6 pb-5 -mt-1">
-        <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
+        <p className="text-sm text-ink-soft leading-relaxed">{item.a}</p>
         {item.link && (
           <Link
             href={item.link.href}
-            className="inline-block mt-3 text-xs font-bold text-caramel-600 hover:underline"
+            className="inline-flex items-center gap-1 mt-3 text-xs font-bold text-ink hover:text-caramel-600 transition-colors"
           >
-            {item.link.label} →
+            {item.link.label}
+            <ArrowRight size={12} />
           </Link>
         )}
       </div>

@@ -37,11 +37,8 @@ export default async function ProjectPreviewPage({
   return (
     <>
       {/* プレビュー用の告知バー */}
-      <div
-        className="fixed top-0 left-0 right-0 z-[60] text-center text-sm font-bold text-white py-2 px-4"
-        style={{ background: "linear-gradient(135deg, #F2807B, #E8842C)" }}
-      >
-        👀 これはプレビューです（まだ公開されていません） · ステータス: {project.status}
+      <div className="fixed top-0 left-0 right-0 z-[60] text-center text-sm font-bold text-white bg-ink py-2 px-4">
+        プレビュー表示中（まだ公開されていません） · ステータス: {project.status}
       </div>
       <div className="pt-9">
         <ProjectDetailClient project={project} isPreview />

@@ -17,20 +17,20 @@ const UPDATED_AT = "2026年8月11日";
 export default function PrivacyPage() {
   return (
     <LegalPageLayout
-      badge="🔐 プライバシーポリシー"
+      eyebrow="Privacy"
       title="プライバシーポリシー"
       lead="CaramYell が、どのような情報を、何のために取得し、どこに渡しているかを具体的に記載しています。"
       updatedAt={UPDATED_AT}
     >
-      <div className="bg-white rounded-3xl shadow-soft p-6 sm:p-8 mb-6">
-        <p className="text-sm text-gray-600 leading-relaxed">
+      <div className="bg-white rounded-xl border border-line p-6 sm:p-8 mb-6">
+        <p className="text-sm text-ink-soft leading-relaxed">
           {"株式会社めしあがレーベル（以下「当社」といいます）は、クラウドファンディングサービス「CaramYell」（以下「本サービス」といいます）の提供にあたり取得する個人情報を、個人情報の保護に関する法律その他の関係法令を遵守して適切に取り扱います。"}
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-soft p-6 sm:p-8">
+      <div className="bg-white rounded-xl border border-line p-6 sm:p-8">
         <Article no="1" title="取得する情報">
-          <p className="font-bold text-gray-700">支援のお申し込み時</p>
+          <p className="font-bold text-ink">支援のお申し込み時</p>
           <List
             items={[
               <>
@@ -59,18 +59,18 @@ export default function PrivacyPage() {
             ]}
           />
 
-          <p className="font-bold text-gray-700 pt-2">アカウント登録時・プロフィール設定時</p>
+          <p className="font-bold text-ink pt-2">アカウント登録時・プロフィール設定時</p>
           <List
             items={[
               "メールアドレス、パスワード",
               "表示名、ユーザーID、自己紹介、Webサイト、X（旧Twitter）のアカウント名、プロフィール画像（いずれも任意項目を含みます）",
             ]}
           />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-muted">
             {"パスワードは、認証基盤である Supabase において暗号化（ハッシュ化）して保管され、当社が元のパスワードを知ることはできません。"}
           </p>
 
-          <p className="font-bold text-gray-700 pt-2">プロジェクトの掲載時</p>
+          <p className="font-bold text-ink pt-2">プロジェクトの掲載時</p>
           <List
             items={[
               "プロジェクトの内容（タイトル、説明、ストーリー、目標金額、募集期間、リターンの内容、画像など）",
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
             ]}
           />
 
-          <p className="font-bold text-gray-700 pt-2">自動的に取得する情報</p>
+          <p className="font-bold text-ink pt-2">自動的に取得する情報</p>
           <List
             items={[
               "アクセスに伴う技術的な情報（IPアドレス、ブラウザの種類、アクセス日時など）",
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
               "表示言語の設定（お使いのブラウザ内にのみ保存されます）",
             ]}
           />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-muted">
             {"IPアドレスは、短時間に大量のリクエストが行われていないかを判定する目的で一時的に参照するもので、データベースには保存していません。"}
           </p>
         </Article>
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
               "配送先情報（配送を伴うリターンを選んだ場合）",
             ]}
           />
-          <Callout icon="💡" title="「匿名で応援する」を選んだ場合">
+          <Callout title="「匿名で応援する」を選んだ場合">
             <p>
               {"匿名の設定は、プロジェクトページなどでニックネームを表示しないためのものです。リターンのお届けとご連絡のために、掲載者の管理画面では引き続きメールアドレスをご確認いただけます。掲載者に一切知られずに支援することはできませんので、あらかじめご了承ください。"}
             </p>
@@ -144,13 +144,13 @@ export default function PrivacyPage() {
           <div className="overflow-x-auto -mx-1 px-1">
             <table className="w-full text-xs sm:text-sm border-collapse">
               <thead>
-                <tr className="border-b-2 border-caramel-100">
-                  <th className="text-left font-bold text-gray-700 py-2 pr-3">事業者</th>
-                  <th className="text-left font-bold text-gray-700 py-2 pr-3">目的</th>
-                  <th className="text-left font-bold text-gray-700 py-2">渡す情報</th>
+                <tr className="border-b border-line-strong">
+                  <th className="text-left font-bold text-ink py-2 pr-3">事業者</th>
+                  <th className="text-left font-bold text-ink py-2 pr-3">目的</th>
+                  <th className="text-left font-bold text-ink py-2">渡す情報</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600">
+              <tbody className="text-ink-soft">
                 <VendorRow
                   name="Stripe, Inc.（米国）"
                   purpose="決済処理"
@@ -189,7 +189,7 @@ export default function PrivacyPage() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-muted">
             {"上記のうち米国の事業者への提供は、外国にある第三者への個人データの提供にあたります。いずれも各社が公表する個人情報保護の方針および契約に基づいて取り扱われます。"}
           </p>
         </Article>
@@ -231,7 +231,7 @@ export default function PrivacyPage() {
               "本サービスの運営上、重要なお知らせが必要な場合",
             ]}
           />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-muted">
             {"現在、営業目的のメールマガジンは配信していません。"}
           </p>
         </Article>
@@ -259,7 +259,7 @@ export default function PrivacyPage() {
           <p>
             {"プロフィールの内容はログイン後の設定画面からご自身で変更できます。メールアドレスの変更、パスワードの変更、アカウントの削除をご希望の場合は、お問い合わせ窓口までご連絡ください。"}
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-muted">
             {"なお、実施中のプロジェクトへの支援に関する情報など、リターンの提供や取引記録の保存に必要な情報は、削除をご請求いただいても対応できない場合があります。"}
           </p>
         </Article>
@@ -278,13 +278,13 @@ export default function PrivacyPage() {
 
         <Article no="14" title="お問い合わせ窓口">
           <p>{"個人情報の取り扱いに関するお問い合わせは、下記までご連絡ください。"}</p>
-          <div className="rounded-2xl bg-caramel-50/60 p-4 space-y-1">
-            <p className="font-bold text-gray-700">株式会社めしあがレーベル</p>
+          <div className="rounded-lg bg-cream-100 p-4 space-y-1">
+            <p className="font-bold text-ink">株式会社めしあがレーベル</p>
             <p>〒150-0044 東京都渋谷区円山町5番3号 MIEUX渋谷ビル8階</p>
             <p>
               <a
                 href="mailto:info@mlbl.co.jp"
-                className="font-bold text-caramel-600 hover:underline"
+                className="font-bold text-ink underline underline-offset-2 hover:text-caramel-600"
               >
                 info@mlbl.co.jp
               </a>
@@ -306,8 +306,8 @@ function VendorRow({
   data: string;
 }) {
   return (
-    <tr className="border-b border-caramel-100 last:border-b-0 align-top">
-      <td className="py-3 pr-3 font-semibold text-gray-700">{name}</td>
+    <tr className="border-b border-line last:border-b-0 align-top">
+      <td className="py-3 pr-3 font-semibold text-ink">{name}</td>
       <td className="py-3 pr-3">{purpose}</td>
       <td className="py-3">{data}</td>
     </tr>

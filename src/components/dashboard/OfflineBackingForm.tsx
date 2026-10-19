@@ -128,14 +128,13 @@ export default function OfflineBackingForm({
   };
 
   return (
-    <Card className="border-2 border-caramel-200">
+    <Card className="rounded-xl">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <h4 className="font-bold text-gray-800 flex items-center gap-2">
-            <Banknote size={18} className="text-caramel-500" />
+          <h4 className="font-bold text-ink">
             現地支援を記録
           </h4>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-ink-muted mt-1">
             会場などで現金を受け取った支援をここから登録します。手数料はかかりません。
             登録するとすぐ支援総額と支援者数に反映されます。
           </p>
@@ -143,7 +142,7 @@ export default function OfflineBackingForm({
         <button
           type="button"
           onClick={onClose}
-          className="p-1.5 rounded-full text-gray-400 hover:bg-caramel-50"
+          className="p-1.5 rounded-md text-ink-muted hover:bg-cream-100 hover:text-ink"
           aria-label="閉じる"
         >
           <X size={16} />
@@ -172,8 +171,8 @@ export default function OfflineBackingForm({
 
       {rewards.length > 0 && (
         <div className="mb-4">
-          <p className="text-sm font-semibold text-gray-700 mb-2">リターン</p>
-          <div className="space-y-2">
+          <p className="text-sm font-bold text-ink mb-2">リターン</p>
+          <div className="rounded-lg border border-line divide-y divide-line">
             {rewards.map((r) => {
               const remaining = remainingOf(r);
               const soldOut = remaining === 0;
@@ -182,18 +181,16 @@ export default function OfflineBackingForm({
                 <div
                   key={r.id}
                   className={cn(
-                    "flex items-center gap-3 p-3 rounded-2xl border-2",
-                    q > 0
-                      ? "border-caramel-300 bg-caramel-50"
-                      : "border-caramel-100 bg-white",
+                    "flex items-center gap-3 px-3 py-2.5",
+                    q > 0 ? "bg-cream-100" : "bg-white",
                     soldOut && "opacity-50"
                   )}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-800 truncate">
+                    <p className="text-sm font-bold text-ink truncate">
                       {r.title}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-ink-muted tabular-nums">
                       {formatCurrency(r.amount)}
                       {remaining != null && ` · 残り${remaining}`}
                       {r.needs_address && " · 住所が必要"}
@@ -204,22 +201,19 @@ export default function OfflineBackingForm({
                       type="button"
                       onClick={() => changeQty(r, -1)}
                       disabled={q === 0}
-                      className="w-8 h-8 rounded-full bg-caramel-100 text-caramel-600 flex items-center justify-center disabled:opacity-40"
+                      className="w-8 h-8 rounded-md border border-line-strong bg-white text-ink-soft hover:bg-cream-100 flex items-center justify-center disabled:opacity-40"
                       aria-label="1つ減らす"
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="w-6 text-center font-bold text-gray-800">
+                    <span className="w-6 text-center font-bold text-ink tabular-nums">
                       {q}
                     </span>
                     <button
                       type="button"
                       onClick={() => changeQty(r, 1)}
                       disabled={soldOut || (remaining != null && q >= remaining)}
-                      className="w-8 h-8 rounded-full text-white flex items-center justify-center disabled:opacity-40"
-                      style={{
-                        background: "linear-gradient(135deg, #F2807B, #F5A34B)",
-                      }}
+                      className="w-8 h-8 rounded-md border border-line-strong bg-white text-ink-soft hover:bg-cream-100 flex items-center justify-center disabled:opacity-40"
                       aria-label="1つ増やす"
                     >
                       <Plus size={14} />
@@ -251,11 +245,11 @@ export default function OfflineBackingForm({
           fullWidth
         />
         <div className="flex flex-col justify-end">
-          <div className="p-3 rounded-2xl bg-caramel-50 flex items-baseline justify-between">
-            <span className="text-sm font-semibold text-gray-600">
+          <div className="px-4 py-3 rounded-lg bg-cream-100 flex items-baseline justify-between">
+            <span className="text-sm font-semibold text-ink-soft">
               受け取った金額
             </span>
-            <span className="text-2xl font-bold text-caramel-600">
+            <span className="text-2xl font-bold text-ink tabular-nums">
               {formatCurrency(total)}
             </span>
           </div>
@@ -272,33 +266,33 @@ export default function OfflineBackingForm({
         fullWidth
       />
 
-      <label className="flex items-center gap-2 mt-3 text-sm text-gray-600 cursor-pointer">
+      <label className="flex items-center gap-2 mt-3 text-sm text-ink-soft cursor-pointer">
         <input
           type="checkbox"
           checked={isAnonymous}
           onChange={(e) => setIsAnonymous(e.target.checked)}
-          className="rounded border-gray-300"
+          className="rounded border-line-strong"
         />
         匿名で表示する
       </label>
 
       {(needsAddress || showAddress) ? (
-        <div className="mt-4 p-4 rounded-2xl border-2 border-caramel-100">
+        <div className="mt-4 p-4 rounded-lg border border-line">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-gray-700">
+            <p className="text-sm font-bold text-ink">
               お届け先{needsAddress ? "（発送が必要なリターンがあります）" : "（任意）"}
             </p>
             {!needsAddress && (
               <button
                 type="button"
                 onClick={() => setShowAddress(false)}
-                className="text-xs text-gray-400 hover:text-gray-600"
+                className="text-xs text-ink-muted hover:text-ink"
               >
                 閉じる
               </button>
             )}
           </div>
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-xs text-ink-muted mb-3">
             その場で手渡しした場合は空欄のままで構いません。
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -354,9 +348,10 @@ export default function OfflineBackingForm({
         <button
           type="button"
           onClick={() => setShowAddress(true)}
-          className="mt-3 text-xs font-semibold text-caramel-600 hover:underline"
+          className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-ink-soft underline underline-offset-4 decoration-line-strong hover:decoration-ink"
         >
-          + お届け先を入力する
+          <Plus size={12} />
+          お届け先を入力する
         </button>
       )}
 

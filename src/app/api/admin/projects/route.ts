@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     .select(
       `
       *,
-      profiles!projects_creator_id_fkey(id, display_name, avatar_url),
+      profiles!projects_creator_id_fkey(id, display_name, avatar_url, organization_name),
       categories(id, slug, name_ja, icon, color)
     `
     );

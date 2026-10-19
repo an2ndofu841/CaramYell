@@ -6,31 +6,33 @@ import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileTabBar from "@/components/layout/MobileTabBar";
-import FloatingParticles from "@/components/animations/FloatingParticles";
 import { SITE_NAME, SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "CaramYell | みんなで夢を叶えるクラウドファンディング",
+    default: "CaramYell | アーティストと応援企画のためのクラウドファンディング",
     template: "%s | CaramYell",
   },
   description:
-    "CaramYellは、手数料0%で誰でも簡単に使えるクラウドファンディングサービスです。アカウント登録なしで出資でき、最短30分で掲載スタート。AI支援でプロジェクト作成も簡単。",
+    "CaramYellは、アーティスト・アイドルの生誕祭や周年企画、作品づくりを支えるクラウドファンディングです。掲載手数料は0%。事務所・レーベル単位での掲載にも対応しています。",
   keywords: [
     "クラウドファンディング",
     "資金調達",
     "応援",
     "CaramYell",
     "手数料無料",
+    "生誕祭",
+    "応援企画",
+    "芸能事務所",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "CaramYell | みんなで夢を叶えるクラウドファンディング",
+    title: "CaramYell | アーティストと応援企画のためのクラウドファンディング",
     description:
-      "手数料0%・アカウント不要で出資できる、世界一やさしいクラウドファンディング",
+      "生誕祭・周年企画・作品づくりを、ファンの支援で形にする。掲載手数料0%、事務所単位での掲載にも対応。",
     type: "website",
     locale: "ja_JP",
     siteName: SITE_NAME,
@@ -38,8 +40,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CaramYell | みんなで夢を叶えるクラウドファンディング",
-    description: "手数料0%・アカウント不要で出資できる、世界一やさしいクラウドファンディング",
+    title: "CaramYell | アーティストと応援企画のためのクラウドファンディング",
+    description: "生誕祭・周年企画・作品づくりを、ファンの支援で形にする。掲載手数料0%、事務所単位での掲載にも対応。",
   },
 };
 
@@ -58,14 +60,13 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className="min-h-screen flex flex-col">
         <LocaleProvider>
         <AuthProvider>
-          <FloatingParticles />
           <Header />
           <main className="flex-1 page-enter pb-14 md:pb-0">{children}</main>
           <Footer />
@@ -75,11 +76,12 @@ export default function RootLayout({
             toastOptions={{
               style: {
                 background: "white",
-                color: "#4A2C17",
-                border: "2px solid #FFDFAE",
-                borderRadius: "16px",
+                color: "#1C1917",
+                border: "1px solid #E7E2DC",
+                borderRadius: "10px",
+                boxShadow: "0 8px 24px rgba(28, 25, 23, 0.08)",
                 fontFamily: "Noto Sans JP, sans-serif",
-                fontWeight: "600",
+                fontWeight: "500",
               },
             }}
           />

@@ -110,21 +110,21 @@ export default function MarkdownEditor({
   };
 
   const toolbarButton =
-    "p-2 rounded-lg text-gray-500 hover:text-caramel-600 hover:bg-caramel-50 transition-colors disabled:opacity-40";
+    "p-2 rounded-md text-ink-muted hover:text-ink hover:bg-cream-100 transition-colors disabled:opacity-40";
 
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {(label || labelExtra) && (
         <div className="flex items-center justify-between">
           {label && (
-            <p className="text-sm font-semibold text-gray-700">{label}</p>
+            <p className="text-sm font-bold text-ink">{label}</p>
           )}
           {labelExtra}
         </div>
       )}
 
-      <div className="rounded-2xl border-2 border-caramel-100 bg-white overflow-hidden focus-within:border-candy-pink transition-colors">
-        <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-caramel-100 flex-wrap">
+      <div className="rounded-lg border border-line-strong bg-white overflow-hidden focus-within:border-ink focus-within:ring-2 focus-within:ring-ink/10 transition-colors">
+        <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-line flex-wrap">
           <button
             type="button"
             onClick={() => apply((sel) => togglePrefix(sel, "## "))}
@@ -212,10 +212,10 @@ export default function MarkdownEditor({
                 type="button"
                 onClick={() => setTab(id)}
                 className={cn(
-                  "px-3 py-1 rounded-full text-xs font-bold transition-colors",
+                  "px-2.5 py-1 rounded-md text-xs font-bold transition-colors",
                   tab === id
-                    ? "bg-caramel-100 text-caramel-700"
-                    : "text-gray-400 hover:text-gray-600"
+                    ? "bg-cream-100 text-ink"
+                    : "text-ink-muted hover:text-ink"
                 )}
               >
                 {id === "write" ? "書く" : "プレビュー"}
@@ -231,14 +231,14 @@ export default function MarkdownEditor({
             onChange={(e) => onChange(e.target.value)}
             rows={rows}
             placeholder={placeholder}
-            className="w-full py-3 px-4 text-gray-800 placeholder:text-gray-400 outline-none resize-y bg-transparent"
+            className="w-full py-3 px-4 text-ink placeholder:text-ink-faint outline-none resize-y bg-transparent"
           />
         ) : (
           <div className="py-3 px-4 min-h-[8rem]">
             {value.trim() ? (
               <Markdown>{value}</Markdown>
             ) : (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-ink-muted">
                 まだ何も書かれていません
               </p>
             )}
@@ -256,7 +256,7 @@ export default function MarkdownEditor({
         />
       )}
 
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-xs text-ink-muted">{hint}</p>}
     </div>
   );
 }

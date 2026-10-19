@@ -2,18 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  Loader2,
-  ExternalLink,
-  Check,
-  X,
-  AlertTriangle,
-  Clock,
-} from "lucide-react";
-import Card from "@/components/ui/Card";
+import { Loader2, ExternalLink, Check, Clock, ImageIcon } from "lucide-react";
 import Badge from "@/components/ui/Badge";
-import { formatCurrency } from "@/lib/utils";
+import Button from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Input";
+import { cn, formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Project, Category, Profile } from "@/types";
 
@@ -66,7 +59,7 @@ export default function AdminReviewPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "処理に失敗しました");
       setProjects((prev) => prev.filter((p) => p.id !== project.id));
-      toast.success(action === "approve" ? "承認しました 🎉" : "却下しました");
+      toast.success(action === "approve" ? "承認しました" : "却下しました");
       setRejectTarget(null);
       setRejectReason("");
     } catch (err) {
@@ -78,26 +71,22 @@ export default function AdminReviewPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">プロジェクト審査</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <h1 className="text-2xl font-bold text-ink mb-1">プロジェクト審査</h1>
+      <p className="text-sm text-ink-muted mb-6">
         申請されたプロジェクトを承認・却下します
       </p>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-1 mb-6 border-b border-line">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setStatusTab(t.key)}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+            className={cn(
+              "px-3 py-2 -mb-px text-sm border-b-2 transition-colors",
               statusTab === t.key
-                ? "text-white shadow-sm"
-                : "bg-white text-gray-500 hover:bg-caramel-50 border-2 border-caramel-100"
-            }`}
-            style={
-              statusTab === t.key
-                ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
-                : {}
-            }
+                ? "border-ink text-ink font-bold"
+                : "border-transparent text-ink-muted hover:text-ink"
+            )}
           >
             {t.label}
           </button>
@@ -105,120 +94,100 @@ export default function AdminReviewPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16">
-          <Loader2 size={28} className="animate-spin text-candy-pink mx-auto" />
+        <div className="py-16 flex justify-center">
+          <Loader2 size={24} className="animate-spin text-ink-muted" />
         </div>
       ) : projects.length === 0 ? (
-        <Card>
-          <div className="text-center py-12">
-            <div className="text-5xl mb-3">🗂️</div>
-            <p className="font-bold text-gray-700">
-              {statusTab === "reviewing"
-                ? "審査待ちのプロジェクトはありません"
-                : "該当するプロジェクトはありません"}
-            </p>
-          </div>
-        </Card>
+        <div className="rounded-xl border border-line bg-white py-16 text-center text-sm text-ink-muted">
+          {statusTab === "reviewing"
+            ? "審査待ちのプロジェクトはありません"
+            : "該当するプロジェクトはありません"}
+        </div>
       ) : (
         <div className="space-y-4">
-          {projects.map((project, i) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <Card hover>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="w-full sm:w-24 h-20 rounded-2xl overflow-hidden bg-caramel-100 flex-shrink-0 flex items-center justify-center text-3xl">
-                    {project.main_image_url ? (
-                      <img
-                        src={project.main_image_url}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      project.categories?.icon || "📋"
+          {projects.map((project) => (
+            <article key={project.id} className="rounded-xl border border-line bg-white">
+              <div className="p-5 sm:p-6 flex flex-col sm:flex-row gap-4">
+                <div className="w-full sm:w-28 aspect-[16/10] sm:aspect-auto sm:h-20 rounded-lg overflow-hidden bg-cream-100 flex-shrink-0 flex items-center justify-center">
+                  {project.main_image_url ? (
+                    <img
+                      src={project.main_image_url}
+                      alt={project.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon size={20} className="text-ink-faint" />
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-bold text-ink line-clamp-2">{project.title}</h3>
+                    {project.categories && (
+                      <Badge color="gray" size="sm" className="flex-shrink-0">
+                        {project.categories.name_ja}
+                      </Badge>
                     )}
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="font-bold text-gray-800 line-clamp-2">
-                        {project.title}
-                      </h3>
-                      {project.categories && (
-                        <Badge color="caramel" size="sm">
-                          {project.categories.name_ja}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                      {project.tagline}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
-                      <span>
-                        作成者:{" "}
-                        <strong className="text-gray-600">
-                          {project.profiles?.display_name || "—"}
-                        </strong>
+                  <p className="text-sm text-ink-soft line-clamp-2 mb-2">{project.tagline}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-muted">
+                    <span>
+                      作成者:{" "}
+                      <strong className="text-ink">
+                        {project.profiles?.display_name || "—"}
+                      </strong>
+                    </span>
+                    <span className="tabular-nums">目標: {formatCurrency(project.goal_amount)}</span>
+                    {project.submitted_at && (
+                      <span className="flex items-center gap-1 tabular-nums">
+                        <Clock size={12} />
+                        {new Date(project.submitted_at).toLocaleString("ja-JP")}
                       </span>
-                      <span>目標: {formatCurrency(project.goal_amount)}</span>
-                      {project.submitted_at && (
-                        <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {new Date(project.submitted_at).toLocaleString("ja-JP")}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
+              </div>
 
-                <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-caramel-100">
-                  {project.preview_token && (
-                    <Link
-                      href={`/projects/preview/${project.preview_token}`}
-                      target="_blank"
-                      className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
+              <div className="flex flex-wrap items-center gap-2 px-5 sm:px-6 py-3 border-t border-line bg-cream-50 rounded-b-xl">
+                {project.preview_token && (
+                  <Link
+                    href={`/projects/preview/${project.preview_token}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-bold text-ink border border-line-strong bg-white hover:bg-cream-100 transition-colors"
+                  >
+                    <ExternalLink size={13} />
+                    内容をプレビュー
+                  </Link>
+                )}
+
+                {statusTab === "reviewing" && (
+                  <div className="flex gap-2 ml-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRejectTarget(project)}
+                      disabled={busyId === project.id}
+                      className="text-red-600"
                     >
-                      <ExternalLink size={14} />
-                      内容をプレビュー
-                    </Link>
-                  )}
-
-                  {statusTab === "reviewing" && (
-                    <div className="flex gap-2 ml-auto">
-                      <button
-                        onClick={() => setRejectTarget(project)}
-                        disabled={busyId === project.id}
-                        className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-500 border-2 border-red-100 hover:bg-red-50 transition-colors disabled:opacity-50"
-                      >
-                        <X size={14} />
-                        却下
-                      </button>
-                      <button
-                        onClick={() => review(project, "approve")}
-                        disabled={busyId === project.id}
-                        className="flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white transition-colors disabled:opacity-50"
-                        style={{ background: "linear-gradient(135deg, #34a853, #8FD4C4)" }}
-                      >
-                        {busyId === project.id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Check size={14} />
-                        )}
-                        承認して掲載
-                      </button>
-                    </div>
-                  )}
-                  {statusTab === "cancelled" && project.rejection_reason && (
-                    <span className="text-xs text-gray-400 ml-auto self-center">
-                      却下理由: {project.rejection_reason}
-                    </span>
-                  )}
-                </div>
-              </Card>
-            </motion.div>
+                      却下
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => review(project, "approve")}
+                      loading={busyId === project.id}
+                      icon={<Check size={14} />}
+                    >
+                      承認して掲載
+                    </Button>
+                  </div>
+                )}
+                {statusTab === "cancelled" && project.rejection_reason && (
+                  <span className="text-xs text-ink-muted ml-auto">
+                    却下理由: {project.rejection_reason}
+                  </span>
+                )}
+              </div>
+            </article>
           ))}
         </div>
       )}
@@ -228,50 +197,36 @@ export default function AdminReviewPage() {
           className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40"
           onClick={() => busyId === null && setRejectTarget(null)}
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white rounded-3xl shadow-soft-lg max-w-sm w-full p-6"
+          <div
+            className="bg-white rounded-xl border border-line max-w-sm w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-red-50 text-red-500">
-              <AlertTriangle size={28} />
-            </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-1 text-center">
-              却下しますか？
-            </h3>
-            <p className="text-sm text-gray-500 mb-4 text-center line-clamp-1 font-semibold">
-              「{rejectTarget.title}」
-            </p>
-            <textarea
+            <h3 className="text-lg font-bold text-ink mb-1">却下しますか？</h3>
+            <p className="text-sm text-ink-muted mb-4 line-clamp-1">「{rejectTarget.title}」</p>
+            <Textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="却下理由（任意）"
               rows={3}
-              className="w-full px-3 py-2 rounded-xl border-2 border-caramel-100 text-sm outline-none focus:border-candy-pink transition-colors mb-4"
+              className="text-sm"
             />
-            <div className="flex gap-3">
-              <button
+            <div className="flex gap-2 justify-end mt-4">
+              <Button
+                variant="outline"
                 onClick={() => setRejectTarget(null)}
                 disabled={busyId !== null}
-                className="flex-1 py-3 rounded-2xl font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors disabled:opacity-60"
               >
                 やめる
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => review(rejectTarget, "reject", rejectReason)}
-                disabled={busyId !== null}
-                className="flex-1 py-3 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                loading={busyId !== null}
               >
-                {busyId !== null ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <X size={18} />
-                )}
                 却下する
-              </button>
+              </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, Palette, RotateCcw, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, RotateCcw } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import ProjectThemePreview from "@/components/project/ProjectThemePreview";
@@ -59,14 +59,13 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="rounded-xl">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <Palette size={18} className="text-candy-pink" />
+            <h3 className="text-lg font-bold text-ink">
               デザインテンプレート
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-ink-muted mt-1">
               まずは雰囲気の近いテンプレートを選び、そのあと下の項目で気になるところだけ調整してください。
             </p>
           </div>
@@ -82,10 +81,10 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
                 type="button"
                 onClick={() => onChange(themeFromPreset(preset.id))}
                 className={cn(
-                  "text-left rounded-2xl border-2 overflow-hidden transition-all",
+                  "text-left rounded-lg border overflow-hidden transition-colors",
                   active
-                    ? "border-candy-pink shadow-candy"
-                    : "border-caramel-100 hover:border-caramel-300"
+                    ? "border-ink ring-1 ring-ink"
+                    : "border-line hover:border-line-strong"
                 )}
               >
                 <div
@@ -114,14 +113,12 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
                     Aa
                   </span>
                 </div>
-                <div className="p-3 bg-white">
-                  <p className="font-bold text-sm text-gray-800 flex items-center gap-1">
+                <div className="p-3 bg-white border-t border-line">
+                  <p className="font-bold text-sm text-ink flex items-center gap-1">
                     {preset.name}
-                    {active && (
-                      <Sparkles size={13} className="text-candy-pink" />
-                    )}
+                    {active && <Check size={14} className="text-ink" />}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-ink-muted mt-0.5 leading-relaxed">
                     {preset.description}
                   </p>
                 </div>
@@ -131,26 +128,26 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
         </div>
       </Card>
 
-      <Card>
-        <h3 className="text-lg font-bold text-gray-800 mb-1">プレビュー</h3>
-        <p className="text-sm text-gray-500 mb-4">
+      <Card className="rounded-xl">
+        <h3 className="text-lg font-bold text-ink mb-1">プレビュー</h3>
+        <p className="text-sm text-ink-muted mb-4">
           実際のページと同じ部品で表示しています。
         </p>
 
         {contrastWarnings.length > 0 && (
-          <div className="mb-4 p-4 rounded-2xl bg-yellow-50 border-2 border-yellow-200">
-            <p className="flex items-center gap-2 text-sm font-bold text-yellow-800">
+          <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <p className="flex items-center gap-2 text-sm font-bold text-amber-800">
               <AlertTriangle size={15} />
               カードの上で読みにくくなっている色があります
             </p>
             <ul className="mt-2 space-y-1">
               {contrastWarnings.map((w) => (
-                <li key={w.label} className="text-sm text-yellow-800">
+                <li key={w.label} className="text-sm text-amber-800">
                   {w.label}（コントラスト比 {w.ratio.toFixed(1)}：1）
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-yellow-700 mt-2 leading-relaxed">
+            <p className="text-xs text-amber-700 mt-2 leading-relaxed">
               金額のような大事な数字が背景に沈んでしまいます。文字は 4.5：1、大きく出る強調色は
               3：1 が目安です。背景と近い色相だと比率が足りていても沈んで見えるので、強調色は思い切って別の色相にすると読みやすくなります。
             </p>
@@ -168,8 +165,8 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
         />
       </Card>
 
-      <Card>
-        <h3 className="text-lg font-bold text-gray-800 mb-5">個別に調整</h3>
+      <Card className="rounded-xl">
+        <h3 className="text-lg font-bold text-ink mb-5">個別に調整</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
           <ColorField
@@ -217,7 +214,7 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
           />
 
           <div className="md:col-span-2">
-            <p className="text-sm font-bold text-gray-700 mb-2">
+            <p className="text-sm font-bold text-ink mb-2">
               ボタンのグラデーション
             </p>
             <div className="flex items-center gap-3 flex-wrap">
@@ -230,20 +227,20 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
                 onChange={(v) => patch({ gradient: buildGradient(gradFrom, v) })}
               />
               <span
-                className="flex-1 min-w-[160px] h-9 rounded-full"
+                className="flex-1 min-w-[160px] h-9 rounded-lg border border-line"
                 style={{ background: theme.gradient }}
               />
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-bold text-gray-700 block mb-2">
+            <label className="text-sm font-bold text-ink block mb-2">
               見出しのフォント
             </label>
             <select
               value={theme.font}
               onChange={(e) => patch({ font: e.target.value as ThemeFontKey })}
-              className="w-full px-4 py-2.5 rounded-xl border-2 border-caramel-100 bg-white text-sm font-medium text-gray-700 focus:border-caramel-300 outline-none"
+              className="w-full h-11 px-3.5 rounded-lg border border-line-strong bg-white text-sm text-ink focus:border-ink focus:ring-2 focus:ring-ink/10 outline-none"
             >
               {(Object.keys(THEME_FONTS) as ThemeFontKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -254,7 +251,7 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
           </div>
 
           <div>
-            <label className="text-sm font-bold text-gray-700 block mb-2">
+            <label className="text-sm font-bold text-ink block mb-2">
               角の丸み
             </label>
             <div className="flex items-center gap-3">
@@ -267,9 +264,9 @@ export default function ThemeEditor({ theme, onChange, preview }: Props) {
                 onChange={(e) =>
                   patch({ radius: `${Number(e.target.value) / 16}rem` })
                 }
-                className="flex-1 accent-candy-pink"
+                className="flex-1 accent-ink"
               />
-              <span className="text-sm font-semibold text-gray-500 w-16 text-right">
+              <span className="text-sm font-semibold text-ink-muted w-16 text-right tabular-nums">
                 {Math.round(parseFloat(theme.radius) * 16)}px
               </span>
             </div>
@@ -301,7 +298,7 @@ function ColorSwatch({
   const hex = /^#[0-9a-fA-F]{6}$/.test(value.trim()) ? value.trim() : "#ffffff";
   return (
     <label
-      className="w-10 h-10 rounded-xl border-2 border-caramel-100 cursor-pointer overflow-hidden flex-shrink-0"
+      className="w-10 h-10 rounded-lg border border-line-strong cursor-pointer overflow-hidden flex-shrink-0"
       style={{ background: value }}
     >
       <input
@@ -327,10 +324,10 @@ function ColorField({
 }) {
   return (
     <div>
-      <label className="text-sm font-bold text-gray-700 block mb-2">
+      <label className="text-sm font-bold text-ink block mb-2">
         {label}
         {hint && (
-          <span className="ml-2 text-xs font-medium text-gray-400">{hint}</span>
+          <span className="ml-2 text-xs font-medium text-ink-muted">{hint}</span>
         )}
       </label>
       <div className="flex items-center gap-2">
@@ -340,7 +337,7 @@ function ColorField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           spellCheck={false}
-          className="flex-1 min-w-0 px-3 py-2 rounded-xl border-2 border-caramel-100 bg-white text-xs font-mono text-gray-700 focus:border-caramel-300 outline-none"
+          className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-line-strong bg-white text-xs font-mono text-ink focus:border-ink focus:ring-2 focus:ring-ink/10 outline-none"
         />
       </div>
     </div>

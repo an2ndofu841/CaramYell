@@ -3,13 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-  TrendingUp,
-  Users,
-  DollarSign,
+  ImageIcon,
   Plus,
-  BarChart3,
   Eye,
   Share2,
   ChevronRight,
@@ -20,12 +16,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
-import AnimatedSection from "@/components/animations/AnimatedSection";
 import DashboardShell from "../DashboardShell";
-import { formatCurrency, formatNumber, getStatusLabel } from "@/lib/utils";
+import { cn, formatCurrency, formatNumber, getStatusLabel } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import type { Project, Category, Reward } from "@/types";
 
@@ -95,10 +89,10 @@ export default function CreatorDashboardClient() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-cream-50">
         <div className="text-center">
-          <Loader2 size={32} className="animate-spin text-candy-pink mx-auto mb-4" />
-          <p className="text-gray-500 font-semibold">読み込み中...</p>
+          <Loader2 size={24} className="animate-spin text-ink-muted mx-auto mb-3" />
+          <p className="text-sm text-ink-muted">読み込み中...</p>
         </div>
       </div>
     );
@@ -135,93 +129,72 @@ export default function CreatorDashboardClient() {
     );
   };
 
+  const summary = [
+    { label: "累計支援金額", value: formatCurrency(totalRaised) },
+    { label: "合計支援者数", value: `${formatNumber(totalBackers)}人` },
+    { label: "掲載中プロジェクト", value: `${activeProjects.length}件` },
+    { label: "全プロジェクト", value: `${projects.length}件` },
+  ];
+
+  const actionClass =
+    "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-ink-muted hover:bg-cream-50 hover:text-ink transition-colors";
+
   return (
     <DashboardShell
       title="掲載中のプロジェクト"
-      description="プロジェクトの状況を管理しましょう"
+      description="支援の状況と支援者を確認・管理できます"
       actions={
         <Link href="/projects/create">
-          <Button icon={<Plus size={18} />} size="md">
-            <span className="hidden sm:inline">新しいプロジェクト</span>
+          <Button icon={<Plus size={16} />} size="md">
+            <span className="hidden sm:inline">新規作成</span>
           </Button>
         </Link>
       }
     >
       <>
-        {/* サマリーカード */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            {
-              label: "累計支援金額",
-              value: formatCurrency(totalRaised),
-              icon: <DollarSign size={20} />,
-              color: "#F2807B",
-            },
-            {
-              label: "合計支援者数",
-              value: `${formatNumber(totalBackers)}人`,
-              icon: <Users size={20} />,
-              color: "#F5A34B",
-            },
-            {
-              label: "掲載中プロジェクト",
-              value: `${activeProjects.length}件`,
-              icon: <TrendingUp size={20} />,
-              color: "#8FD4C4",
-            },
-            {
-              label: "全プロジェクト",
-              value: `${projects.length}件`,
-              icon: <BarChart3 size={20} />,
-              color: "#C9A87C",
-            },
-          ].map((item, i) => (
-            <AnimatedSection key={i} animation="scale" delay={i * 80}>
-              <Card>
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-white"
-                    style={{ background: item.color }}
-                  >
-                    {item.icon}
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-gray-800">{item.value}</p>
-                <p className="text-xs text-gray-400 font-medium mt-1">
-                  {item.label}
-                </p>
-              </Card>
-            </AnimatedSection>
+        {/* サマリー */}
+        <dl className="grid grid-cols-2 lg:grid-cols-4 rounded-xl border border-line bg-white mb-8 overflow-hidden">
+          {summary.map((item, i) => (
+            <div
+              key={item.label}
+              className={cn(
+                "px-4 sm:px-6 py-4 sm:py-5 min-w-0 border-line",
+                i % 2 === 1 && "border-l",
+                i >= 2 && "border-t lg:border-t-0",
+                i === 2 && "lg:border-l"
+              )}
+            >
+              <dt className="text-xs font-bold text-ink-muted mb-1 truncate">
+                {item.label}
+              </dt>
+              <dd className="text-xl sm:text-2xl font-bold text-ink tabular-nums truncate">
+                {item.value}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
 
         {/* プロジェクト一覧 */}
         {projects.length === 0 ? (
-          <AnimatedSection animation="fade-up">
-            <Card>
-              <div className="text-center py-12">
-                <div className="text-5xl mb-4">🚀</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                  最初のプロジェクトを作りましょう
-                </h2>
-                <p className="text-gray-500 mb-6">
-                  AIのサポートで、最短10分でページが完成します
-                </p>
-                <Link href="/projects/create">
-                  <Button icon={<Plus size={18} />} size="lg">
-                    プロジェクトを作る
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          </AnimatedSection>
-        ) : (
-          <AnimatedSection animation="fade-up">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
-              マイプロジェクト
+          <div className="rounded-xl border border-line bg-white px-6 py-14 text-center">
+            <h2
+              className="text-lg font-bold text-ink mb-2"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              まだプロジェクトはありません
             </h2>
-            <div className="space-y-4">
-              {projects.map((project, i) => {
+            <p className="text-sm text-ink-muted leading-relaxed mb-6">
+              作成したプロジェクトはここに並び、支援の状況や支援者を管理できます。
+            </p>
+            <Link href="/projects/create">
+              <Button icon={<Plus size={16} />}>プロジェクトを作成する</Button>
+            </Link>
+          </div>
+        ) : (
+          <section>
+            <h2 className="text-xs font-bold text-ink-muted mb-3">プロジェクト</h2>
+            <div className="space-y-3">
+              {projects.map((project) => {
                 const amount =
                   project.live_current_amount || project.current_amount || 0;
                 const backers =
@@ -244,151 +217,136 @@ export default function CreatorDashboardClient() {
                 );
 
                 return (
-                  <motion.div
+                  <article
                     key={project.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08 }}
+                    className="rounded-xl border border-line bg-white"
                   >
-                    <Card hover>
-                      <div className="flex gap-4">
-                        <div className="w-20 h-16 rounded-2xl overflow-hidden bg-caramel-100 flex-shrink-0 flex items-center justify-center text-3xl">
-                          {project.main_image_url ? (
-                            <img
-                              src={project.main_image_url}
-                              alt={project.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            project.categories?.icon || "📋"
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h3 className="font-bold text-gray-800 text-sm line-clamp-2 leading-snug">
-                              {project.title}
-                            </h3>
-                            {statusBadge(project.status)}
-                          </div>
-
-                          <ProgressBar percentage={progress} className="mb-2" />
-
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span>
-                              <strong className="text-caramel-600">
-                                {formatCurrency(amount)}
-                              </strong>{" "}
-                              / {formatCurrency(project.goal_amount)}
-                            </span>
-                            <span>
-                              {backers}人が応援 · 残り{daysLeft}日
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 mt-4 pt-3 border-t border-caramel-100">
-                        <Link
-                          href={`/projects/${project.slug || project.id}`}
-                          className="flex-1"
-                        >
-                          <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors">
-                            <Eye size={14} />
-                            プレビュー
-                          </button>
-                        </Link>
-                        <Link
-                          href={`/dashboard/projects/${project.id}`}
-                          className="flex-1"
-                        >
-                          <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white transition-colors"
-                            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}>
-                            管理する
-                            <ChevronRight size={14} />
-                          </button>
-                        </Link>
-                        {isEditable ? (
-                          // 未公開のうちは画像・目標金額・リターンまで作成画面で直せる。
-                          // シェアはまだ意味がないので入れ替える。
-                          <Link
-                            href={`/projects/create?id=${project.id}`}
-                            className="flex-1"
-                          >
-                            <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors">
-                              <Pencil size={14} />
-                              編集を続ける
-                            </button>
-                          </Link>
+                    <div className="p-4 sm:p-5 flex gap-4">
+                      <div className="w-20 h-16 rounded-lg overflow-hidden bg-cream-100 flex-shrink-0 flex items-center justify-center text-ink-faint">
+                        {project.main_image_url ? (
+                          <img
+                            src={project.main_image_url}
+                            alt={project.title}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-caramel-50 hover:text-caramel-600 transition-colors">
-                            <Share2 size={14} />
-                            シェア
-                          </button>
+                          <ImageIcon size={18} />
                         )}
-                        <button
-                          onClick={() => setDeleteTarget(project)}
-                          aria-label="削除"
-                          className="flex-shrink-0 flex items-center justify-center px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
                       </div>
-                    </Card>
-                  </motion.div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-bold text-ink text-sm line-clamp-2 leading-snug">
+                            {project.title}
+                          </h3>
+                          {statusBadge(project.status)}
+                        </div>
+
+                        <ProgressBar percentage={progress} className="mb-2" />
+
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-ink-muted">
+                          <span className="tabular-nums">
+                            <strong className="font-bold text-ink">
+                              {formatCurrency(amount)}
+                            </strong>{" "}
+                            / {formatCurrency(project.goal_amount)}
+                          </span>
+                          <span className="tabular-nums">
+                            {backers}人が応援 · 残り{daysLeft}日
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex border-t border-line divide-x divide-line">
+                      <Link
+                        href={`/projects/${project.slug || project.id}`}
+                        className={cn(actionClass, "rounded-bl-xl")}
+                      >
+                        <Eye size={14} />
+                        プレビュー
+                      </Link>
+                      <Link
+                        href={`/dashboard/projects/${project.id}`}
+                        className={cn(actionClass, "text-ink font-bold")}
+                      >
+                        管理する
+                        <ChevronRight size={14} />
+                      </Link>
+                      {isEditable ? (
+                        // 未公開のうちは画像・目標金額・リターンまで作成画面で直せる。
+                        // シェアはまだ意味がないので入れ替える。
+                        <Link
+                          href={`/projects/create?id=${project.id}`}
+                          className={actionClass}
+                        >
+                          <Pencil size={14} />
+                          編集を続ける
+                        </Link>
+                      ) : (
+                        <button className={actionClass}>
+                          <Share2 size={14} />
+                          シェア
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setDeleteTarget(project)}
+                        aria-label="削除"
+                        className="flex-shrink-0 flex items-center justify-center px-4 py-2.5 text-ink-muted hover:bg-red-50 hover:text-red-600 transition-colors rounded-br-xl"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </article>
                 );
               })}
             </div>
-          </AnimatedSection>
+          </section>
         )}
 
         {/* 削除確認モーダル */}
         {deleteTarget && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !isDeleting && setDeleteTarget(null)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white rounded-3xl shadow-soft-lg max-w-sm w-full p-6 text-center"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40"
+            onClick={() => !isDeleting && setDeleteTarget(null)}
           >
-            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-red-50 text-red-500">
-              <AlertTriangle size={28} />
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="bg-white rounded-xl border border-line max-w-sm w-full p-6 animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-base font-bold text-ink mb-2 flex items-center gap-2">
+                <AlertTriangle size={18} className="text-red-600 flex-shrink-0" />
+                プロジェクトを削除しますか？
+              </h3>
+              <p className="text-sm text-ink-soft mb-1 line-clamp-2 font-semibold">
+                「{deleteTarget.title}」
+              </p>
+              <p className="text-xs text-ink-muted mb-6">
+                この操作は取り消せません。リターン・活動報告なども削除されます。
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  fullWidth
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={isDeleting}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  variant="danger"
+                  fullWidth
+                  onClick={handleDelete}
+                  loading={isDeleting}
+                  icon={<Trash2 size={16} />}
+                >
+                  削除する
+                </Button>
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">
-              プロジェクトを削除しますか？
-            </h3>
-            <p className="text-sm text-gray-500 mb-1 line-clamp-2 font-semibold">
-              「{deleteTarget.title}」
-            </p>
-            <p className="text-xs text-gray-400 mb-6">
-              この操作は取り消せません。リターン・活動報告なども削除されます。
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                disabled={isDeleting}
-                className="flex-1 py-3 rounded-2xl font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors disabled:opacity-60"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex-1 py-3 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {isDeleting ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Trash2 size={18} />
-                )}
-                削除する
-              </button>
-            </div>
-          </motion.div>
-        </div>
+          </div>
         )}
       </>
     </DashboardShell>

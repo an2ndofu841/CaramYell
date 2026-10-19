@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, HelpCircle, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/Input";
 import EnglishPanel from "@/components/project/EnglishPanel";
 import { FAQ_LIMITS } from "@/lib/project/faqs";
@@ -43,11 +43,10 @@ export default function FaqEditor({
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-          <HelpCircle size={16} className="text-caramel-500" />
+        <p className="text-sm font-bold text-ink">
           よくある質問（任意）
         </p>
-        <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+        <p className="text-xs text-ink-muted mt-1 leading-relaxed">
           支援者から聞かれそうなことを先に書いておけます。ここに書いたものが、
           手数料や決済方法などの共通の質問より上に並びます。
         </p>
@@ -56,10 +55,10 @@ export default function FaqEditor({
       {items.map((item, i) => (
         <div
           key={i}
-          className="rounded-2xl border-2 border-caramel-100 bg-white p-4 space-y-3"
+          className="rounded-lg border border-line bg-white p-4 space-y-3"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400">
+            <span className="text-xs font-bold text-ink-muted">
               質問 {i + 1}
             </span>
             <div className="flex items-center gap-1">
@@ -68,7 +67,7 @@ export default function FaqEditor({
                 onClick={() => move(i, -1)}
                 disabled={i === 0}
                 aria-label="上へ"
-                className="p-1.5 rounded-full text-gray-400 hover:bg-caramel-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                className="p-1.5 rounded-md text-ink-muted hover:bg-cream-100 hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent"
               >
                 <ChevronUp size={16} />
               </button>
@@ -77,7 +76,7 @@ export default function FaqEditor({
                 onClick={() => move(i, 1)}
                 disabled={i === items.length - 1}
                 aria-label="下へ"
-                className="p-1.5 rounded-full text-gray-400 hover:bg-caramel-50 disabled:opacity-30 disabled:hover:bg-transparent"
+                className="p-1.5 rounded-md text-ink-muted hover:bg-cream-100 hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent"
               >
                 <ChevronDown size={16} />
               </button>
@@ -85,7 +84,7 @@ export default function FaqEditor({
                 type="button"
                 onClick={() => remove(i)}
                 aria-label="削除"
-                className="p-1.5 rounded-full text-red-400 hover:bg-red-50"
+                className="p-1.5 rounded-md text-ink-muted hover:text-red-600 hover:bg-red-50"
               >
                 <Trash2 size={16} />
               </button>
@@ -135,7 +134,7 @@ export default function FaqEditor({
         <button
           type="button"
           onClick={add}
-          className="w-full py-3 rounded-2xl border-2 border-dashed border-caramel-200 text-caramel-500 text-sm font-bold hover:border-caramel-300 hover:bg-caramel-50 transition-all duration-200 flex items-center justify-center gap-2"
+          className="w-full h-11 rounded-lg border border-dashed border-line-strong text-ink-soft text-sm font-bold hover:bg-cream-50 hover:text-ink transition-colors flex items-center justify-center gap-2"
         >
           <Plus size={16} />
           質問を追加する

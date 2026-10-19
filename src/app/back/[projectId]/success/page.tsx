@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CircleCheck } from "lucide-react";
 import {
   getStripeClient,
   recordBackingFromSession,
@@ -45,38 +46,42 @@ export default async function BackingSuccessPage({
   const email = session?.customer_details?.email || session?.customer_email;
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center pt-20 pb-16 px-4"
-      style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}
-    >
-      <div className="max-w-md w-full text-center">
-        <div className="text-7xl mb-4">🎉</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-3">
-          応援ありがとうございます！
+    <div className="min-h-screen bg-cream-50 flex items-center justify-center pt-24 pb-16 px-4">
+      <div className="max-w-md w-full text-center rounded-xl border border-line bg-white px-6 py-10 sm:px-10">
+        <CircleCheck
+          size={32}
+          strokeWidth={1.75}
+          className="mx-auto mb-4 text-emerald-700"
+        />
+        <h1
+          className="text-2xl font-bold text-ink mb-3"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          応援ありがとうございます
         </h1>
 
         {paid ? (
           <>
-            <p className="text-gray-500 leading-relaxed mb-2">
+            <p className="text-ink-soft leading-relaxed mb-2">
               決済が完了しました。
               {total != null && (
                 <>
                   <br />
                   お支払い金額：
-                  <span className="font-bold text-caramel-600">
+                  <span className="font-bold text-ink tabular-nums">
                     ¥{total.toLocaleString()}
                   </span>
                 </>
               )}
             </p>
             {email && (
-              <p className="text-sm text-gray-400 mb-8">
-                確認メールを <strong>{email}</strong> にお送りします。
+              <p className="text-sm text-ink-muted mb-8">
+                確認メールを <strong className="text-ink">{email}</strong> にお送りします。
               </p>
             )}
           </>
         ) : (
-          <p className="text-gray-500 leading-relaxed mb-8">
+          <p className="text-ink-soft leading-relaxed mb-8">
             お支払い手続きを受け付けました。反映まで少しお時間がかかる場合があります。
           </p>
         )}
@@ -84,17 +89,13 @@ export default async function BackingSuccessPage({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href={`/projects/${projectId}`}
-            className="px-8 py-3 rounded-full text-white font-bold btn-pop"
-            style={{
-              background: "linear-gradient(135deg, #F2807B, #F5A34B)",
-              boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)",
-            }}
+            className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
           >
             プロジェクトに戻る
           </Link>
           <Link
             href="/projects"
-            className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
+            className="inline-flex items-center justify-center h-11 px-6 rounded-lg border border-line-strong bg-white text-sm font-bold text-ink hover:bg-cream-100 transition-colors"
           >
             他のプロジェクトを見る
           </Link>

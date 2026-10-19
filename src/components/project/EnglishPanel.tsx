@@ -32,7 +32,7 @@ export default function EnglishPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border-2 border-caramel-100 bg-caramel-50/40 overflow-hidden",
+        "rounded-lg border border-line bg-cream-50 overflow-hidden",
         className
       )}
     >
@@ -42,15 +42,15 @@ export default function EnglishPanel({
         aria-expanded={open}
         className="w-full flex items-center gap-2 px-4 py-3 text-left"
       >
-        <Languages size={16} className="text-caramel-500 flex-shrink-0" />
-        <span className="text-sm font-bold text-gray-700">英語表示（任意）</span>
+        <Languages size={16} className="text-ink-muted flex-shrink-0" />
+        <span className="text-sm font-bold text-ink">英語表示（任意）</span>
         {hasContent && !open && (
-          <span className="text-xs font-semibold text-caramel-500">入力済み</span>
+          <span className="text-xs font-semibold text-ink-muted">入力済み</span>
         )}
         <ChevronDown
           size={16}
           className={cn(
-            "ml-auto flex-shrink-0 text-gray-400 transition-transform duration-200",
+            "ml-auto flex-shrink-0 text-ink-muted transition-transform duration-200",
             open && "rotate-180"
           )}
         />
@@ -58,7 +58,7 @@ export default function EnglishPanel({
 
       {open && (
         <div className="px-4 pb-4 space-y-4">
-          <p className="text-xs text-gray-500 leading-relaxed">{note}</p>
+          <p className="text-xs text-ink-muted leading-relaxed">{note}</p>
           {children}
         </div>
       )}

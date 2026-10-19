@@ -10,7 +10,6 @@ import {
   Download,
   Search,
   Loader2,
-  ClipboardList,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -318,20 +317,20 @@ export default function FulfillmentTab({
           <button
             key={s}
             onClick={() => setFilter(filter === s ? "all" : s)}
+            aria-pressed={filter === s}
             className={cn(
-              "p-3 rounded-2xl border-2 text-left transition-all",
+              "px-4 py-3 rounded-xl border text-left transition-colors",
               filter === s
-                ? "border-candy-pink bg-candy-pink/5"
-                : "border-caramel-100 bg-white hover:border-caramel-200"
+                ? "border-ink bg-white ring-1 ring-ink"
+                : "border-line bg-white hover:border-line-strong"
             )}
           >
-            <div className="flex items-center gap-1.5 text-gray-500 mb-1">
-              {STATUS_META[s].icon}
-              <span className="text-xs font-bold">{STATUS_META[s].label}</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-800">
+            <p className="text-xs font-bold text-ink-muted mb-1">
+              {STATUS_META[s].label}
+            </p>
+            <p className="text-2xl font-bold text-ink tabular-nums">
               {counts[s]}
-              <span className="text-xs font-semibold text-gray-400 ml-1">件</span>
+              <span className="text-xs font-semibold text-ink-muted ml-1">件</span>
             </p>
           </button>
         ))}
@@ -339,25 +338,24 @@ export default function FulfillmentTab({
 
       {/* 用意するもの（未発送分の合計と送り先） */}
       {shipments.length > 0 && (
-        <Card>
+        <Card className="rounded-xl">
           <div className="mb-3">
-            <h3 className="flex items-center gap-1.5 font-bold text-gray-800">
-              <ClipboardList size={16} className="text-caramel-500" />
+            <h3 className="flex flex-wrap items-baseline gap-x-2 font-bold text-ink">
               用意するもの
-              <span className="text-xs font-semibold text-gray-400">
+              <span className="text-xs font-semibold text-ink-muted tabular-nums">
                 未発送 {unshipped.length}件分
               </span>
             </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-ink-muted mt-0.5">
               上位プランには、それより安いリターンもすべて含めて数えています。同じ人が複数回支援している場合は、その回数分を合算しています。品目を押すとその送り先だけに絞り込めます
             </p>
           </div>
           {prepRows.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">
+            <p className="text-sm text-ink-muted py-4 text-center">
               未発送の品目はありません
             </p>
           ) : (
-            <ul className="divide-y divide-caramel-100">
+            <ul className="divide-y divide-line">
               {prepRows.map((row) => (
                 <li key={row.key} className="py-3 first:pt-0 last:pb-0">
                   <button
@@ -365,16 +363,16 @@ export default function FulfillmentTab({
                       setItemFilter(itemFilter === row.key ? null : row.key)
                     }
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors",
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
                       itemFilter === row.key
-                        ? "bg-candy-pink/10"
-                        : "hover:bg-caramel-50"
+                        ? "bg-cream-100 ring-1 ring-inset ring-line-strong"
+                        : "hover:bg-cream-50"
                     )}
                   >
-                    <span className="font-bold text-gray-800 min-w-0 truncate">
+                    <span className="font-bold text-ink min-w-0 truncate">
                       {row.title}
                     </span>
-                    <span className="ml-auto flex items-baseline gap-0.5 text-caramel-600 font-bold tabular-nums flex-shrink-0">
+                    <span className="ml-auto flex items-baseline gap-0.5 text-ink font-bold tabular-nums flex-shrink-0">
                       <span className="text-2xl">{row.total}</span>
                       <span className="text-xs">個</span>
                     </span>
@@ -383,11 +381,11 @@ export default function FulfillmentTab({
                     {row.recipients.map((r) => (
                       <span
                         key={r.shipmentKey}
-                        className="px-2 py-0.5 rounded-lg bg-caramel-50 text-xs text-gray-600"
+                        className="px-2 py-0.5 rounded-md bg-cream-100 text-xs text-ink-soft"
                       >
                         {r.name}
                         {r.quantity > 1 && (
-                          <span className="font-bold text-caramel-600 ml-1">
+                          <span className="font-bold text-ink ml-1 tabular-nums">
                             ×{r.quantity}
                           </span>
                         )}
@@ -406,13 +404,13 @@ export default function FulfillmentTab({
         <div className="relative flex-1">
           <Search
             size={16}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted"
           />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="氏名・メール・住所で検索"
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-caramel-100 text-sm outline-none focus:border-candy-pink transition-colors"
+            className="w-full h-10 pl-10 pr-4 rounded-lg border border-line-strong bg-white text-sm text-ink placeholder:text-ink-faint outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 transition-colors"
           />
         </div>
         <div className="flex gap-2">
@@ -422,7 +420,7 @@ export default function FulfillmentTab({
                 setFilter("all");
                 setItemFilter(null);
               }}
-              className="px-4 py-2.5 rounded-2xl text-sm font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors whitespace-nowrap"
+              className="h-10 px-4 rounded-lg text-sm font-bold text-ink-soft border border-line-strong bg-white hover:bg-cream-100 transition-colors whitespace-nowrap"
             >
               絞り込み解除
             </button>
@@ -430,8 +428,7 @@ export default function FulfillmentTab({
           <button
             onClick={exportCsv}
             disabled={filtered.length === 0}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-bold text-white disabled:opacity-40 whitespace-nowrap"
-            style={{ background: "linear-gradient(135deg, #C9A87C, #8FD4C4)" }}
+            className="flex items-center gap-1.5 h-10 px-4 rounded-lg text-sm font-bold text-white bg-ink hover:bg-ink-soft transition-colors disabled:opacity-40 whitespace-nowrap"
           >
             <Download size={15} />
             CSV書き出し
@@ -440,22 +437,21 @@ export default function FulfillmentTab({
       </div>
 
       {itemFilterTitle && (
-        <p className="text-sm text-gray-500 -mt-2">
-          「<span className="font-bold text-gray-700">{itemFilterTitle}</span>」を送る送り先 {filtered.length}件を表示中
+        <p className="text-sm text-ink-muted -mt-2">
+          「<span className="font-bold text-ink">{itemFilterTitle}</span>」を送る送り先 {filtered.length}件を表示中
         </p>
       )}
 
       {filtered.length === 0 ? (
-        <Card>
-          <div className="text-center py-12">
-            <Package size={40} className="text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 font-semibold">
+        <Card className="rounded-xl">
+          <div className="text-center py-10">
+            <p className="text-sm text-ink-muted">
               {shipments.length === 0
                 ? "発送が必要な支援はまだありません"
                 : "該当する支援はありません"}
             </p>
             {shipments.length === 0 && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-ink-muted mt-1">
                 住所が必要なリターンの支援がここに表示されます
               </p>
             )}
@@ -475,15 +471,15 @@ export default function FulfillmentTab({
             const busy = busyKey === s.key;
             const shippedAt = s.backers.find((x) => x.shipped_at)?.shipped_at;
             return (
-              <Card key={s.key}>
+              <Card key={s.key} className="rounded-xl">
                 {/* 宛先 */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-gray-400">送り先</p>
+                    <p className="text-[11px] font-bold text-ink-muted">送り先</p>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-lg font-bold text-gray-800">
+                      <span className="text-lg font-bold text-ink">
                         {recipientName(b)}
-                        <span className="text-sm font-semibold text-gray-500 ml-1">様</span>
+                        <span className="text-sm font-semibold text-ink-muted ml-1">様</span>
                       </span>
                       <Badge color={meta.color} size="sm">
                         {meta.label}
@@ -494,19 +490,19 @@ export default function FulfillmentTab({
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-ink-soft">
                       {b.guest_address?.postal_code && (
                         <span className="mr-1">〒{b.guest_address.postal_code}</span>
                       )}
                       {formatAddress(b)}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-ink-muted mt-0.5">
                       {emails.length > 0 ? emails.join(" / ") : "メール未登録（現地支援）"}
                     </p>
                   </div>
                   <button
                     onClick={() => copyAddress(b)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors flex-shrink-0"
+                    className="flex items-center gap-1 h-8 px-3 rounded-md text-xs font-bold text-ink-soft border border-line-strong bg-white hover:bg-cream-100 transition-colors flex-shrink-0"
                   >
                     <Copy size={13} />
                     宛先コピー
@@ -514,16 +510,16 @@ export default function FulfillmentTab({
                 </div>
 
                 {/* 送るもの */}
-                <div className="p-3 rounded-2xl bg-caramel-50 mb-3">
+                <div className="p-3 rounded-lg bg-cream-100 mb-3">
                   {s.pack.length === 0 ? (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-ink-soft">
                       （リターンなしの応援）
                     </p>
                   ) : (
                     <>
-                      <p className="text-xs text-gray-500 mb-2">
+                      <p className="text-xs text-ink-muted mb-2">
                         支援プラン：
-                        <span className="font-bold text-gray-700">
+                        <span className="font-bold text-ink">
                           {plans
                             .map((l) =>
                               l.planQuantity > 1
@@ -533,7 +529,7 @@ export default function FulfillmentTab({
                             .join(" / ")}
                         </span>
                       </p>
-                      <p className="text-xs font-bold text-gray-500 mb-1.5">
+                      <p className="text-xs font-bold text-ink-muted mb-1.5">
                         送るもの
                       </p>
                       {shipLines.length > 0 ? (
@@ -541,14 +537,14 @@ export default function FulfillmentTab({
                           {shipLines.map((l) => (
                             <li
                               key={l.key}
-                              className="flex items-center gap-2 text-sm text-gray-700"
+                              className="flex items-center gap-2 text-sm text-ink"
                             >
                               <span className="font-semibold">{l.title}</span>
-                              <span className="px-2 py-0.5 rounded-lg bg-white font-bold text-caramel-600 tabular-nums">
+                              <span className="px-1.5 py-0.5 rounded-md bg-white border border-line font-bold text-ink tabular-nums">
                                 × {l.quantity}
                               </span>
                               {l.planQuantity === 0 && (
-                                <span className="text-[11px] text-gray-400">
+                                <span className="text-[11px] text-ink-muted">
                                   上位プランに含む
                                 </span>
                               )}
@@ -556,7 +552,7 @@ export default function FulfillmentTab({
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-ink-muted">
                           発送する品目はありません
                         </p>
                       )}
@@ -565,7 +561,7 @@ export default function FulfillmentTab({
                         .map((l) => (
                           <p
                             key={l.key}
-                            className="mt-2 text-xs text-gray-500 whitespace-pre-line"
+                            className="mt-2 text-xs text-ink-muted whitespace-pre-line"
                           >
                             <span className="font-bold">
                               プラン内容{l.planQuantity > 1 ? `（×${l.planQuantity}）` : ""}：
@@ -574,7 +570,7 @@ export default function FulfillmentTab({
                           </p>
                         ))}
                       {otherLines.length > 0 && (
-                        <p className="mt-2 text-xs text-gray-500">
+                        <p className="mt-2 text-xs text-ink-muted">
                           <span className="font-bold">発送不要の特典（別途対応）：</span>
                           {otherLines
                             .map((l) => `${l.title} ×${l.quantity}`)
@@ -583,7 +579,7 @@ export default function FulfillmentTab({
                       )}
                     </>
                   )}
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-ink-muted mt-2 tabular-nums">
                     支援額 {formatCurrency(s.amount)}
                     {s.backers.length > 1 && `（${s.backers.length}回の合計）`} ·{" "}
                     {s.backers
@@ -600,7 +596,7 @@ export default function FulfillmentTab({
                       setTrackingDrafts((p) => ({ ...p, [s.key]: e.target.value }))
                     }
                     placeholder="追跡番号（任意）"
-                    className="flex-1 px-3 py-2 rounded-xl border-2 border-caramel-100 text-sm outline-none focus:border-candy-pink transition-colors"
+                    className="flex-1 h-10 px-3 rounded-lg border border-line-strong bg-white text-sm text-ink placeholder:text-ink-faint outline-none focus:border-ink focus:ring-2 focus:ring-ink/10 transition-colors"
                   />
                   <button
                     onClick={() =>
@@ -609,33 +605,25 @@ export default function FulfillmentTab({
                       })
                     }
                     disabled={busy}
-                    className="px-4 py-2 rounded-xl text-sm font-bold text-gray-600 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    className="h-10 px-4 rounded-lg text-sm font-bold text-ink-soft border border-line-strong bg-white hover:bg-cream-100 transition-colors disabled:opacity-50 whitespace-nowrap"
                   >
                     番号を保存
                   </button>
                 </div>
 
                 {/* ステータス変更 */}
-                <div className="flex flex-wrap gap-2 pt-3 border-t border-caramel-100">
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-line">
                   {STATUS_ORDER.map((st) => (
                     <button
                       key={st}
                       onClick={() => patch(s, { shippingStatus: st })}
                       disabled={busy || s.status === st}
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors disabled:opacity-100",
+                        "flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-bold border transition-colors disabled:opacity-100",
                         s.status === st
-                          ? "text-white"
-                          : "text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50"
+                          ? "border-ink bg-ink text-white"
+                          : "border-line-strong bg-white text-ink-soft hover:bg-cream-100"
                       )}
-                      style={
-                        s.status === st
-                          ? {
-                              background:
-                                "linear-gradient(135deg, #F2807B, #F5A34B)",
-                            }
-                          : {}
-                      }
                     >
                       {busy ? (
                         <Loader2 size={12} className="animate-spin" />
@@ -646,7 +634,7 @@ export default function FulfillmentTab({
                     </button>
                   ))}
                   {shippedAt && (
-                    <span className="text-xs text-gray-400 self-center ml-auto">
+                    <span className="text-xs text-ink-muted self-center ml-auto">
                       発送 {new Date(shippedAt).toLocaleDateString("ja-JP")}
                     </span>
                   )}

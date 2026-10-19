@@ -146,3 +146,13 @@ export function getStatusLabel(status: string): {
   };
   return map[status] || { label: status, color: "gray" };
 }
+
+/** 日付を「2026年10月19日」の形で出す */
+export function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Tokyo",
+  });
+}

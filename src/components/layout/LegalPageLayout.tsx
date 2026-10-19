@@ -2,18 +2,19 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * 規約・ポリシー系ページの共通の枠。
- * 特商法ページと同じ見た目に揃えたいので、余白・カード・下部の導線をここにまとめている。
+ * 規約・ポリシー・案内系ページの共通の枠。
+ * 特商法ページと同じ見た目に揃えたいので、余白・見出し・下部の導線をここにまとめている。
  */
 export default function LegalPageLayout({
-  badge,
+  eyebrow,
   title,
   lead,
   updatedAt,
   width = "narrow",
   children,
 }: {
-  badge: string;
+  /** 見出しの上に出す小さな英字ラベル（例: "Terms"） */
+  eyebrow: string;
   title: string;
   lead: ReactNode;
   /** 表示したくないページ（FAQ など）では省略できる */
@@ -23,48 +24,35 @@ export default function LegalPageLayout({
   children: ReactNode;
 }) {
   return (
-    <div
-      className="min-h-screen pt-28 pb-20 px-4 sm:px-6"
-      style={{ background: "linear-gradient(180deg, #FFFBF5 0%, #FFFFFF 100%)" }}
-    >
+    <div className="min-h-screen pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-8">
       <div className={width === "wide" ? "max-w-5xl mx-auto" : "max-w-3xl mx-auto"}>
-        <header className="text-center mb-10">
-          <span
-            className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-            style={{ background: "rgba(244, 123, 10, 0.1)", color: "#F47B0A" }}
+        <header className="mb-10 pb-8 border-b border-line">
+          <p className="eyebrow mb-3">{eyebrow}</p>
+          <h1
+            className="text-3xl sm:text-4xl font-bold text-ink mb-4"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            {badge}
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-3">
             {title}
           </h1>
-          <p className="text-sm text-gray-500 leading-relaxed max-w-2xl mx-auto">
-            {lead}
-          </p>
+          <p className="text-[15px] text-ink-soft leading-relaxed max-w-2xl">{lead}</p>
         </header>
 
         {children}
 
         {updatedAt && (
-          <p className="text-xs text-gray-400 text-center mt-8">
-            最終更新日：{updatedAt}
-          </p>
+          <p className="text-xs text-ink-muted mt-8">最終更新日：{updatedAt}</p>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+        <div className="flex flex-col sm:flex-row gap-3 mt-12 pt-8 border-t border-line">
           <Link
             href="/"
-            className="px-8 py-3 rounded-full text-white font-bold btn-pop text-center"
-            style={{
-              background: "linear-gradient(135deg, #F2807B, #F5A34B)",
-              boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)",
-            }}
+            className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors"
           >
             トップへ戻る
           </Link>
           <Link
             href="/projects"
-            className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors text-center"
+            className="inline-flex items-center justify-center h-11 px-6 rounded-lg border border-line-strong bg-white text-ink text-sm font-bold hover:bg-cream-100 transition-colors"
           >
             プロジェクトを見る
           </Link>
@@ -85,14 +73,12 @@ export function Article({
   children: ReactNode;
 }) {
   return (
-    <section className="py-5 border-b border-caramel-100 last:border-b-0 first:pt-0">
-      <h2 className="text-base font-bold text-gray-800 mb-3">
-        {no && <span className="text-caramel-500 mr-2">{no}</span>}
+    <section className="py-6 border-b border-line last:border-b-0 first:pt-0">
+      <h2 className="text-base font-bold text-ink mb-3">
+        {no && <span className="text-ink-muted font-semibold mr-2 tabular-nums">{no}</span>}
         {title}
       </h2>
-      <div className="text-sm text-gray-600 leading-relaxed space-y-2.5">
-        {children}
-      </div>
+      <div className="text-sm text-ink-soft leading-relaxed space-y-2.5">{children}</div>
     </section>
   );
 }
@@ -106,8 +92,8 @@ export function List({
   items: ReactNode[];
 }) {
   const className = ordered
-    ? "list-decimal pl-5 space-y-1.5 marker:text-caramel-400 marker:font-bold"
-    : "list-disc pl-5 space-y-1.5 marker:text-caramel-400";
+    ? "list-decimal pl-5 space-y-1.5 marker:text-ink-muted"
+    : "list-disc pl-5 space-y-1.5 marker:text-ink-faint";
   const Tag = ordered ? "ol" : "ul";
   return (
     <Tag className={className}>
@@ -118,25 +104,18 @@ export function List({
   );
 }
 
-/** 注意書きを目立たせる枠 */
+/** 注意書きを目立たせる枠。左の線だけで区切り、色は使いすぎない */
 export function Callout({
-  icon,
   title,
   children,
 }: {
-  icon: string;
   title: string;
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border-2 border-caramel-100 bg-caramel-50/50 p-6">
-      <h3 className="text-sm font-bold text-gray-700 mb-2">
-        <span className="mr-2">{icon}</span>
-        {title}
-      </h3>
-      <div className="text-sm text-gray-600 leading-relaxed space-y-2">
-        {children}
-      </div>
+    <div className="rounded-xl border border-line bg-white p-5 sm:p-6 border-l-[3px] border-l-caramel-600">
+      <h3 className="text-sm font-bold text-ink mb-2">{title}</h3>
+      <div className="text-sm text-ink-soft leading-relaxed space-y-2">{children}</div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Lock, Flag, Sparkles } from "lucide-react";
+import { Check, Lock, Flag, ChevronsUp } from "lucide-react";
 import type { ProjectMilestone } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -16,6 +16,10 @@ import { nextUnreached, splitMilestones } from "@/lib/project/goals";
  *
  * ネクストゴール（is_stretch）は最終目標の分母に入れず、下に別枠で出す。
  * 掲載中に足しても、上の達成率・達成表示は一切動かない。
+ *
+ * プロジェクト詳細（掲載者テーマ配下）でだけ使うので、色は globals.css の
+ * .project-theme で読み替わるクラス（bg-white / bg-caramel-50 / border-line /
+ * border-candy-pink / text-gray-* / text-caramel-600 / green-*）に限っている。
  */
 export default function MilestonesProgress({
   milestones,
@@ -61,14 +65,14 @@ export default function MilestonesProgress({
         <>
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-gray-800 flex items-center gap-1.5">
-              <Flag size={16} className="text-caramel-500" />
+              <Flag size={15} className="text-gray-400" />
               {t.detail.milestones}
             </h3>
-            <span className="text-xs font-bold text-caramel-500">
+            <span className="text-xs font-bold text-caramel-600 tabular-nums">
               {achievedCount} / {sorted.length} {t.detail.milestonesAchieved}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             {t.detail.milestonesNote}
           </p>
 
@@ -81,15 +85,15 @@ export default function MilestonesProgress({
             }))}
             className="mb-1"
           />
-          <div className="flex justify-between text-xs text-gray-400 mb-4">
+          <div className="flex justify-between text-xs text-gray-500 mb-4">
             <span>
-              <span className="font-bold text-caramel-600">
+              <span className="font-bold text-gray-800 tabular-nums">
                 {formatCurrency(currentAmount)}
               </span>
             </span>
             <span>
               {t.common.finalGoal}{" "}
-              <span className="font-bold text-gray-600">
+              <span className="font-bold text-gray-600 tabular-nums">
                 {formatCurrency(topAmount)}
               </span>
             </span>
@@ -112,20 +116,20 @@ export default function MilestonesProgress({
       {stretch.length > 0 && (
         <div
           className={cn(
-            sorted.length > 0 && "mt-5 pt-4 border-t border-dashed border-caramel-100"
+            sorted.length > 0 && "mt-5 pt-4 border-t border-dashed border-line"
           )}
         >
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-gray-800 flex items-center gap-1.5">
-              <Sparkles size={16} className="text-candy-pink" />
+              <ChevronsUp size={15} className="text-gray-400" />
               {t.detail.stretchGoals}
             </h3>
-            <span className="text-xs font-bold text-candy-pink">
+            <span className="text-xs font-bold text-caramel-600 tabular-nums">
               {stretchAchievedCount} / {stretch.length}{" "}
               {t.detail.milestonesAchieved}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             {t.detail.stretchGoalsNote}
           </p>
 
@@ -150,21 +154,21 @@ export default function MilestonesProgress({
             ]}
             className="mb-1"
           />
-          <div className="flex justify-between text-xs text-gray-400 mb-4">
+          <div className="flex justify-between text-xs text-gray-500 mb-4">
             <span>
               {finalReached ? (
-                <span className="font-semibold text-green-600">
+                <span className="font-bold text-green-700">
                   {t.common.finalGoal} {t.common.achieved}
                 </span>
               ) : (
-                <span className="font-bold text-caramel-600">
+                <span className="font-bold text-gray-800 tabular-nums">
                   {formatCurrency(currentAmount)}
                 </span>
               )}
             </span>
             <span>
               {t.detail.stretchTop}{" "}
-              <span className="font-bold text-gray-600">
+              <span className="font-bold text-gray-600 tabular-nums">
                 {formatCurrency(stretchTop)}
               </span>
             </span>
@@ -199,42 +203,35 @@ function MilestoneRow({
   achieved: boolean;
   isNext: boolean;
   remaining: number;
-  /** ネクストゴール。ロック色を候補ピンクに寄せて基本の段階と区別する */
+  /** ネクストゴール。アイコンとアクセント色で基本の段階と区別する */
   stretch?: boolean;
 }) {
   const t = useT();
   return (
     <li
       className={cn(
-        "flex items-start gap-3 p-2.5 rounded-2xl border-2 transition-colors",
+        "flex items-start gap-3 p-3 rounded-xl border transition-colors",
         achieved
           ? "border-transparent bg-green-50"
           : isNext
-          ? stretch
-            ? "border-candy-pink bg-caramel-50"
-            : "border-caramel-200 bg-caramel-50"
-          : "border-caramel-100 bg-white"
+          ? "border-candy-pink bg-caramel-50"
+          : "border-line bg-white"
       )}
     >
       <div
         className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5",
+          "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5",
           achieved
-            ? "text-white"
+            ? "text-white bg-green-700"
             : stretch
-            ? "text-candy-pink bg-caramel-100"
+            ? "text-caramel-600 bg-caramel-100"
             : "text-gray-400 bg-caramel-100"
         )}
-        style={
-          achieved
-            ? { background: "linear-gradient(135deg, #34a853, #8FD4C4)" }
-            : {}
-        }
       >
         {achieved ? (
-          <Check size={15} />
+          <Check size={14} />
         ) : stretch ? (
-          <Sparkles size={13} />
+          <ChevronsUp size={13} />
         ) : (
           <Lock size={13} />
         )}
@@ -251,12 +248,8 @@ function MilestoneRow({
           </span>
           <span
             className={cn(
-              "text-xs font-bold flex-shrink-0",
-              achieved
-                ? "text-green-600"
-                : stretch
-                ? "text-candy-pink"
-                : "text-caramel-500"
+              "text-xs font-bold flex-shrink-0 tabular-nums",
+              achieved ? "text-green-700" : "text-gray-600"
             )}
           >
             {formatCurrency(m.amount)}
@@ -268,11 +261,11 @@ function MilestoneRow({
           </p>
         )}
         {achieved ? (
-          <p className="text-xs text-green-600 font-semibold mt-0.5">
+          <p className="text-xs text-green-700 font-semibold mt-0.5">
             {t.detail.reachedLabel}
           </p>
         ) : isNext ? (
-          <p className="text-xs font-semibold mt-0.5 text-caramel-600">
+          <p className="text-xs font-bold mt-0.5 text-caramel-600 tabular-nums">
             {formatCurrency(remaining)}
             {t.detail.remainingToReach}
           </p>

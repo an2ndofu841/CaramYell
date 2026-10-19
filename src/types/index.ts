@@ -43,6 +43,8 @@ export interface Profile {
   website_url?: string;
   twitter_handle?: string;
   role: UserRole;
+  /** 掲載者の事務所・レーベル名。掲載申請の承認時に運営が設定する */
+  organization_name?: string | null;
   total_backed: number;
   total_created: number;
   created_at: string;
@@ -286,4 +288,33 @@ export interface ProjectStats {
   days_left: number;
   is_funded: boolean;
   average_backing: number;
+}
+
+export type OrganizationType =
+  | "agency"
+  | "label"
+  | "management"
+  | "venue"
+  | "individual"
+  | "other";
+
+export type CreatorApplicationStatus = "pending" | "approved" | "rejected";
+
+/** 事務所・レーベルからの掲載申請 */
+export interface CreatorApplication {
+  id: string;
+  user_id: string;
+  organization_name: string;
+  organization_type: OrganizationType;
+  contact_name: string;
+  contact_email: string;
+  phone: string | null;
+  website_url: string | null;
+  artists: string | null;
+  plan: string;
+  expected_start: string | null;
+  status: CreatorApplicationStatus;
+  review_note: string | null;
+  reviewed_at: string | null;
+  created_at: string;
 }

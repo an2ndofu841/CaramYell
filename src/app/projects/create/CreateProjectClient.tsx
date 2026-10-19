@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
-  Sparkles,
   ChevronRight,
   ChevronLeft,
   Plus,
@@ -12,12 +11,7 @@ import {
   Wand2,
   Check,
   Info,
-  Upload,
-  Calendar,
-  DollarSign,
-  Package,
-  Smartphone,
-  Star,
+  Loader2,
   Save,
   ExternalLink,
   Link2,
@@ -55,25 +49,25 @@ const SITE_HOST = (process.env.NEXT_PUBLIC_APP_URL || "https://caramyell.com")
   .replace(/\/+$/, "");
 
 const categories = [
-  { slug: "music", name: "音楽", icon: "🎵" },
-  { slug: "art", name: "アート", icon: "🎨" },
-  { slug: "game", name: "ゲーム", icon: "🎮" },
-  { slug: "tech", name: "テクノロジー", icon: "💻" },
-  { slug: "video", name: "動画・映像", icon: "🎬" },
-  { slug: "food", name: "フード", icon: "🍽️" },
-  { slug: "fashion", name: "ファッション", icon: "👗" },
-  { slug: "photo", name: "写真", icon: "📸" },
-  { slug: "social", name: "社会・コミュニティ", icon: "🌍" },
-  { slug: "other", name: "その他", icon: "✨" },
+  { slug: "music", name: "音楽" },
+  { slug: "art", name: "アート" },
+  { slug: "game", name: "ゲーム" },
+  { slug: "tech", name: "テクノロジー" },
+  { slug: "video", name: "動画・映像" },
+  { slug: "food", name: "フード" },
+  { slug: "fashion", name: "ファッション" },
+  { slug: "photo", name: "写真" },
+  { slug: "social", name: "社会・コミュニティ" },
+  { slug: "other", name: "その他" },
 ];
 
 const steps = [
-  { id: 1, title: "基本情報", icon: "📝" },
-  { id: 2, title: "プロジェクト詳細", icon: "📖" },
-  { id: 3, title: "段階ゴール・期間", icon: "🎯" },
-  { id: 4, title: "リターン設定", icon: "🎁" },
-  { id: 5, title: "デザイン", icon: "🎨" },
-  { id: 6, title: "確認・送信", icon: "🚀" },
+  { id: 1, title: "基本情報" },
+  { id: 2, title: "詳細" },
+  { id: 3, title: "ゴール・期間" },
+  { id: 4, title: "リターン" },
+  { id: 5, title: "デザイン" },
+  { id: 6, title: "確認・申請" },
 ];
 
 type RewardInput = {
@@ -233,9 +227,9 @@ export default function CreateProjectClient() {
       else if (type === "description") updateField("description", data.result);
       else if (type === "story") updateField("story", data.result);
 
-      toast.success("AIが生成しました！✨ 自由に編集してください");
+      toast.success("下書きを作成しました。自由に編集してください");
     } catch {
-      toast.error("AI生成に失敗しました。後でもう一度お試しください。");
+      toast.error("下書きの生成に失敗しました。時間をおいてもう一度お試しください");
     } finally {
       setIsGenerating(null);
     }
@@ -398,7 +392,7 @@ export default function CreateProjectClient() {
       const token = data.project.preview_token as string;
       setSavedProjectId(id);
       setPreviewToken(token);
-      if (!opts.silent) toast.success("下書きを保存しました 📝");
+      if (!opts.silent) toast.success("下書きを保存しました");
       return { id, token };
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "エラーが発生しました");
@@ -447,7 +441,7 @@ export default function CreateProjectClient() {
     } else {
       await navigator.clipboard.writeText(previewUrl);
     }
-    toast.success("関係者プレビューリンクをコピーしました 🔗");
+    toast.success("関係者プレビューリンクをコピーしました");
   };
 
   const handleSubmit = async () => {
@@ -462,7 +456,7 @@ export default function CreateProjectClient() {
         const data = await res.json();
         throw new Error(data.error || "プロジェクト作成に失敗しました");
       }
-      toast.success("プロジェクトを申請しました！審査は最短30分で完了します");
+      toast.success("プロジェクトを申請しました。運営の確認後に掲載されます");
       router.push("/dashboard");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "エラーが発生しました");
@@ -471,10 +465,10 @@ export default function CreateProjectClient() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-cream-50">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-caramel-200 border-t-candy-pink animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 font-semibold">読み込み中...</p>
+          <Loader2 size={24} className="animate-spin text-ink-muted mx-auto mb-3" />
+          <p className="text-sm text-ink-muted">読み込み中...</p>
         </div>
       </div>
     );
@@ -482,38 +476,28 @@ export default function CreateProjectClient() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4" style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md"
-        >
-          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-4xl shadow-candy"
-            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}>
-            🔒
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+      <div className="min-h-screen flex items-center justify-center bg-cream-50 pt-24 pb-12 px-4">
+        <div className="w-full max-w-md rounded-xl border border-line bg-white p-8 text-center">
+          <h1
+            className="text-2xl font-bold text-ink mb-3"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
             ログインが必要です
           </h1>
-          <p className="text-gray-500 mb-8 leading-relaxed">
+          <p className="text-sm text-ink-soft mb-8 leading-relaxed">
             プロジェクトを作成するには、ログインが必要です。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
+            <Button
               onClick={() => router.push("/auth/login?redirect=/projects/create")}
-              className="px-8 py-3 rounded-full text-white font-bold btn-pop"
-              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)" }}
             >
               ログイン / 新規登録
-            </button>
-            <button
-              onClick={() => router.push("/projects")}
-              className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
-            >
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/projects")}>
               プロジェクトを見る
-            </button>
+            </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -521,760 +505,662 @@ export default function CreateProjectClient() {
   // 掲載は運営が承認したアカウントのみ
   if (!isCreator) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4" style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-md"
-        >
-          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-4xl shadow-candy"
-            style={{ background: "linear-gradient(135deg, #F5A34B, #8FD4C4)" }}>
-            🚧
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+      <div className="min-h-screen flex items-center justify-center bg-cream-50 pt-24 pb-12 px-4">
+        <div className="w-full max-w-md rounded-xl border border-line bg-white p-8 text-center">
+          <h1
+            className="text-2xl font-bold text-ink mb-3"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
             掲載には運営の承認が必要です
           </h1>
-          <p className="text-gray-500 mb-8 leading-relaxed">
+          <p className="text-sm text-ink-soft mb-8 leading-relaxed">
             プロジェクトの掲載は、運営が内容を確認したアカウントのみが行えます。
-            <br />
-            掲載をご希望の方はお問い合わせください。順次ご案内しています。
+            掲載をご希望の事務所・レーベルの方は、
+            <Link
+              href="/apply"
+              className="font-bold text-ink underline underline-offset-4 decoration-line-strong hover:decoration-ink"
+            >
+              掲載の申し込み
+            </Link>
+            からご連絡ください。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => router.push("/projects")}
-              className="px-8 py-3 rounded-full text-white font-bold btn-pop"
-              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)", boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)" }}
-            >
+            <Button onClick={() => router.push("/projects")}>
               プロジェクトを見る
-            </button>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors"
-            >
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/dashboard")}>
               マイページへ
-            </button>
+            </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   if (loadingDraft) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-cream-50">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-caramel-200 border-t-candy-pink animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 font-semibold">下書きを読み込み中...</p>
+          <Loader2 size={24} className="animate-spin text-ink-muted mx-auto mb-3" />
+          <p className="text-sm text-ink-muted">下書きを読み込み中...</p>
         </div>
       </div>
     );
   }
 
+  const current = steps[currentStep - 1];
+  const fieldClass =
+    "h-11 rounded-lg border border-line-strong bg-white text-ink placeholder:text-ink-faint outline-none hover:border-ink-faint focus:border-ink focus:ring-2 focus:ring-ink/10 transition-colors";
+  const aiButtonClass =
+    "inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-line-strong bg-white text-xs font-bold text-ink-soft hover:bg-cream-100 hover:text-ink transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+
   return (
-    <div className="min-h-screen pt-20 pb-20" style={{ background: "linear-gradient(180deg, #FFFBF5 0%, white 100%)" }}>
+    <div className="min-h-screen bg-cream-50 pt-24 pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
-        <div className="text-center py-10">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
-            className="w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center text-3xl shadow-candy"
-            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+        <header className="pt-4 pb-8">
+          <h1
+            className="text-3xl sm:text-4xl font-bold text-ink mb-2"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            🚀
-          </motion.div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            プロジェクトを作る
+            プロジェクトを作成
           </h1>
-          <p className="text-gray-500">
-            AIのサポートで、最短10分でページ完成 ✨
+          <p className="text-sm text-ink-muted">
+            6つのステップで入力します。途中で下書き保存して、あとから続きを編集できます。
           </p>
-        </div>
+        </header>
 
         {/* ステッパー */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 right-0 top-5 h-0.5 bg-caramel-100 -z-10" />
-            {steps.map((step) => (
-              <div key={step.id} className="flex flex-col items-center gap-2">
-                <motion.div
-                  className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300",
-                    step.id < currentStep
-                      ? "text-white shadow-sm"
-                      : step.id === currentStep
-                      ? "text-white shadow-candy"
-                      : "bg-white text-gray-400 border-2 border-caramel-100"
-                  )}
-                  style={
-                    step.id <= currentStep
-                      ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
-                      : {}
-                  }
-                  animate={{ scale: step.id === currentStep ? 1.1 : 1 }}
-                >
-                  {step.id < currentStep ? (
-                    <Check size={16} />
-                  ) : (
-                    <span>{step.icon}</span>
-                  )}
-                </motion.div>
-                <span className={cn(
-                  "text-xs font-semibold hidden sm:block",
-                  step.id === currentStep ? "text-caramel-600" : "text-gray-400"
-                )}>
-                  {step.title}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <nav aria-label="作成ステップ" className="mb-8">
+          <p className="text-xs font-bold text-ink-muted mb-2 sm:hidden">
+            ステップ {currentStep} / {steps.length}・{current?.title}
+          </p>
+          <ol className="grid grid-cols-6 gap-1.5 sm:gap-2">
+            {steps.map((step) => {
+              const done = step.id < currentStep;
+              const active = step.id === currentStep;
+              return (
+                <li key={step.id} aria-current={active ? "step" : undefined}>
+                  <div
+                    className={cn(
+                      "h-1 rounded-full transition-colors",
+                      done || active ? "bg-ink" : "bg-line"
+                    )}
+                  />
+                  <p
+                    className={cn(
+                      "hidden sm:flex items-center gap-1 mt-2 text-xs",
+                      active
+                        ? "font-bold text-ink"
+                        : done
+                        ? "text-ink-soft"
+                        : "text-ink-faint"
+                    )}
+                  >
+                    {done ? (
+                      <Check size={12} className="flex-shrink-0" />
+                    ) : (
+                      <span className="tabular-nums">{step.id}</span>
+                    )}
+                    <span className="truncate">{step.title}</span>
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
 
         {/* ステップコンテンツ */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* STEP 1: 基本情報 */}
-            {currentStep === 1 && (
-              <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-6">
-                  📝 基本情報を入力
-                </h2>
+        <div key={currentStep} className="animate-fade-in">
+          {/* STEP 1: 基本情報 */}
+          {currentStep === 1 && (
+            <Card className="rounded-xl">
+              <StepHeading>基本情報</StepHeading>
 
-                <div className="space-y-6">
-                  <Input
-                    label="プロジェクトタイトル"
-                    placeholder="例：世界で初めての香りで楽しむ音楽アルバムを作りたい！"
-                    value={formData.title}
-                    onChange={(e) => updateField("title", e.target.value)}
-                    hint="ユーザーが最初に見るタイトルです。魅力的に！"
+              <div className="space-y-6">
+                <Input
+                  label="プロジェクトタイトル"
+                  placeholder="例：香りで楽しむ音楽アルバムを作りたい"
+                  value={formData.title}
+                  onChange={(e) => updateField("title", e.target.value)}
+                  hint="プロジェクトページで最初に目に入るタイトルです"
+                  fullWidth
+                />
+
+                <div>
+                  <p className="text-sm font-bold text-ink mb-1.5">
+                    タグライン
+                    <span className="text-xs text-ink-muted font-normal ml-2">
+                      プロジェクトを一文で表す短い説明
+                    </span>
+                  </p>
+                  <Textarea
+                    placeholder="例：音楽と香りを組み合わせたリスニング体験"
+                    value={formData.tagline}
+                    onChange={(e) => updateField("tagline", e.target.value)}
+                    rows={2}
                     fullWidth
                   />
-
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">
-                      タグライン
-                      <span className="text-xs text-gray-400 font-normal ml-2">
-                        プロジェクトを一文で表す短い説明
-                      </span>
-                    </p>
-                    <div className="relative">
-                      <Textarea
-                        placeholder="例：音楽と香りを融合させた、全く新しいリスニング体験"
-                        value={formData.tagline}
-                        onChange={(e) => updateField("tagline", e.target.value)}
-                        rows={2}
-                        fullWidth
-                      />
-                      <button
-                        onClick={() => generateWithAI("tagline")}
-                        disabled={!formData.title || isGenerating === "tagline"}
-                        className="mt-2 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed btn-pop"
-                        style={{ background: "linear-gradient(135deg, #C9A87C, #A8D8CB)" }}
-                      >
-                        {isGenerating === "tagline" ? (
-                          <>⏳ 生成中...</>
-                        ) : (
-                          <>
-                            <Wand2 size={14} />
-                            AIで生成する
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Input
-                      label="公開URL（任意）"
-                      placeholder="例：scent-music-album"
-                      value={formData.slug}
-                      onChange={(e) =>
-                        updateField("slug", normalizeSlugInput(e.target.value))
-                      }
-                      error={slugIssue ?? undefined}
-                      fullWidth
-                      hint="半角英数字とハイフン。空欄ならこちらで決めます。公開後は変更できません"
-                    />
-                    <p className="text-xs text-gray-400 mt-1.5 break-all">
-                      {SITE_HOST}/projects/
-                      <span className="font-bold text-caramel-500">
-                        {finalSlug || "（自動）"}
-                      </span>
-                    </p>
-                  </div>
-
-                  <EnglishPanel
-                    hasContent={Boolean(formData.titleEn || formData.taglineEn)}
+                  <button
+                    onClick={() => generateWithAI("tagline")}
+                    disabled={!formData.title || isGenerating === "tagline"}
+                    className={cn(aiButtonClass, "mt-2")}
                   >
-                    <Input
-                      label="Title"
-                      placeholder="e.g. A music album you can enjoy with scent"
-                      value={formData.titleEn}
-                      onChange={(e) => updateField("titleEn", e.target.value)}
-                      fullWidth
-                    />
-                    <Textarea
-                      label="Tagline"
-                      placeholder="e.g. A brand-new listening experience blending music and scent"
-                      value={formData.taglineEn}
-                      onChange={(e) => updateField("taglineEn", e.target.value)}
-                      rows={2}
-                      fullWidth
-                    />
-                  </EnglishPanel>
+                    {isGenerating === "tagline" ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 size={12} />
+                        AIで下書きを作る
+                      </>
+                    )}
+                  </button>
+                </div>
 
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
-                      カテゴリー
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.slug}
-                          onClick={() => updateField("category", cat.slug)}
-                          className={cn(
-                            "flex items-center gap-2 px-4 py-3 rounded-2xl border-2 text-sm font-semibold transition-all duration-200",
-                            formData.category === cat.slug
-                              ? "text-white border-transparent shadow-sm"
-                              : "border-caramel-100 text-gray-600 hover:border-caramel-200 bg-white"
-                          )}
-                          style={
-                            formData.category === cat.slug
-                              ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" }
-                              : {}
-                          }
-                        >
-                          <span>{cat.icon}</span>
-                          <span>{cat.name}</span>
-                        </button>
-                      ))}
-                    </div>
+                <div>
+                  <Input
+                    label="公開URL（任意）"
+                    placeholder="例：scent-music-album"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      updateField("slug", normalizeSlugInput(e.target.value))
+                    }
+                    error={slugIssue ?? undefined}
+                    fullWidth
+                    hint="半角英数字とハイフン。空欄ならこちらで決めます。公開後は変更できません"
+                  />
+                  <p className="text-xs text-ink-muted mt-1.5 break-all">
+                    {SITE_HOST}/projects/
+                    <span className="font-bold text-ink">
+                      {finalSlug || "（自動）"}
+                    </span>
+                  </p>
+                </div>
+
+                <EnglishPanel
+                  hasContent={Boolean(formData.titleEn || formData.taglineEn)}
+                >
+                  <Input
+                    label="Title"
+                    placeholder="e.g. A music album you can enjoy with scent"
+                    value={formData.titleEn}
+                    onChange={(e) => updateField("titleEn", e.target.value)}
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Tagline"
+                    placeholder="e.g. A brand-new listening experience blending music and scent"
+                    value={formData.taglineEn}
+                    onChange={(e) => updateField("taglineEn", e.target.value)}
+                    rows={2}
+                    fullWidth
+                  />
+                </EnglishPanel>
+
+                <div>
+                  <p className="text-sm font-bold text-ink mb-2">カテゴリー</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.slug}
+                        onClick={() => updateField("category", cat.slug)}
+                        aria-pressed={formData.category === cat.slug}
+                        className={cn(
+                          "h-11 px-4 rounded-lg border text-sm font-semibold text-left transition-colors",
+                          formData.category === cat.slug
+                            ? "border-ink bg-ink text-white"
+                            : "border-line-strong bg-white text-ink-soft hover:bg-cream-50"
+                        )}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </Card>
-            )}
+              </div>
+            </Card>
+          )}
 
-            {/* STEP 2: プロジェクト詳細 */}
-            {currentStep === 2 && (
-              <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-6">
-                  📖 プロジェクトを詳しく説明する
-                </h2>
+          {/* STEP 2: プロジェクト詳細 */}
+          {currentStep === 2 && (
+            <Card className="rounded-xl">
+              <StepHeading>プロジェクトの詳細</StepHeading>
 
-                <div className="space-y-6">
-                  <ProjectImagePicker
-                    mainImageUrl={formData.mainImageUrl}
-                    images={formData.images}
-                    onChange={(next) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        mainImageUrl: next.mainImageUrl,
-                        images: next.images,
-                      }))
-                    }
-                  />
+              <div className="space-y-6">
+                <ProjectImagePicker
+                  mainImageUrl={formData.mainImageUrl}
+                  images={formData.images}
+                  onChange={(next) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mainImageUrl: next.mainImageUrl,
+                      images: next.images,
+                    }))
+                  }
+                />
 
-                  <div className="h-px bg-caramel-100" />
+                <div className="h-px bg-line" />
 
-                  {/* AI生成バナー */}
-                  <div className="p-4 rounded-2xl flex items-start gap-3"
-                    style={{ background: "linear-gradient(135deg, rgba(201, 168, 124, 0.1), rgba(143, 212, 196, 0.1))", border: "1px solid rgba(201, 168, 124, 0.3)" }}>
-                    <Sparkles size={20} className="text-purple-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-gray-700 mb-1">
-                        AIがあなたのプロジェクトを説明します！
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        タイトルとカテゴリーをもとに、AIが説明文を自動生成します。
-                        生成後、自由に編集できます。
-                      </p>
-                    </div>
-                  </div>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  「AIで下書きを作る」を押すと、タイトルとカテゴリーをもとに文章の下書きを作ります。生成後に自由に編集できます。
+                </p>
 
-                  <MarkdownEditor
-                    label="プロジェクト概要"
-                    labelExtra={
-                      <button
-                        onClick={() => generateWithAI("description")}
-                        disabled={isGenerating === "description"}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white disabled:opacity-50 btn-pop"
-                        style={{ background: "linear-gradient(135deg, #C9A87C, #A8D8CB)" }}
-                      >
+                <MarkdownEditor
+                  label="プロジェクト概要"
+                  labelExtra={
+                    <button
+                      onClick={() => generateWithAI("description")}
+                      disabled={isGenerating === "description"}
+                      className={aiButtonClass}
+                    >
+                      {isGenerating === "description" ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
                         <Wand2 size={12} />
-                        {isGenerating === "description" ? "生成中..." : "AIで生成"}
-                      </button>
-                    }
-                    placeholder="プロジェクトについて詳しく説明してください。何を作りたいのか、なぜそれをしたいのか、誰に届けたいのかを書きましょう。"
-                    value={formData.description}
-                    onChange={(v) => updateField("description", v)}
-                    rows={10}
-                    allowImages
-                    hint={`${formData.description.length}文字（最低50文字）・見出しや箇条書きで区切ると読みやすくなります`}
-                  />
+                      )}
+                      {isGenerating === "description" ? "生成中..." : "AIで下書きを作る"}
+                    </button>
+                  }
+                  placeholder="何を作りたいのか、なぜそれをしたいのか、誰に届けたいのかを書いてください。"
+                  value={formData.description}
+                  onChange={(v) => updateField("description", v)}
+                  rows={10}
+                  allowImages
+                  hint={`${formData.description.length}文字（最低50文字）・見出しや箇条書きで区切ると読みやすくなります`}
+                />
 
-                  <MarkdownEditor
-                    label="ストーリー（任意）"
-                    labelExtra={
-                      <button
-                        onClick={() => generateWithAI("story")}
-                        disabled={isGenerating === "story"}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white disabled:opacity-50 btn-pop"
-                        style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
-                      >
+                <MarkdownEditor
+                  label="ストーリー（任意）"
+                  labelExtra={
+                    <button
+                      onClick={() => generateWithAI("story")}
+                      disabled={isGenerating === "story"}
+                      className={aiButtonClass}
+                    >
+                      {isGenerating === "story" ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
                         <Wand2 size={12} />
-                        {isGenerating === "story" ? "生成中..." : "AIで生成"}
-                      </button>
-                    }
-                    placeholder="このプロジェクトを始めたきっかけや、あなたの想いを書きましょう。"
-                    value={formData.story}
-                    onChange={(v) => updateField("story", v)}
+                      )}
+                      {isGenerating === "story" ? "生成中..." : "AIで下書きを作る"}
+                    </button>
+                  }
+                  placeholder="このプロジェクトを始めたきっかけや、込めた想いを書いてください。"
+                  value={formData.story}
+                  onChange={(v) => updateField("story", v)}
+                  rows={8}
+                  allowImages
+                />
+
+                <EnglishPanel
+                  hasContent={Boolean(
+                    formData.descriptionEn || formData.storyEn
+                  )}
+                >
+                  <MarkdownEditor
+                    label="Project overview"
+                    placeholder="Describe your project in English."
+                    value={formData.descriptionEn}
+                    onChange={(v) => updateField("descriptionEn", v)}
                     rows={8}
                     allowImages
                   />
+                  <MarkdownEditor
+                    label="Story"
+                    placeholder="Tell your story in English."
+                    value={formData.storyEn}
+                    onChange={(v) => updateField("storyEn", v)}
+                    rows={6}
+                    allowImages
+                  />
+                </EnglishPanel>
 
-                  <EnglishPanel
-                    hasContent={Boolean(
-                      formData.descriptionEn || formData.storyEn
-                    )}
-                  >
-                    <MarkdownEditor
-                      label="Project overview"
-                      placeholder="Describe your project in English."
-                      value={formData.descriptionEn}
-                      onChange={(v) => updateField("descriptionEn", v)}
-                      rows={8}
-                      allowImages
-                    />
-                    <MarkdownEditor
-                      label="Story"
-                      placeholder="Tell your story in English."
-                      value={formData.storyEn}
-                      onChange={(v) => updateField("storyEn", v)}
-                      rows={6}
-                      allowImages
-                    />
-                  </EnglishPanel>
-
-                  <div className="pt-2 border-t border-caramel-100">
-                    <FaqEditor
-                      items={formData.faqs}
-                      onChange={(faqs) => updateField("faqs", faqs)}
-                    />
-                  </div>
+                <div className="pt-6 border-t border-line">
+                  <FaqEditor
+                    items={formData.faqs}
+                    onChange={(faqs) => updateField("faqs", faqs)}
+                  />
                 </div>
-              </Card>
-            )}
+              </div>
+            </Card>
+          )}
 
-            {/* STEP 3: 目標・期間 */}
-            {currentStep === 3 && (
-              <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                  🎯 段階ゴールと掲載期間
-                </h2>
-                <p className="text-sm text-gray-500 mb-6">
-                  金額の少ない段階から順に設定します。達成した段階まで実施され、最小額が「第1目標」になります。
-                </p>
+          {/* STEP 3: 目標・期間 */}
+          {currentStep === 3 && (
+            <Card className="rounded-xl">
+              <StepHeading>段階ゴールと掲載期間</StepHeading>
+              <p className="text-sm text-ink-muted leading-relaxed -mt-3 mb-6">
+                金額の少ない段階から順に設定します。達成した段階まで実施され、最小額が「第1目標」になります。
+              </p>
 
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-gray-700">
-                        段階ゴール
-                      </p>
-                      <span className="text-xs text-gray-400">
-                        例：¥50,000 フラスタ → ¥100,000 新衣装 → ¥150,000 新曲
-                      </span>
-                    </div>
+              <div className="space-y-6">
+                <div>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-2">
+                    <p className="text-sm font-bold text-ink">段階ゴール</p>
+                    <span className="text-xs text-ink-muted">
+                      例：¥50,000 フラスタ → ¥100,000 新衣装 → ¥150,000 新曲
+                    </span>
+                  </div>
 
-                    <div className="space-y-3">
-                      {formData.milestones.map((m, i) => (
-                        <div
-                          key={i}
-                          className="p-3 rounded-2xl border-2 border-caramel-100 bg-white"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span
-                              className="text-xs font-bold text-white px-2.5 py-1 rounded-full"
-                              style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+                  <ol className="rounded-lg border border-line divide-y divide-line">
+                    {formData.milestones.map((m, i) => (
+                      <li key={i} className="p-3 sm:p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-ink-muted">
+                            {i === 0 ? "第1目標" : `第${i + 1}段階`}
+                          </span>
+                          {formData.milestones.length > 1 && (
+                            <button
+                              onClick={() => removeMilestone(i)}
+                              className="p-1.5 rounded-md text-ink-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+                              aria-label="この段階を削除"
                             >
-                              {i === 0 ? "第1目標" : `第${i + 1}段階`}
-                            </span>
-                            {formData.milestones.length > 1 && (
-                              <button
-                                onClick={() => removeMilestone(i)}
-                                className="p-1 rounded-full text-red-400 hover:bg-red-50 transition-colors"
-                                aria-label="この段階を削除"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            )}
-                          </div>
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
 
-                          <div className="flex gap-2">
-                            <div className="relative w-36 flex-shrink-0">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-sm">¥</span>
-                              <input
-                                type="number"
-                                value={m.amount || ""}
-                                onChange={(e) => updateMilestone(i, "amount", parseInt(e.target.value) || 0)}
-                                placeholder="50000"
-                                className="w-full pl-7 pr-2 py-2.5 rounded-xl border-2 border-caramel-100 text-gray-800 font-bold outline-none focus:border-candy-pink transition-colors"
-                              />
-                            </div>
+                        <div className="flex gap-2">
+                          <div className="relative w-32 sm:w-36 flex-shrink-0">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-ink-muted text-sm">
+                              ¥
+                            </span>
                             <input
-                              type="text"
-                              value={m.title}
-                              onChange={(e) => updateMilestone(i, "title", e.target.value)}
-                              placeholder="達成内容（例：フラスタ）"
-                              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border-2 border-caramel-100 text-gray-800 outline-none focus:border-candy-pink transition-colors"
+                              type="number"
+                              value={m.amount || ""}
+                              onChange={(e) => updateMilestone(i, "amount", parseInt(e.target.value) || 0)}
+                              placeholder="50000"
+                              className={cn(fieldClass, "w-full pl-7 pr-2 font-bold tabular-nums")}
                             />
                           </div>
                           <input
                             type="text"
-                            value={m.description || ""}
-                            onChange={(e) => updateMilestone(i, "description", e.target.value)}
-                            placeholder="補足説明（任意）"
-                            className="w-full mt-2 px-3 py-2 rounded-xl border-2 border-caramel-100 text-sm text-gray-600 outline-none focus:border-candy-pink transition-colors"
+                            value={m.title}
+                            onChange={(e) => updateMilestone(i, "title", e.target.value)}
+                            placeholder="達成内容（例：フラスタ）"
+                            className={cn(fieldClass, "flex-1 min-w-0 px-3")}
                           />
                         </div>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={addMilestone}
-                      className="w-full mt-3 py-3 rounded-2xl border-2 border-dashed border-caramel-200 text-caramel-500 font-bold hover:border-caramel-300 hover:bg-caramel-50 transition-all duration-200 flex items-center justify-center gap-2"
-                    >
-                      <Plus size={18} />
-                      段階を追加する
-                    </button>
-                    <p className="text-xs text-gray-400 mt-2">
-                      第1目標は¥{MIN_GOAL_AMOUNT.toLocaleString()}
-                      以上。各段階は金額と達成内容の両方が必要です。
-                    </p>
-                  </div>
-
-                  <Input
-                    label="掲載終了日"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => updateField("endDate", e.target.value)}
-                    min={jstDateAfterDays(7)}
-                    fullWidth
-                    hint="最短7日・最長90日"
-                  />
-
-                  {/* 手数料の説明 */}
-                  <div className="p-4 rounded-2xl bg-green-50 border-2 border-green-100">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">💰</div>
-                      <div>
-                        <p className="font-bold text-green-700 mb-1">掲載者の手数料は完全0円！</p>
-                        <p className="text-sm text-green-600">
-                          CaramYellは掲載者への手数料を一切いただきません。
-                          出資者側に{BACKER_FEE_PERCENT}%の手数料が上乗せされる仕組みです。
-                        </p>
-                        <p className="text-xs text-green-500 mt-1">
-                          例：¥{FEE_EXAMPLE.baseText}のリターンを選んだ出資者は ¥{FEE_EXAMPLE.totalText} をお支払いいただきます
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* STEP 4: リターン設定 */}
-            {currentStep === 4 && (
-              <div className="space-y-4">
-                <Card>
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    🎁 リターンを設定する
-                  </h2>
-                  <p className="text-sm text-gray-500 mb-4">
-                    支援者へのお礼を設定しましょう。デジタルコンテンツも設定できます。
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    {[
-                      { type: "physical", icon: <Package size={20} />, label: "物品", desc: "グッズ等" },
-                      { type: "digital", icon: <Smartphone size={20} />, label: "デジタル", desc: "ボイス・画像・動画" },
-                      { type: "experience", icon: <Star size={20} />, label: "体験", desc: "イベント・特典" },
-                    ].map((t) => (
-                      <div key={t.type} className="text-center p-3 rounded-2xl bg-caramel-50">
-                        <div className="text-caramel-500 mx-auto mb-1 flex justify-center">{t.icon}</div>
-                        <p className="text-xs font-bold text-gray-700">{t.label}</p>
-                        <p className="text-xs text-gray-400">{t.desc}</p>
-                      </div>
+                        <input
+                          type="text"
+                          value={m.description || ""}
+                          onChange={(e) => updateMilestone(i, "description", e.target.value)}
+                          placeholder="補足説明（任意）"
+                          className={cn(fieldClass, "w-full mt-2 px-3 text-sm")}
+                        />
+                      </li>
                     ))}
-                  </div>
+                  </ol>
 
-                  {/* 金額自由の応援（リターンなし）を受け付けるか */}
                   <button
-                    type="button"
-                    onClick={() => updateField("allowFreeAmount", !formData.allowFreeAmount)}
-                    className={cn(
-                      "w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all",
-                      formData.allowFreeAmount
-                        ? "border-candy-pink bg-candy-pink/5"
-                        : "border-caramel-100 hover:border-caramel-200"
-                    )}
+                    onClick={addMilestone}
+                    className="w-full mt-3 h-11 rounded-lg border border-dashed border-line-strong text-sm font-bold text-ink-soft hover:bg-cream-50 hover:text-ink transition-colors flex items-center justify-center gap-2"
                   >
-                    <div
-                      className={cn(
-                        "relative w-11 h-6 rounded-full flex-shrink-0 transition-colors",
-                        formData.allowFreeAmount ? "bg-candy-pink" : "bg-caramel-200"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
-                          formData.allowFreeAmount && "translate-x-5"
-                        )}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-800 text-sm">
-                        金額自由の応援（リターンなし）を受け付ける
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        オンにすると、支援者が好きな金額でリターンなしの純粋な応援ができます。
-                      </p>
-                    </div>
+                    <Plus size={16} />
+                    段階を追加する
                   </button>
+                  <p className="text-xs text-ink-muted mt-2">
+                    第1目標は¥{MIN_GOAL_AMOUNT.toLocaleString()}
+                    以上。各段階は金額と達成内容の両方が必要です。
+                  </p>
+                </div>
+
+                <Input
+                  label="掲載終了日"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => updateField("endDate", e.target.value)}
+                  min={jstDateAfterDays(7)}
+                  fullWidth
+                  hint="最短7日・最長90日"
+                />
+
+                {/* 手数料の説明 */}
+                <div className="px-4 py-3.5 rounded-lg bg-cream-100">
+                  <p className="text-sm font-bold text-ink mb-1">
+                    掲載者の手数料は0円です
+                  </p>
+                  <p className="text-sm text-ink-soft leading-relaxed">
+                    CaramYellは掲載者から手数料をいただきません。
+                    支援者側に{BACKER_FEE_PERCENT}%の手数料が上乗せされる仕組みです。
+                  </p>
+                  <p className="text-xs text-ink-muted mt-1 tabular-nums">
+                    例：¥{FEE_EXAMPLE.baseText}のリターンを選んだ支援者は ¥{FEE_EXAMPLE.totalText} をお支払いいただきます
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* STEP 4: リターン設定 */}
+          {currentStep === 4 && (
+            <div className="space-y-4">
+              <Card className="rounded-xl">
+                <StepHeading>リターン</StepHeading>
+                <p className="text-sm text-ink-muted leading-relaxed -mt-3 mb-4">
+                  支援者へのお礼を設定します。種類は次の3つから選べます。
+                </p>
+
+                <dl className="grid grid-cols-3 rounded-lg border border-line divide-x divide-line mb-6">
+                  {[
+                    { label: "物品", desc: "グッズ等" },
+                    { label: "デジタル", desc: "ボイス・画像・動画" },
+                    { label: "体験", desc: "イベント・特典" },
+                  ].map((t) => (
+                    <div key={t.label} className="px-3 py-2.5 min-w-0">
+                      <dt className="text-xs font-bold text-ink">{t.label}</dt>
+                      <dd className="text-xs text-ink-muted">{t.desc}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                <div className="rounded-lg border border-line divide-y divide-line">
+                  {/* 金額自由の応援（リターンなし）を受け付けるか */}
+                  <ToggleRow
+                    checked={formData.allowFreeAmount}
+                    onToggle={() => updateField("allowFreeAmount", !formData.allowFreeAmount)}
+                    title="金額自由の応援（リターンなし）を受け付ける"
+                    description="オンにすると、支援者が好きな金額でリターンなしの応援ができます。"
+                  />
 
                   {/* コメント欄の有無 */}
-                  <button
-                    type="button"
-                    onClick={() => updateField("allowComments", !formData.allowComments)}
-                    className={cn(
-                      "w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all mt-3",
-                      formData.allowComments
-                        ? "border-candy-pink bg-candy-pink/5"
-                        : "border-caramel-100 hover:border-caramel-200"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "relative w-11 h-6 rounded-full flex-shrink-0 transition-colors",
-                        formData.allowComments ? "bg-candy-pink" : "bg-caramel-200"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
-                          formData.allowComments && "translate-x-5"
-                        )}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-800 text-sm">
-                        コメント欄を設置する
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        オンにすると、支援者がプロジェクトページにコメントを投稿できます。
-                      </p>
-                    </div>
-                  </button>
-                </Card>
-
-                {formData.rewards.map((reward, i) => (
-                  <RewardForm
-                    key={i}
-                    reward={reward}
-                    index={i}
-                    onChange={(field, value) => updateReward(i, field, value)}
-                    onRemove={() => removeReward(i)}
+                  <ToggleRow
+                    checked={formData.allowComments}
+                    onToggle={() => updateField("allowComments", !formData.allowComments)}
+                    title="コメント欄を設置する"
+                    description="オンにすると、支援者がプロジェクトページにコメントを投稿できます。"
                   />
-                ))}
+                </div>
+              </Card>
 
-                <button
-                  onClick={addReward}
-                  className="w-full py-4 rounded-3xl border-2 border-dashed border-caramel-200 text-caramel-500 font-bold hover:border-caramel-300 hover:bg-caramel-50 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <Plus size={20} />
-                  リターンを追加する
-                </button>
-
-                {formData.rewards.length === 0 && (
-                  <p className="text-center text-sm text-gray-400 pb-2">
-                    リターンなしでも掲載できます（応援のみ）
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* STEP 5: デザイン */}
-            {currentStep === 5 && (
-              <div>
-                <Card className="mb-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    🎨 ページの見た目を決める
-                  </h2>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    プロジェクトページの配色とフォントです。あとから何度でも変えられるので、
-                    迷ったらそのままで大丈夫です。
-                  </p>
-                </Card>
-
-                <ThemeEditor
-                  theme={formData.theme}
-                  onChange={(theme) => updateField("theme", theme)}
-                  preview={{
-                    title: formData.title,
-                    tagline: formData.tagline || formData.title,
-                    imageUrl: formData.mainImageUrl,
-                    goalAmount: validMilestones()[0]?.amount ?? 0,
-                  }}
+              {formData.rewards.map((reward, i) => (
+                <RewardForm
+                  key={i}
+                  reward={reward}
+                  index={i}
+                  onChange={(field, value) => updateReward(i, field, value)}
+                  onRemove={() => removeReward(i)}
                 />
-              </div>
-            )}
+              ))}
 
-            {/* STEP 6: 確認 */}
-            {currentStep === 6 && (
-              <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-6">
-                  🚀 内容を確認して申請する
-                </h2>
+              <button
+                onClick={addReward}
+                className="w-full h-12 rounded-xl border border-dashed border-line-strong bg-white text-sm font-bold text-ink-soft hover:bg-cream-50 hover:text-ink transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus size={16} />
+                リターンを追加する
+              </button>
 
-                <div className="space-y-4">
-                  <ReviewItem label="タイトル" value={formData.title || "（未入力）"} />
-                  <ReviewItem
-                    label="公開URL"
-                    value={
-                      finalSlug
-                        ? `${SITE_HOST}/projects/${finalSlug}`
-                        : "（自動で決まります）"
-                    }
-                  />
-                  <ReviewItem label="カテゴリー" value={categories.find(c => c.slug === formData.category)?.name || "（未選択）"} />
-                  <ReviewItem label="タグライン" value={formData.tagline || "（未入力）"} />
-                  <ReviewItem
-                    label="第1目標"
-                    value={
-                      validMilestones()[0]
-                        ? `¥${validMilestones()[0].amount.toLocaleString()}`
-                        : "（未設定）"
-                    }
-                  />
-                  <div className="py-3 border-b border-caramel-100">
-                    <span className="text-sm text-gray-500 font-medium block mb-2">段階ゴール</span>
+              {formData.rewards.length === 0 && (
+                <p className="text-center text-sm text-ink-muted pb-2">
+                  リターンなしでも掲載できます（応援のみ）
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* STEP 5: デザイン */}
+          {currentStep === 5 && (
+            <div>
+              <Card className="rounded-xl mb-6">
+                <StepHeading>ページのデザイン</StepHeading>
+                <p className="text-sm text-ink-muted leading-relaxed -mt-3">
+                  プロジェクトページの配色とフォントです。あとから何度でも変えられるので、
+                  迷ったらそのままで大丈夫です。
+                </p>
+              </Card>
+
+              <ThemeEditor
+                theme={formData.theme}
+                onChange={(theme) => updateField("theme", theme)}
+                preview={{
+                  title: formData.title,
+                  tagline: formData.tagline || formData.title,
+                  imageUrl: formData.mainImageUrl,
+                  goalAmount: validMilestones()[0]?.amount ?? 0,
+                }}
+              />
+            </div>
+          )}
+
+          {/* STEP 6: 確認 */}
+          {currentStep === 6 && (
+            <Card className="rounded-xl">
+              <StepHeading>内容の確認と申請</StepHeading>
+
+              <dl className="divide-y divide-line border-y border-line">
+                <ReviewItem label="タイトル" value={formData.title || "（未入力）"} />
+                <ReviewItem
+                  label="公開URL"
+                  value={
+                    finalSlug
+                      ? `${SITE_HOST}/projects/${finalSlug}`
+                      : "（自動で決まります）"
+                  }
+                />
+                <ReviewItem label="カテゴリー" value={categories.find(c => c.slug === formData.category)?.name || "（未選択）"} />
+                <ReviewItem label="タグライン" value={formData.tagline || "（未入力）"} />
+                <ReviewItem
+                  label="第1目標"
+                  value={
+                    validMilestones()[0]
+                      ? `¥${validMilestones()[0].amount.toLocaleString()}`
+                      : "（未設定）"
+                  }
+                />
+                <div className="py-3">
+                  <dt className="text-sm text-ink-muted mb-2">段階ゴール</dt>
+                  <dd>
                     {validMilestones().length > 0 ? (
                       <ol className="space-y-1">
                         {validMilestones().map((m, i) => (
-                          <li key={i} className="flex justify-between text-sm">
-                            <span className="text-gray-700 font-semibold">
+                          <li key={i} className="flex justify-between gap-3 text-sm">
+                            <span className="text-ink-soft min-w-0">
                               {i + 1}. {m.title}
                             </span>
-                            <span className="font-bold text-caramel-600">
+                            <span className="font-bold text-ink tabular-nums">
                               ¥{m.amount.toLocaleString()}
                             </span>
                           </li>
                         ))}
                       </ol>
                     ) : (
-                      <span className="text-sm font-bold text-gray-800">（未設定）</span>
+                      <span className="text-sm font-bold text-ink">（未設定）</span>
                     )}
-                  </div>
-                  <ReviewItem label="掲載終了日" value={formData.endDate || "（未設定）"} />
-                  <ReviewItem label="リターン数" value={`${formData.rewards.length}種類`} />
+                  </dd>
+                </div>
+                <ReviewItem label="掲載終了日" value={formData.endDate || "（未設定）"} />
+                <ReviewItem label="リターン数" value={`${formData.rewards.length}種類`} />
+              </dl>
 
-                  <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-100 mt-6">
-                    <div className="flex gap-3">
-                      <Info size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-amber-700">
-                        <p className="font-bold mb-1">申請後の流れ</p>
-                        <ul className="space-y-1 text-xs">
-                          <li>✅ 申請完了（即時）</li>
-                          <li>⏱️ 審査（最短30分）</li>
-                          <li>🎉 掲載開始（審査通過後）</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
+              <div className="mt-6 px-4 py-3.5 rounded-lg bg-cream-100">
+                <p className="text-sm font-bold text-ink mb-2">申請後の流れ</p>
+                <ol className="space-y-1 text-sm text-ink-soft list-decimal list-inside">
+                  <li>申請が完了します</li>
+                  <li>運営が内容を確認します</li>
+                  <li>確認が済むと掲載が始まります</li>
+                </ol>
+              </div>
 
-                  {/* プレビュー・関係者リンク */}
-                  <div className="p-4 rounded-2xl bg-caramel-50 border-2 border-caramel-100 mt-6 space-y-3">
-                    <p className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                      👀 公開前に見え方を確認
-                    </p>
-                    <button
-                      onClick={handlePreview}
-                      disabled={isPreviewing || isSaving}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white btn-pop disabled:opacity-60"
-                      style={{ background: "linear-gradient(135deg, #C9A87C, #8FD4C4)" }}
-                    >
-                      <ExternalLink size={16} />
-                      {isPreviewing ? "準備中..." : "実際の掲載画面を別窓でプレビュー"}
-                    </button>
-
-                    <div className="pt-1">
-                      <p className="text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
-                        <Link2 size={14} />
-                        関係者プレビューリンク
-                      </p>
-                      {previewToken ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            readOnly
-                            value={previewUrl}
-                            onFocus={(e) => e.currentTarget.select()}
-                            className="flex-1 min-w-0 px-3 py-2 rounded-xl border-2 border-caramel-200 text-xs text-gray-600 bg-white outline-none"
-                          />
-                          <button
-                            onClick={copyPreviewLink}
-                            className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-white"
-                            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
-                          >
-                            <Copy size={14} />
-                            コピー
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={copyPreviewLink}
-                          disabled={isSaving}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-caramel-600 border-2 border-caramel-200 hover:bg-white transition-colors disabled:opacity-60"
-                        >
-                          <Link2 size={14} />
-                          リンクを発行してコピー
-                        </button>
-                      )}
-                      <p className="text-[11px] text-gray-400 mt-1.5">
-                        ログイン不要で閲覧できます。未公開の内容なので共有先にご注意ください。
-                      </p>
-                    </div>
-                  </div>
-
+              {/* プレビュー・関係者リンク */}
+              <section className="mt-6 rounded-lg border border-line p-4 space-y-4">
+                <div>
+                  <p className="text-sm font-bold text-ink mb-2">
+                    公開前に見え方を確認
+                  </p>
                   <Button
+                    variant="outline"
                     fullWidth
-                    size="xl"
-                    onClick={handleSubmit}
-                    icon={<Sparkles size={20} />}
-                    className="mt-4"
+                    onClick={handlePreview}
+                    disabled={isPreviewing || isSaving}
+                    icon={<ExternalLink size={16} />}
                   >
-                    プロジェクトを申請する（無料）
+                    {isPreviewing ? "準備中..." : "実際の掲載画面を別窓でプレビュー"}
                   </Button>
+                </div>
 
-                  <p className="text-xs text-center text-gray-400">
-                    申請後も内容は編集できます
+                <div className="pt-4 border-t border-line">
+                  <p className="text-xs font-bold text-ink-muted mb-1.5 flex items-center gap-1.5">
+                    <Link2 size={14} />
+                    関係者プレビューリンク
+                  </p>
+                  {previewToken ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        readOnly
+                        value={previewUrl}
+                        onFocus={(e) => e.currentTarget.select()}
+                        className="flex-1 min-w-0 h-10 px-3 rounded-lg border border-line-strong bg-cream-50 text-xs text-ink-soft outline-none"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={copyPreviewLink}
+                        icon={<Copy size={14} />}
+                        className="flex-shrink-0"
+                      >
+                        コピー
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      onClick={copyPreviewLink}
+                      disabled={isSaving}
+                      icon={<Link2 size={14} />}
+                    >
+                      リンクを発行してコピー
+                    </Button>
+                  )}
+                  <p className="text-[11px] text-ink-muted mt-1.5">
+                    ログイン不要で閲覧できます。未公開の内容なので共有先にご注意ください。
                   </p>
                 </div>
-              </Card>
-            )}
-          </motion.div>
-        </AnimatePresence>
+              </section>
+
+              <Button
+                fullWidth
+                size="xl"
+                onClick={handleSubmit}
+                className="mt-6"
+              >
+                プロジェクトを申請する
+              </Button>
+
+              <p className="text-xs text-center text-ink-muted mt-3">
+                申請後も内容は編集できます
+              </p>
+            </Card>
+          )}
+        </div>
 
         {/* ナビゲーションボタン */}
         {currentStep < steps.length && nextBlockedReason() && (
-          <div className="flex items-start gap-2 mt-6 p-3 rounded-2xl bg-amber-50 border-2 border-amber-100">
-            <Info size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-semibold text-amber-700">
+          <div className="flex items-start gap-2 mt-6 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200">
+            <Info size={16} className="text-amber-700 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
               {nextBlockedReason()}
             </p>
           </div>
@@ -1283,7 +1169,7 @@ export default function CreateProjectClient() {
         <div className="flex items-center justify-between gap-2 mt-6">
           <Button
             variant="ghost"
-            icon={<ChevronLeft size={18} />}
+            icon={<ChevronLeft size={16} />}
             onClick={() => setCurrentStep((s) => s - 1)}
             disabled={currentStep === 1}
           >
@@ -1291,18 +1177,18 @@ export default function CreateProjectClient() {
           </Button>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
               onClick={() => saveDraft()}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold text-caramel-600 border-2 border-caramel-200 hover:bg-caramel-50 transition-colors disabled:opacity-60"
+              icon={<Save size={16} />}
             >
-              <Save size={16} />
               {isSaving ? "保存中..." : "下書き保存"}
-            </button>
+            </Button>
 
             {currentStep < steps.length ? (
               <Button
-                icon={<ChevronRight size={18} />}
+                icon={<ChevronRight size={16} />}
                 iconPosition="right"
                 onClick={() => setCurrentStep((s) => s + 1)}
                 disabled={!canGoNext()}
@@ -1314,6 +1200,57 @@ export default function CreateProjectClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+function StepHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      className="text-xl font-bold text-ink mb-6"
+      style={{ fontFamily: "var(--font-display)" }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+function ToggleRow({
+  checked,
+  onToggle,
+  title,
+  description,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  title: string;
+  description: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-cream-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
+    >
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-ink text-sm">{title}</p>
+        <p className="text-xs text-ink-muted mt-0.5">{description}</p>
+      </div>
+      <span
+        className={cn(
+          "relative w-10 h-6 rounded-full flex-shrink-0 transition-colors",
+          checked ? "bg-ink" : "bg-line-strong"
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform",
+            checked && "translate-x-4"
+          )}
+        />
+      </span>
+    </button>
   );
 }
 
@@ -1329,124 +1266,120 @@ function RewardForm({
   onRemove: () => void;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <Card variant="outlined">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-gray-700">リターン {index + 1}</h3>
-          <button
-            onClick={onRemove}
-            className="p-1.5 rounded-full text-red-400 hover:bg-red-50 transition-colors"
-          >
-            <Trash2 size={16} />
-          </button>
+    <Card className="rounded-xl">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-ink">リターン {index + 1}</h3>
+        <button
+          onClick={onRemove}
+          aria-label="このリターンを削除"
+          className="p-1.5 rounded-md text-ink-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { value: "physical", label: "物品", needsAddress: true },
+            { value: "digital", label: "デジタル", needsAddress: false },
+            { value: "experience", label: "体験", needsAddress: false },
+          ].map((t) => (
+            <button
+              key={t.value}
+              onClick={() => {
+                onChange("rewardType", t.value);
+                onChange("needsAddress", t.needsAddress);
+              }}
+              aria-pressed={reward.rewardType === t.value}
+              className={cn(
+                "h-10 rounded-lg text-xs font-bold border transition-colors",
+                reward.rewardType === t.value
+                  ? "border-ink bg-ink text-white"
+                  : "border-line-strong bg-white text-ink-soft hover:bg-cream-50"
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { value: "physical", label: "📦 物品", needsAddress: true },
-              { value: "digital", label: "📱 デジタル", needsAddress: false },
-              { value: "experience", label: "⭐ 体験", needsAddress: false },
-            ].map((t) => (
-              <button
-                key={t.value}
-                onClick={() => {
-                  onChange("rewardType", t.value);
-                  onChange("needsAddress", t.needsAddress);
-                }}
-                className={cn(
-                  "py-2 rounded-xl text-xs font-bold border-2 transition-all",
-                  reward.rewardType === t.value
-                    ? "text-white border-transparent"
-                    : "border-caramel-100 text-gray-500 hover:border-caramel-200"
-                )}
-                style={reward.rewardType === t.value ? { background: "linear-gradient(135deg, #F2807B, #F5A34B)" } : {}}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+        <Input
+          label="タイトル"
+          placeholder="例：限定お礼ボイス＋デジタルアルバム"
+          value={reward.title}
+          onChange={(e) => onChange("title", e.target.value)}
+          fullWidth
+        />
 
+        <Textarea
+          label="説明"
+          placeholder="このリターンの詳細を説明してください"
+          value={reward.description}
+          onChange={(e) => onChange("description", e.target.value)}
+          rows={3}
+          fullWidth
+        />
+
+        <EnglishPanel
+          hasContent={Boolean(reward.titleEn || reward.descriptionEn)}
+        >
           <Input
-            label="タイトル"
-            placeholder="例：限定お礼ボイス＋デジタルアルバム"
-            value={reward.title}
-            onChange={(e) => onChange("title", e.target.value)}
+            label="Title"
+            placeholder="e.g. Limited thank-you voice message + digital album"
+            value={reward.titleEn}
+            onChange={(e) => onChange("titleEn", e.target.value)}
             fullWidth
           />
-
           <Textarea
-            label="説明"
-            placeholder="このリターンの詳細を説明してください"
-            value={reward.description}
-            onChange={(e) => onChange("description", e.target.value)}
+            label="Description"
+            placeholder="Describe this reward in English"
+            value={reward.descriptionEn}
+            onChange={(e) => onChange("descriptionEn", e.target.value)}
             rows={3}
             fullWidth
           />
+        </EnglishPanel>
 
-          <EnglishPanel
-            hasContent={Boolean(reward.titleEn || reward.descriptionEn)}
-          >
-            <Input
-              label="Title"
-              placeholder="e.g. Limited thank-you voice message + digital album"
-              value={reward.titleEn}
-              onChange={(e) => onChange("titleEn", e.target.value)}
-              fullWidth
-            />
-            <Textarea
-              label="Description"
-              placeholder="Describe this reward in English"
-              value={reward.descriptionEn}
-              onChange={(e) => onChange("descriptionEn", e.target.value)}
-              rows={3}
-              fullWidth
-            />
-          </EnglishPanel>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="金額（円）"
-              type="number"
-              value={reward.amount.toString()}
-              onChange={(e) => onChange("amount", parseInt(e.target.value) || 0)}
-              fullWidth
-            />
-            <Input
-              label="数量制限（任意）"
-              type="number"
-              placeholder="無制限"
-              value={reward.quantityTotal?.toString() || ""}
-              onChange={(e) => onChange("quantityTotal", e.target.value ? parseInt(e.target.value) : undefined)}
-              fullWidth
-            />
-          </div>
-
-          {reward.rewardType !== "digital" && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={reward.needsAddress}
-                onChange={(e) => onChange("needsAddress", e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm font-medium text-gray-600">住所入力が必要</span>
-            </label>
-          )}
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            label="金額（円）"
+            type="number"
+            value={reward.amount.toString()}
+            onChange={(e) => onChange("amount", parseInt(e.target.value) || 0)}
+            fullWidth
+          />
+          <Input
+            label="数量制限（任意）"
+            type="number"
+            placeholder="無制限"
+            value={reward.quantityTotal?.toString() || ""}
+            onChange={(e) => onChange("quantityTotal", e.target.value ? parseInt(e.target.value) : undefined)}
+            fullWidth
+          />
         </div>
-      </Card>
-    </motion.div>
+
+        {reward.rewardType !== "digital" && (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={reward.needsAddress}
+              onChange={(e) => onChange("needsAddress", e.target.checked)}
+              className="rounded"
+            />
+            <span className="text-sm font-medium text-ink-soft">住所入力が必要</span>
+          </label>
+        )}
+      </div>
+    </Card>
   );
 }
 
 function ReviewItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between py-3 border-b border-caramel-100 last:border-0">
-      <span className="text-sm text-gray-500 font-medium">{label}</span>
-      <span className="text-sm font-bold text-gray-800 text-right max-w-[60%]">{value}</span>
+    <div className="flex items-start justify-between gap-4 py-3">
+      <dt className="text-sm text-ink-muted flex-shrink-0">{label}</dt>
+      <dd className="text-sm font-bold text-ink text-right min-w-0 break-words max-w-[65%]">{value}</dd>
     </div>
   );
 }

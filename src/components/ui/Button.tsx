@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ButtonHTMLAttributes, forwardRef, ReactNode, useState } from "react";
-import { Loader2, Heart } from "lucide-react";
+import { ButtonHTMLAttributes, forwardRef, ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -11,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
   iconPosition?: "left" | "right";
   fullWidth?: boolean;
-  /** ホバー時にハートが現れる演出（デザインカンプ「ホバーボタンの変化」） */
+  /** 互換のために残している旧オプション。演出はもう行わない */
   heartOnHover?: boolean;
 }
 
@@ -25,33 +25,32 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       icon,
       iconPosition = "left",
       fullWidth = false,
-      heartOnHover = false,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      heartOnHover,
       className,
       disabled,
       ...props
     },
     ref
   ) => {
-    const [hovered, setHovered] = useState(false);
-
     const variants = {
       primary:
-        "text-white font-bold shadow-caramel btn-pop disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
+        "text-white font-bold hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed",
       secondary:
-        "text-caramel-700 font-bold bg-caramel-50 hover:bg-caramel-100 transition-colors duration-200",
+        "text-caramel-700 font-bold bg-caramel-50 hover:bg-caramel-100 disabled:opacity-50",
       outline:
-        "text-caramel-600 font-bold border-2 border-caramel-300 bg-white hover:bg-caramel-50 transition-colors duration-200",
+        "text-ink font-bold border border-line-strong bg-white hover:bg-cream-100 disabled:opacity-50",
       ghost:
-        "text-gray-600 font-semibold hover:bg-gray-100 transition-colors duration-200",
+        "text-ink-soft font-semibold hover:bg-cream-100 disabled:opacity-50",
       danger:
-        "text-white font-bold bg-red-500 hover:bg-red-600 transition-colors duration-200 shadow-sm",
+        "text-white font-bold bg-red-600 hover:bg-red-700 disabled:opacity-50",
     };
 
     const sizes = {
-      sm: "px-3 py-1.5 text-xs rounded-full",
-      md: "px-5 py-2.5 text-sm rounded-full",
-      lg: "px-7 py-3 text-base rounded-full",
-      xl: "px-10 py-4 text-lg rounded-full",
+      sm: "h-8 px-3 text-xs rounded-md",
+      md: "h-10 px-4 text-sm rounded-lg",
+      lg: "h-12 px-6 text-[15px] rounded-lg",
+      xl: "h-14 px-8 text-base rounded-lg",
     };
 
     // プロジェクトページのテーマ配下では --pt-* が定義される。
@@ -59,22 +58,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const primaryStyle =
       variant === "primary"
         ? {
-            background:
-              "var(--pt-gradient, linear-gradient(135deg, #F2807B 0%, #E8842C 60%, #F5A34B 100%))",
-            boxShadow: "0 4px 20px var(--pt-glow, rgba(232, 132, 44, 0.4))",
+            background: "var(--pt-gradient, #1C1917)",
+            boxShadow: "var(--pt-button-shadow, none)",
           }
         : {};
-
-    const showHeart = heartOnHover && hovered && !loading;
 
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         className={cn(
-          "inline-flex items-center justify-center gap-2 transition-all duration-200 select-none",
+          "inline-flex items-center justify-center gap-2 transition-[background-color,filter,opacity] duration-150 select-none",
           variants[variant],
           sizes[size],
           fullWidth && "w-full",
@@ -85,8 +79,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <Loader2 size={16} className="animate-spin" />
-        ) : showHeart ? (
-          <Heart size={16} className="fill-current animate-fade-in" />
         ) : (
           icon && iconPosition === "left" && icon
         )}

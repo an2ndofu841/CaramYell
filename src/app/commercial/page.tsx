@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import LegalPageLayout, { Callout } from "@/components/layout/LegalPageLayout";
 import { BACKER_FEE_PERCENT } from "@/lib/config/fees";
 import { paymentMethodList } from "@/lib/config/payment-methods";
 
@@ -19,9 +19,9 @@ const UPDATED_AT = "2026年8月11日";
  */
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid gap-1 py-5 sm:grid-cols-[13rem_1fr] sm:gap-6 border-b border-caramel-100 last:border-b-0">
-      <dt className="text-sm font-bold text-gray-700 sm:pt-0.5">{label}</dt>
-      <dd className="text-sm text-gray-600 leading-relaxed space-y-2">
+    <div className="grid gap-1 py-5 sm:grid-cols-[13rem_1fr] sm:gap-6 border-b border-line last:border-b-0">
+      <dt className="text-sm font-bold text-ink sm:pt-0.5">{label}</dt>
+      <dd className="text-sm text-ink-soft leading-relaxed space-y-2">
         {children}
       </dd>
     </div>
@@ -30,27 +30,13 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 export default function CommercialPage() {
   return (
-    <div
-      className="min-h-screen pt-28 pb-20 px-4 sm:px-6"
-      style={{ background: "linear-gradient(180deg, #FFFBF5 0%, #FFFFFF 100%)" }}
+    <LegalPageLayout
+      eyebrow="Legal notice"
+      title="特定商取引法に基づく表記"
+      lead="特定商取引法第11条に基づき、CaramYell の運営事業者と取引条件について表示しています。"
+      updatedAt={UPDATED_AT}
     >
-      <div className="max-w-3xl mx-auto">
-        <header className="text-center mb-10">
-          <span
-            className="inline-block px-4 py-1.5 rounded-full text-sm font-bold mb-4"
-            style={{ background: "rgba(244, 123, 10, 0.1)", color: "#F47B0A" }}
-          >
-            📋 法定表記
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-3">
-            特定商取引法に基づく表記
-          </h1>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            {"特定商取引法第11条に基づき、CaramYell の運営事業者と取引条件について表示しています。"}
-          </p>
-        </header>
-
-        <div className="bg-white rounded-3xl shadow-soft p-6 sm:p-8">
+        <div className="bg-white rounded-xl border border-line px-6 sm:px-8 py-2">
           <dl>
             <Row label="事業者名">株式会社めしあがレーベル</Row>
 
@@ -66,7 +52,7 @@ export default function CommercialPage() {
             <Row label="電話番号">
               <a
                 href="tel:07085095708"
-                className="font-bold text-caramel-600 hover:underline"
+                className="font-bold text-ink underline underline-offset-2 hover:text-caramel-600 break-all"
               >
                 070-8509-5708
               </a>
@@ -75,11 +61,11 @@ export default function CommercialPage() {
             <Row label="メールアドレス">
               <a
                 href="mailto:info@mlbl.co.jp"
-                className="font-bold text-caramel-600 hover:underline"
+                className="font-bold text-ink underline underline-offset-2 hover:text-caramel-600 break-all"
               >
                 info@mlbl.co.jp
               </a>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-ink-muted">
                 お問い合わせはメールでの受付を基本としています。
               </p>
             </Row>
@@ -87,7 +73,7 @@ export default function CommercialPage() {
             <Row label="サイトURL">
               <a
                 href="https://caramyell.com"
-                className="font-bold text-caramel-600 hover:underline"
+                className="font-bold text-ink underline underline-offset-2 hover:text-caramel-600 break-all"
               >
                 https://caramyell.com
               </a>
@@ -113,7 +99,7 @@ export default function CommercialPage() {
 
             <Row label="お支払い方法">
               <p>{`${paymentMethodList("ja")}（決済代行：Stripe, Inc.）`}</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-ink-muted">
                 {"クレジットカード番号などの決済情報は Stripe が取り扱い、当社のサーバーには保存されません。"}
               </p>
             </Row>
@@ -159,38 +145,13 @@ export default function CommercialPage() {
           </dl>
         </div>
 
-        <div className="mt-6 rounded-3xl border-2 border-caramel-100 bg-caramel-50/50 p-6">
-          <h2 className="text-sm font-bold text-gray-700 mb-2">
-            リターンの提供主体について
-          </h2>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            {"CaramYell は、掲載者（プロジェクトの実施者）と支援者をつなぐ場を提供しています。リターンの企画・制作・提供は各掲載者が行います。個別のプロジェクトやリターンに関するお問い合わせも、まずは上記の連絡先までご連絡ください。当社から掲載者へお取り次ぎします。"}
-          </p>
+        <div className="mt-6">
+          <Callout title="リターンの提供主体について">
+            <p>
+              CaramYell は、掲載者（プロジェクトの実施者）と支援者をつなぐ場を提供しています。リターンの企画・制作・提供は各掲載者が行います。個別のプロジェクトやリターンに関するお問い合わせも、まずは上記の連絡先までご連絡ください。当社から掲載者へお取り次ぎします。
+            </p>
+          </Callout>
         </div>
-
-        <p className="text-xs text-gray-400 text-center mt-8">
-          最終更新日：{UPDATED_AT}
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-          <Link
-            href="/"
-            className="px-8 py-3 rounded-full text-white font-bold btn-pop text-center"
-            style={{
-              background: "linear-gradient(135deg, #F2807B, #F5A34B)",
-              boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)",
-            }}
-          >
-            トップへ戻る
-          </Link>
-          <Link
-            href="/projects"
-            className="px-8 py-3 rounded-full font-bold text-gray-500 border-2 border-caramel-100 hover:bg-caramel-50 transition-colors text-center"
-          >
-            プロジェクトを見る
-          </Link>
-        </div>
-      </div>
-    </div>
+    </LegalPageLayout>
   );
 }

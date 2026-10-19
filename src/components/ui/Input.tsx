@@ -15,7 +15,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={cn("flex flex-col gap-1.5", fullWidth && "w-full")}>
         {label && (
-          <label className="text-sm font-semibold text-gray-700">{label}</label>
+          <label className="text-sm font-bold text-ink">{label}</label>
         )}
         <div className="relative">
           {icon && (
@@ -26,13 +26,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             className={cn(
-              "w-full py-3 rounded-2xl border-2 bg-white text-gray-800 placeholder:text-gray-400",
-              "transition-all duration-200 outline-none",
-              "focus:border-candy-pink focus:shadow-candy/20 focus:shadow-md",
+              "w-full h-11 rounded-lg border bg-white text-ink placeholder:text-ink-faint",
+              "transition-colors duration-150 outline-none",
+              "focus:border-ink focus:ring-2 focus:ring-ink/10",
               error
-                ? "border-red-300 focus:border-red-400"
-                : "border-caramel-100 hover:border-caramel-200",
-              icon ? "pl-10 pr-4" : "px-4",
+                ? "border-red-400 focus:border-red-500"
+                : "border-line-strong hover:border-ink-faint",
+              icon ? "pl-10 pr-3.5" : "px-3.5",
               rightElement ? "pr-12" : "",
               className
             )}
@@ -44,8 +44,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
         </div>
-        {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-        {hint && !error && <p className="text-xs text-gray-400">{hint}</p>}
+        {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+        {hint && !error && <p className="text-xs text-ink-muted">{hint}</p>}
       </div>
     );
   }
@@ -64,23 +64,23 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className={cn("flex flex-col gap-1.5", fullWidth && "w-full")}>
         {label && (
-          <label className="text-sm font-semibold text-gray-700">{label}</label>
+          <label className="text-sm font-bold text-ink">{label}</label>
         )}
         <textarea
           ref={ref}
           className={cn(
-            "w-full py-3 px-4 rounded-2xl border-2 bg-white text-gray-800 placeholder:text-gray-400",
-            "transition-all duration-200 outline-none resize-none",
-            "focus:border-candy-pink focus:shadow-candy/20 focus:shadow-md",
+            "w-full py-2.5 px-3.5 rounded-lg border bg-white text-ink placeholder:text-ink-faint",
+            "transition-colors duration-150 outline-none resize-none",
+            "focus:border-ink focus:ring-2 focus:ring-ink/10",
             error
-              ? "border-red-300 focus:border-red-400"
-              : "border-caramel-100 hover:border-caramel-200",
+              ? "border-red-400 focus:border-red-500"
+              : "border-line-strong hover:border-ink-faint",
             className
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-        {hint && !error && <p className="text-xs text-gray-400">{hint}</p>}
+        {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+        {hint && !error && <p className="text-xs text-ink-muted">{hint}</p>}
       </div>
     );
   }

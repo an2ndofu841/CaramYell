@@ -1,10 +1,11 @@
 import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import CreateProjectClient from "./CreateProjectClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "プロジェクトを作る",
-  description: "AIのサポートで、最短10分でクラウドファンディングページを作れます",
+  title: "プロジェクトを作成",
+  description: "基本情報・ゴール・リターン・デザインを入力して、プロジェクトの掲載を申請します",
 };
 
 export default function CreateProjectPage() {
@@ -12,8 +13,8 @@ export default function CreateProjectPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full border-4 border-caramel-200 border-t-candy-pink animate-spin" />
+        <div className="min-h-screen flex items-center justify-center bg-cream-50">
+          <Loader2 size={24} className="animate-spin text-ink-muted" />
         </div>
       }
     >

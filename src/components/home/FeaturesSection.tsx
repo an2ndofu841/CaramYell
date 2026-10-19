@@ -1,72 +1,75 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import AnimatedSection from "@/components/animations/AnimatedSection";
 
-const features = [
+/**
+ * 掲載者向けの機能紹介。生誕祭や周年企画で実際に手間がかかる作業
+ * （名前の掲載、デジタル特典の配布、発送、現地での受け付け）を
+ * 管理画面で片付けられることを伝える。ここに書く機能は実装済みのものだけにする。
+ */
+export const ORGANIZER_FEATURES = [
   {
-    icon: "📊",
-    title: "クリエイターにうれしいサポート",
+    title: "段階ゴールとネクストゴール",
     description:
-      "掲載者の手数料は完全0%。AIがページ作りをサポートし、初めてでも安心のサポート体制。プロモーション支援で広がるチャンス。",
-    linkLabel: "詳しく見る",
-    href: "/about",
-    color: "#E8842C",
-    bg: "rgba(232, 132, 44, 0.06)",
+      "目標を段階に分けて、達成した段階まで実施できます。最終目標を超えたあとの追加目標も設定できます。",
   },
   {
-    icon: "🤝",
-    title: "みんなでつくる温かいコミュニティ",
+    title: "フラスタ用のお名前リスト",
     description:
-      "応援コメントや活動報告で、支援して終わりではないつながりが生まれます。クリエイターとサポーターが一緒に夢を育てます。",
-    linkLabel: "コミュニティを見る",
-    href: "/projects",
-    color: "#F2807B",
-    bg: "rgba(242, 128, 123, 0.06)",
+      "支援額の多い順に、同じ人の複数回の支援を合算した名前の一覧をコピーできます。",
   },
   {
-    icon: "🛡️",
-    title: "はじめての方も安心",
+    title: "デジタルリターンの一括送付",
     description:
-      "ガイドや要所の丁寧な説明で、安心してはじめられます。決済はStripeで安全に処理。アカウント登録なしでも応援できます。",
-    linkLabel: "はじめてガイド",
-    href: "/about",
-    color: "#F3A93C",
-    bg: "rgba(243, 169, 60, 0.08)",
+      "ボイスや画像などのデジタル特典を、対象の支援者へまとめてメールで届けられます。",
+  },
+  {
+    title: "発送の管理",
+    description:
+      "リターンごとに用意する数と送り先を一覧にし、同じ送り先への複数の支援は1つの荷物にまとめます。",
+  },
+  {
+    title: "会場での支援の記録",
+    description:
+      "ライブ会場などで受け取った現金の支援も記録して、集計と達成率に反映できます。",
+  },
+  {
+    title: "ページのデザインと英語表示",
+    description:
+      "アーティストの世界観に合わせて配色と書体を選べます。英語の文面を入れれば海外のファンにも届きます。",
   },
 ];
 
 export default function FeaturesSection() {
   return (
-    <section className="py-16 sm:py-20 relative overflow-hidden" style={{ background: "#FFFBF5" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {features.map((feature, i) => (
-            <AnimatedSection key={i} animation="fade-up" delay={i * 100}>
-              <motion.div
-                className="p-7 rounded-3xl h-full flex flex-col"
-                style={{ background: feature.bg, border: `2px solid ${feature.color}20` }}
-                whileHover={{ y: -4, boxShadow: `0 12px 40px ${feature.color}20` }}
-              >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-bold text-cocoa-700 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-5">
-                  {feature.description}
-                </p>
-                <Link
-                  href={feature.href}
-                  className="inline-flex items-center gap-1.5 self-start px-4 py-2 rounded-full text-xs font-bold text-white btn-pop"
-                  style={{ background: `linear-gradient(135deg, ${feature.color}, ${feature.color}CC)` }}
-                >
-                  {feature.linkLabel}
-                  <ArrowRight size={12} />
-                </Link>
-              </motion.div>
-            </AnimatedSection>
+    <section className="py-16 sm:py-24 bg-white border-t border-line">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+          <div>
+            <p className="eyebrow mb-3">For organizers</p>
+            <h2
+              className="text-2xl sm:text-[28px] font-bold text-ink leading-snug"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              応援企画の運営に必要なことを、
+              <br className="hidden sm:block" />
+              ひとつの管理画面で。
+            </h2>
+          </div>
+          <Link
+            href="/for-agencies"
+            className="inline-flex items-center gap-1 text-sm font-bold text-ink hover:text-caramel-600 transition-colors whitespace-nowrap"
+          >
+            掲載について詳しく
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line border border-line rounded-xl overflow-hidden">
+          {ORGANIZER_FEATURES.map((f) => (
+            <div key={f.title} className="bg-white p-6 sm:p-7">
+              <h3 className="font-bold text-ink">{f.title}</h3>
+              <p className="mt-2 text-sm text-ink-muted leading-relaxed">{f.description}</p>
+            </div>
           ))}
         </div>
       </div>

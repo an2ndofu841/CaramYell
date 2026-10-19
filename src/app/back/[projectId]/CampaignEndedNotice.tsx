@@ -14,15 +14,16 @@ export default function CampaignEndedNotice({
   const t = useT();
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-20 pb-tabbar px-4">
+    <div className="min-h-screen bg-cream-50 flex items-center justify-center pt-24 pb-tabbar px-4">
       <Card className="max-w-md w-full text-center">
-        <div className="w-14 h-14 rounded-full bg-caramel-50 text-caramel-500 flex items-center justify-center mx-auto mb-4">
-          <CalendarX size={26} />
-        </div>
-        <h1 className="text-lg font-bold text-gray-800 mb-2">
+        <CalendarX size={24} strokeWidth={1.75} className="mx-auto mb-4 text-ink-muted" />
+        <h1
+          className="text-lg font-bold text-ink mb-2"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
           {t.detail.endedDisabled}
         </h1>
-        <p className="text-sm text-gray-500 leading-relaxed mb-6">
+        <p className="text-sm text-ink-soft leading-relaxed mb-6">
           {t.detail.endedNotice}
         </p>
         <Link href={`/projects/${projectSlug}`}>

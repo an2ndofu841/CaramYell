@@ -2,17 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Clock,
-  TrendingUp,
-  Users,
-  DollarSign,
-  Loader2,
-  ChevronRight,
-  FileEdit,
-} from "lucide-react";
-import Card from "@/components/ui/Card";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { Loader2, ChevronRight } from "lucide-react";
+import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 
 interface Stats {
   reviewing: number;
@@ -21,6 +12,8 @@ interface Stats {
   completed: number;
   draft: number;
   users: number;
+  /** 確認待ちの掲載申請の数 */
+  pendingApplications: number;
   gmv: number;
   totalBackers: number;
 }
@@ -43,84 +36,122 @@ export default function AdminOverviewPage() {
 
   if (loading) {
     return (
-      <div className="py-16 text-center">
-        <Loader2 size={28} className="animate-spin text-candy-pink mx-auto" />
+      <div className="py-16 flex justify-center">
+        <Loader2 size={24} className="animate-spin text-ink-muted" />
       </div>
     );
   }
 
-  const cards = [
-    { label: "審査待ち", value: `${stats?.reviewing ?? 0}件`, icon: <Clock size={20} />, color: "#F2807B", href: "/admin/review" },
-    { label: "掲載中", value: `${stats?.active ?? 0}件`, icon: <TrendingUp size={20} />, color: "#8FD4C4", href: "/admin/projects" },
-    { label: "登録ユーザー", value: `${formatNumber(stats?.users ?? 0)}人`, icon: <Users size={20} />, color: "#F5A34B", href: "/admin/users" },
-    { label: "流通総額", value: formatCurrency(stats?.gmv ?? 0), icon: <DollarSign size={20} />, color: "#C9A87C" },
+  // 運営が手を動かす必要があるもの。0件のときは目立たせない
+  const todos = [
+    {
+      label: "確認待ちの掲載申請",
+      count: stats?.pendingApplications ?? 0,
+      href: "/admin/applications",
+    },
+    {
+      label: "審査待ちのプロジェクト",
+      count: stats?.reviewing ?? 0,
+      href: "/admin/review",
+    },
+  ];
+
+  const metrics: { label: string; value: string; href?: string }[] = [
+    { label: "掲載中", value: `${formatNumber(stats?.active ?? 0)}件`, href: "/admin/projects" },
+    { label: "登録ユーザー", value: `${formatNumber(stats?.users ?? 0)}人`, href: "/admin/users" },
+    { label: "流通総額", value: formatCurrency(stats?.gmv ?? 0) },
+    { label: "累計支援者", value: `${formatNumber(stats?.totalBackers ?? 0)}人` },
+  ];
+
+  const statusCounts = [
+    { label: "達成", value: stats?.funded ?? 0 },
+    { label: "完了", value: stats?.completed ?? 0 },
+    { label: "下書き", value: stats?.draft ?? 0 },
   ];
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-1">概要</h1>
-      <p className="text-sm text-gray-500 mb-6">サービス全体の状況</p>
+      <h1 className="text-2xl font-bold text-ink mb-1">概要</h1>
+      <p className="text-sm text-ink-muted mb-6">サービス全体の状況</p>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {cards.map((c, i) => {
-          const inner = (
-            <Card hover={!!c.href}>
-              <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white mb-3"
-                style={{ background: c.color }}
-              >
-                {c.icon}
+      <h2 className="text-xs font-bold text-ink-muted mb-2">対応が必要なもの</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line border border-line rounded-xl overflow-hidden mb-8">
+        {todos.map((t) => {
+          const pending = t.count > 0;
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              className="group flex items-center justify-between gap-4 bg-white px-5 py-4 hover:bg-cream-50 transition-colors"
+            >
+              <div className="min-w-0">
+                <p className={cn("text-sm", pending ? "font-bold text-ink" : "text-ink-muted")}>
+                  {t.label}
+                </p>
+                <p
+                  className={cn(
+                    "mt-1 text-2xl font-bold tabular-nums",
+                    pending ? "text-ink" : "text-ink-faint"
+                  )}
+                >
+                  {t.count}
+                  <span className="ml-0.5 text-sm font-semibold">件</span>
+                </p>
               </div>
-              <p className="text-2xl font-bold text-gray-800">{c.value}</p>
-              <p className="text-xs text-gray-400 font-medium mt-1 flex items-center gap-1">
-                {c.label}
-                {c.href && <ChevronRight size={12} />}
-              </p>
-            </Card>
-          );
-          return c.href ? (
-            <Link key={i} href={c.href}>
-              {inner}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {pending && (
+                  <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-800">
+                    要対応
+                  </span>
+                )}
+                <ChevronRight
+                  size={16}
+                  className="text-ink-faint group-hover:text-ink transition-colors"
+                />
+              </div>
             </Link>
-          ) : (
-            <div key={i}>{inner}</div>
           );
         })}
       </div>
 
-      {(stats?.reviewing ?? 0) > 0 && (
-        <Link href="/admin/review">
-          <Card hover>
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}>
-                <FileEdit size={20} />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-gray-800">
-                  {stats?.reviewing}件のプロジェクトが審査待ちです
-                </p>
-                <p className="text-xs text-gray-400">クリックして審査へ</p>
-              </div>
-              <ChevronRight size={18} className="text-gray-400" />
+      <h2 className="text-xs font-bold text-ink-muted mb-2">全体</h2>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden mb-4">
+        {metrics.map((m) => {
+          const inner = (
+            <>
+              <p className="text-xs text-ink-muted flex items-center gap-1">
+                {m.label}
+                {m.href && <ChevronRight size={12} />}
+              </p>
+              <p className="mt-1.5 text-xl sm:text-2xl font-bold text-ink tabular-nums break-all">
+                {m.value}
+              </p>
+            </>
+          );
+          return m.href ? (
+            <Link
+              key={m.label}
+              href={m.href}
+              className="bg-white px-5 py-4 hover:bg-cream-50 transition-colors"
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={m.label} className="bg-white px-5 py-4">
+              {inner}
             </div>
-          </Card>
-        </Link>
-      )}
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-        {[
-          { label: "達成", value: stats?.funded ?? 0 },
-          { label: "完了", value: stats?.completed ?? 0 },
-          { label: "下書き", value: stats?.draft ?? 0 },
-          { label: "累計支援者", value: stats?.totalBackers ?? 0 },
-        ].map((s, i) => (
-          <Card key={i}>
-            <p className="text-xl font-bold text-gray-800">{formatNumber(s.value)}</p>
-            <p className="text-xs text-gray-400 mt-1">{s.label}</p>
-          </Card>
-        ))}
+          );
+        })}
       </div>
+
+      <dl className="flex flex-wrap gap-x-8 gap-y-2 px-1 text-sm">
+        {statusCounts.map((s) => (
+          <div key={s.label} className="flex items-baseline gap-2">
+            <dt className="text-ink-muted">{s.label}</dt>
+            <dd className="font-bold text-ink tabular-nums">{formatNumber(s.value)}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }

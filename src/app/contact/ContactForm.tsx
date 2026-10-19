@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import Button from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { CONTACT_CATEGORIES } from "@/lib/config/contact-categories";
 import { SUPPORT_EMAIL } from "@/lib/config/site";
@@ -62,15 +64,15 @@ export default function ContactForm() {
 
   if (status.kind === "sent") {
     return (
-      <div className="bg-white rounded-3xl shadow-soft p-8 text-center">
-        <p className="text-4xl mb-3">📨</p>
-        <h2 className="text-lg font-bold text-gray-800 mb-2">
+      <div className="bg-white rounded-xl border border-line p-6 sm:p-8">
+        <CheckCircle2 size={22} className="text-emerald-700 mb-3" />
+        <h2 className="text-lg font-bold text-ink mb-2">
           お問い合わせを受け付けました
         </h2>
-        <p className="text-sm text-gray-600 leading-relaxed">
+        <p className="text-sm text-ink-soft leading-relaxed">
           {"内容を確認のうえ、ご入力いただいたメールアドレス宛にご返信します。"}
         </p>
-        <p className="text-xs text-gray-400 mt-3">
+        <p className="text-xs text-ink-muted mt-3">
           {"数日経っても返信が届かない場合は、迷惑メールフォルダをご確認ください。"}
         </p>
       </div>
@@ -79,18 +81,17 @@ export default function ContactForm() {
 
   if (status.kind === "undelivered") {
     return (
-      <div className="bg-white rounded-3xl shadow-soft p-8 text-center">
-        <p className="text-4xl mb-3">🙏</p>
-        <h2 className="text-lg font-bold text-gray-800 mb-2">
+      <div className="bg-white rounded-xl border border-line p-6 sm:p-8">
+        <AlertCircle size={22} className="text-amber-700 mb-3" />
+        <h2 className="text-lg font-bold text-ink mb-2">
           フォームからの送信ができませんでした
         </h2>
-        <p className="text-sm text-gray-600 leading-relaxed mb-4">
+        <p className="text-sm text-ink-soft leading-relaxed mb-4">
           {"お手数ですが、下記のアドレス宛にメールでご連絡ください。入力いただいた内容をそのままお送りいただけます。"}
         </p>
         <a
           href={`mailto:${SUPPORT_EMAIL}`}
-          className="inline-block px-6 py-3 rounded-full text-white font-bold btn-pop"
-          style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+          className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink-soft transition-colors break-all"
         >
           {SUPPORT_EMAIL}
         </a>
@@ -101,7 +102,7 @@ export default function ContactForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-3xl shadow-soft p-6 sm:p-8 space-y-5"
+      className="bg-white rounded-xl border border-line p-6 sm:p-8 space-y-5"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Input
@@ -127,7 +128,7 @@ export default function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="contact-category" className="text-sm font-semibold text-gray-700">
+        <label htmlFor="contact-category" className="text-sm font-bold text-ink">
           お問い合わせの種別
         </label>
         <select
@@ -135,7 +136,7 @@ export default function ContactForm() {
           required
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full py-3 px-4 rounded-2xl border-2 border-caramel-100 bg-white text-gray-800 outline-none transition-all duration-200 hover:border-caramel-200 focus:border-candy-pink"
+          className="w-full h-11 px-3.5 rounded-lg border border-line-strong bg-white text-ink outline-none transition-colors duration-150 hover:border-ink-faint focus:border-ink focus:ring-2 focus:ring-ink/10"
         >
           <option value="" disabled>
             選択してください
@@ -184,22 +185,14 @@ export default function ContactForm() {
       </div>
 
       {status.kind === "error" && (
-        <p className="text-sm text-red-500 font-medium">{status.message}</p>
+        <p className="text-sm text-red-600 font-medium">{status.message}</p>
       )}
 
       <div className="pt-1">
-        <button
-          type="submit"
-          disabled={sending}
-          className="w-full sm:w-auto px-10 py-3.5 rounded-full text-white font-bold btn-pop disabled:opacity-60 disabled:cursor-not-allowed"
-          style={{
-            background: "linear-gradient(135deg, #F2807B, #F5A34B)",
-            boxShadow: "0 4px 20px rgba(242, 128, 123, 0.4)",
-          }}
-        >
+        <Button type="submit" size="lg" loading={sending} className="w-full sm:w-auto">
           {sending ? "送信中..." : "この内容で送信する"}
-        </button>
-        <p className="text-xs text-gray-400 mt-3">
+        </Button>
+        <p className="text-xs text-ink-muted mt-3">
           {"送信いただいた内容は、お問い合わせへの対応のためにのみ利用します。"}
         </p>
       </div>

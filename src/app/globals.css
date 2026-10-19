@@ -1,6 +1,7 @@
 /* @tailwind より前に置く。後ろだと Tailwind の展開で数千行うしろに送られ、
-   「@import は他のルールより先」という CSS の決まりに引っかかる。 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap');
+   「@import は他のルールより先」という CSS の決まりに引っかかる。
+   丸ゴシック（Zen Maru Gothic）は掲載者テーマで選ばれたときだけ読み込む。 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,20 +9,17 @@
 
 :root {
   --font-sans: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-  --font-display: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif;
+  --font-display: 'Zen Kaku Gothic New', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
 
-  /* Caramel palette */
-  --caramel-50: #FFF8F0;
-  --caramel-100: #FFEFD6;
-  --caramel-400: #F5A34B;
-  --caramel-500: #E8842C;
-  --honey: #F3A93C;
-  --apricot: #FFC98A;
-  --coral: #F2807B;
-  --mint: #8FD4C4;
-  --latte: #C9A87C;
-  --cocoa: #4A2C17;
-  --cream-50: #FFFBF5;
+  /* サイト共通の配色。tailwind.config.ts と同じ値 */
+  --ink: #1C1917;
+  --ink-soft: #44403C;
+  --ink-muted: #78716C;
+  --line: #E7E2DC;
+  --accent: #9A5A2A;
+  --accent-strong: #7C4721;
+  --accent-soft: #F5EADD;
+  --page: #FAF8F5;
 }
 
 * {
@@ -41,81 +39,59 @@ html {
 }
 
 body {
-  background-color: var(--cream-50);
+  background-color: var(--page);
   font-family: var(--font-sans);
-  color: #4A2C17;
+  color: var(--ink);
+  font-feature-settings: "palt" 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
   overflow-x: clip;
 }
 
-/* スクロールバーのカスタマイズ */
-::-webkit-scrollbar {
-  width: 8px;
+/* 見出しは字間を少し詰めて締める。
+   和文の見出しが「応援した/い」のように語の途中で折り返さないよう、
+   対応ブラウザ（Chrome 系）では文節単位で改行させる */
+h1,
+h2,
+h3 {
+  word-break: auto-phrase;
 }
-::-webkit-scrollbar-track {
-  background: #FFF6E9;
-}
-::-webkit-scrollbar-thumb {
-  background: #F5A34B;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #E8842C;
+h1,
+h2 {
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 /* テキスト選択色 */
 ::selection {
-  background-color: rgba(245, 163, 75, 0.35);
-  color: #4A2C17;
+  background-color: rgba(154, 90, 42, 0.18);
+  color: var(--ink);
 }
 
-/* アニメーション用クラス */
 @layer utilities {
-  .text-gradient-candy {
-    background: linear-gradient(135deg, #F2807B, #E8842C);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
+  /* 旧来のグラデーション文字は単色の強調に置き換える */
+  .text-gradient-candy,
   .text-gradient-caramel {
-    background: linear-gradient(135deg, #E8842C, #F5A34B);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--accent);
   }
 
   .glass {
-    background: rgba(255, 251, 245, 0.75);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(250, 248, 245, 0.88);
+    backdrop-filter: saturate(140%) blur(12px);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
   }
 
-  .glass-dark {
-    background: rgba(74, 44, 23, 0.75);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
+  /* カードのホバーは浮かせず、枠の色だけを変える */
   .card-hover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
-
   .card-hover:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 16px 40px rgba(232, 132, 44, 0.22);
+    box-shadow: 0 6px 20px rgba(28, 25, 23, 0.08), 0 0 0 1px rgba(28, 25, 23, 0.1);
   }
 
   .btn-pop {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .btn-pop:hover {
-    transform: translateY(-2px) scale(1.02);
-  }
-
-  .btn-pop:active {
-    transform: translateY(0) scale(0.98);
+    transition: background-color 0.15s ease, opacity 0.15s ease;
   }
 
   .shimmer {
@@ -134,73 +110,42 @@ body {
     100% { background-position: 200% 0; }
   }
 
-  .bubble {
-    border-radius: 60% 40% 70% 30% / 50% 60% 40% 70%;
-  }
-
-  .bubble-2 {
-    border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%;
+  /* 小見出しの上に置くラベル（例: FOR AGENCIES） */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    word-break: auto-phrase;
   }
 }
 
 /* プログレスバー */
 .progress-bar {
   position: relative;
-  height: 12px;
-  background: #FFEAD0;
+  height: 8px;
+  background: #EEE8E1;
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #F2807B, #E8842C, #F5A34B);
+  background: var(--accent);
   border-radius: 999px;
   transition: width 1s ease;
   position: relative;
 }
 
-.progress-bar-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,255,255,0.4) 50%,
-    transparent 100%
-  );
-  animation: shimmer 2s infinite;
-  background-size: 200% 100%;
-}
-
-/* 浮遊パーティクル */
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0.6;
-  animation: float-particle linear infinite;
-}
-
-@keyframes float-particle {
-  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-20vh) rotate(720deg); opacity: 0; }
-}
-
 /* ページ遷移 */
 .page-enter {
-  animation: fade-in 0.4s ease-out;
+  animation: fade-in 0.3s ease-out;
 }
 
 /* フォーカスリング */
 :focus-visible {
-  outline: 3px solid #F5A34B;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -208,17 +153,6 @@ body {
 /* 画像のロード前プレースホルダー */
 img {
   color: transparent;
-}
-
-/* ============ カラメルドリップ装飾 ============ */
-.caramel-drip {
-  position: relative;
-}
-
-.caramel-drip-svg {
-  display: block;
-  width: 100%;
-  height: auto;
 }
 
 /* モバイルタブバー用のセーフエリア余白 */
@@ -244,7 +178,7 @@ img {
    ページ本体のスクロールバーと二本並んで目立つ。 */
 .sidebar-scroll {
   scrollbar-width: thin;
-  scrollbar-color: var(--pt-border, #FFEFD6) transparent;
+  scrollbar-color: var(--pt-border, #E7E2DC) transparent;
 }
 .sidebar-scroll::-webkit-scrollbar {
   width: 6px;
@@ -253,7 +187,7 @@ img {
   background: transparent;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background-color: var(--pt-border, #FFEFD6);
+  background-color: var(--pt-border, #E7E2DC);
   border-radius: 9999px;
 }
 
@@ -344,6 +278,31 @@ img {
   background-color: var(--pt-accent);
 }
 
+/* 新しい配色トークン（ink / line / cream）もテーマの変数に読み替える。
+   共通部品（Card・Input・Badge など）はこれらのクラスで書かれているので、
+   ここが抜けると暗いテーマの上に明るい枠や文字が浮く。 */
+.project-theme .text-ink,
+.project-theme .text-ink-soft {
+  color: var(--pt-text);
+}
+.project-theme .text-ink-muted,
+.project-theme .text-ink-faint {
+  color: var(--pt-text-muted);
+}
+.project-theme .border-line,
+.project-theme .border-line-strong,
+.project-theme .ring-line,
+.project-theme .ring-line-strong {
+  border-color: var(--pt-border);
+  --tw-ring-color: var(--pt-border);
+}
+.project-theme .bg-cream-50,
+.project-theme .bg-cream-100,
+.project-theme .bg-cream-200,
+.project-theme .hover\:bg-cream-100:hover {
+  background-color: var(--pt-surface-soft);
+}
+
 /* 影 */
 .project-theme .shadow-soft {
   box-shadow: 0 4px 30px var(--pt-glow);
@@ -406,18 +365,29 @@ img {
   outline-color: var(--pt-accent);
 }
 
-/* ヘッダーはページ最上部では透明なので、暗いテーマだと文字が沈む。
-   共通ヘッダー自体は変えず、暗いテーマのページにいる間だけ明るくする。 */
-html[data-project-theme="dark"] header.bg-transparent .text-gray-700,
-html[data-project-theme="dark"] header.bg-transparent .text-gray-600,
-html[data-project-theme="dark"] header.bg-transparent .text-caramel-600 {
-  color: rgba(255, 255, 255, 0.86);
+/* 共通ヘッダーはテーマのスコープ外にあるので、暗いテーマのページにいる間だけ
+   ProjectThemeScope が html に置く --pt-chrome-* を使って面と文字色を合わせる。
+   明るい既定のヘッダーのままだと、暗いページの上に白い帯が浮いてしまう。 */
+html[data-project-theme="dark"] .site-header {
+  background: var(--pt-chrome-surface);
+  border-bottom-color: var(--pt-chrome-border);
 }
-
-/* 全ページ共通の浮遊パーティクルはクリーム色なので、暗いテーマでは目立たせない。
-   粒の opacity は生成時にインラインで付くため !important で上書きする */
-html[data-project-theme="dark"] .floating-particles > div {
-  opacity: 0.1 !important;
+html[data-project-theme="dark"] .site-header .chrome-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+html[data-project-theme="dark"] .site-header .chrome-muted {
+  color: var(--pt-chrome-muted);
+}
+html[data-project-theme="dark"] .site-header .chrome-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+html[data-project-theme="dark"] .site-header .chrome-solid {
+  background: #FFFFFF;
+  color: #1C1917;
+}
+html[data-project-theme="dark"] .site-header .chrome-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--pt-chrome-border);
 }
 
 /* スマホ下部のタブバーも明るいままだと暗いページから浮くので、テーマの面に合わせる */

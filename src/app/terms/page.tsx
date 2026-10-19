@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowRight } from "lucide-react";
 import LegalPageLayout, {
   Article,
   Callout,
@@ -19,18 +20,18 @@ const UPDATED_AT = "2026年8月11日";
 export default function TermsPage() {
   return (
     <LegalPageLayout
-      badge="📜 利用規約"
+      eyebrow="Terms"
       title="利用規約"
       lead="CaramYell をご利用いただくすべての方に適用される条件です。支援のお申し込み前に必ずお読みください。"
       updatedAt={UPDATED_AT}
     >
-      <div className="bg-white rounded-3xl shadow-soft p-6 sm:p-8 mb-6">
-        <p className="text-sm text-gray-600 leading-relaxed">
+      <div className="bg-white rounded-xl border border-line p-6 sm:p-8 mb-6">
+        <p className="text-sm text-ink-soft leading-relaxed">
           {`この利用規約（以下「本規約」といいます）は、株式会社めしあがレーベル（以下「当社」といいます）が提供するクラウドファンディングサービス「CaramYell」（以下「本サービス」といいます）の利用条件を定めるものです。本サービスをご利用いただいた時点で、本規約に同意いただいたものとみなします。`}
         </p>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-soft p-6 sm:p-8">
+      <div className="bg-white rounded-xl border border-line p-6 sm:p-8">
         <Article no="第1条" title="定義">
           <p>本規約で使用する用語の意味は、次のとおりとします。</p>
           <List
@@ -82,7 +83,7 @@ export default function TermsPage() {
               "アカウントを第三者に譲渡、貸与、売買することはできません。",
             ]}
           />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-ink-muted">
             {"より安全にご利用いただくため、二段階認証の設定をおすすめしています。"}
           </p>
         </Article>
@@ -122,7 +123,7 @@ export default function TermsPage() {
               "決済が失敗した場合、その支援は成立しません。",
             ]}
           />
-          <Callout icon="⚠️" title="目標金額に届かなかった場合">
+          <Callout title="目標金額に届かなかった場合">
             <p>
               {"本サービスでは、目標金額の達成有無にかかわらず、お申し込み時に決済が行われます。目標未達を理由とした自動的な返金は行われません。"}
             </p>
@@ -277,7 +278,7 @@ export default function TermsPage() {
         <Article no="第18条" title="個人情報の取り扱い">
           <p>
             {"当社は、本サービスの利用によって取得した個人情報を、"}
-            <Link href="/privacy" className="font-bold text-caramel-600 hover:underline">
+            <Link href="/privacy" className="font-bold text-ink underline underline-offset-2 hover:text-caramel-600">
               プライバシーポリシー
             </Link>
             {"に従って適切に取り扱います。"}
@@ -293,7 +294,7 @@ export default function TermsPage() {
           </p>
           <p>
             {"利用者から当社への連絡は、"}
-            <Link href="/contact" className="font-bold text-caramel-600 hover:underline">
+            <Link href="/contact" className="font-bold text-ink underline underline-offset-2 hover:text-caramel-600">
               お問い合わせ窓口
             </Link>
             {"よりお願いします。"}
@@ -317,44 +318,26 @@ export default function TermsPage() {
         </Article>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <LinkCard
-          href="/commercial"
-          emoji="📋"
-          title="特定商取引法に基づく表記"
-          note="事業者情報と取引条件"
-        />
-        <LinkCard
-          href="/privacy"
-          emoji="🔐"
-          title="プライバシーポリシー"
-          note="個人情報の取り扱い"
-        />
-        <LinkCard href="/faq" emoji="❓" title="よくある質問" note="支援前の疑問はこちら" />
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-px bg-line border border-line rounded-xl overflow-hidden">
+        <LinkCard href="/commercial" title="特定商取引法に基づく表記" note="事業者情報と取引条件" />
+        <LinkCard href="/privacy" title="プライバシーポリシー" note="個人情報の取り扱い" />
+        <LinkCard href="/faq" title="よくある質問" note="支援前の疑問はこちら" />
       </div>
     </LegalPageLayout>
   );
 }
 
-function LinkCard({
-  href,
-  emoji,
-  title,
-  note,
-}: {
-  href: string;
-  emoji: string;
-  title: string;
-  note: string;
-}) {
+function LinkCard({ href, title, note }: { href: string; title: string; note: string }) {
   return (
     <Link
       href={href}
-      className="block rounded-3xl bg-white border-2 border-caramel-100 p-5 hover:border-caramel-300 hover:shadow-soft transition-all"
+      className="group flex items-center justify-between gap-3 bg-white p-5 hover:bg-cream-50 transition-colors"
     >
-      <span className="text-2xl">{emoji}</span>
-      <p className="text-sm font-bold text-gray-800 mt-2">{title}</p>
-      <p className="text-xs text-gray-400 mt-1">{note}</p>
+      <span>
+        <span className="block text-sm font-bold text-ink">{title}</span>
+        <span className="block text-xs text-ink-muted mt-1">{note}</span>
+      </span>
+      <ArrowRight size={16} className="text-ink-muted group-hover:text-ink transition-colors flex-shrink-0" />
     </Link>
   );
 }

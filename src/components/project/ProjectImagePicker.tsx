@@ -132,9 +132,9 @@ export default function ProjectImagePicker({
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-semibold text-gray-700 mb-2">
+        <p className="text-sm font-bold text-ink mb-2">
           メイン画像
-          <span className="text-xs text-gray-400 font-normal ml-1">
+          <span className="text-xs text-ink-muted font-normal ml-1">
             （正方形で表示されます）
           </span>
         </p>
@@ -148,7 +148,7 @@ export default function ProjectImagePicker({
         />
 
         {mainImageUrl ? (
-          <div className="relative aspect-square rounded-2xl overflow-hidden border-2 border-caramel-100 group">
+          <div className="relative aspect-square rounded-xl overflow-hidden border border-line group">
             <Image
               src={mainImageUrl}
               alt="メイン画像"
@@ -160,14 +160,14 @@ export default function ProjectImagePicker({
               <button
                 type="button"
                 onClick={() => mainInput.current?.click()}
-                className="px-3 py-2 rounded-xl bg-white/95 text-xs font-bold text-gray-700"
+                className="px-3 py-2 rounded-lg bg-white/95 text-xs font-bold text-ink"
               >
                 差し替える
               </button>
               <button
                 type="button"
                 onClick={removeMain}
-                className="px-3 py-2 rounded-xl bg-white/95 text-xs font-bold text-red-500"
+                className="px-3 py-2 rounded-lg bg-white/95 text-xs font-bold text-red-600"
               >
                 削除
               </button>
@@ -178,7 +178,7 @@ export default function ProjectImagePicker({
             type="button"
             onClick={() => mainInput.current?.click()}
             disabled={busy === "main"}
-            className="w-full aspect-square rounded-2xl border-2 border-dashed border-caramel-200 hover:border-candy-pink hover:bg-caramel-50/50 transition-colors flex flex-col items-center justify-center gap-2 text-gray-400 disabled:opacity-60"
+            className="w-full aspect-square rounded-xl border border-dashed border-line-strong hover:border-ink-faint hover:bg-cream-50 transition-colors flex flex-col items-center justify-center gap-2 text-ink-muted disabled:opacity-60"
           >
             {busy === "main" ? (
               <Loader2 size={28} className="animate-spin" />
@@ -195,11 +195,11 @@ export default function ProjectImagePicker({
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-semibold text-gray-700">
+          <p className="text-sm font-bold text-ink">
             ギャラリー
-            <span className="text-xs text-gray-400 font-normal ml-1">（任意）</span>
+            <span className="text-xs text-ink-muted font-normal ml-1">（任意）</span>
           </p>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-ink-muted tabular-nums">
             {images.length} / {MAX_GALLERY}
           </span>
         </div>
@@ -217,7 +217,7 @@ export default function ProjectImagePicker({
           {images.map((url) => (
             <div
               key={url}
-              className="relative aspect-square rounded-xl overflow-hidden border-2 border-caramel-100 group"
+              className="relative aspect-square rounded-xl overflow-hidden border border-line group"
             >
               <Image
                 src={url}
@@ -231,7 +231,7 @@ export default function ProjectImagePicker({
                   type="button"
                   onClick={() => promote(url)}
                   title="メイン画像にする"
-                  className="p-1.5 rounded-lg bg-white/95 text-caramel-600"
+                  className="p-1.5 rounded-md bg-white/95 text-ink"
                 >
                   <Star size={14} />
                 </button>
@@ -239,7 +239,7 @@ export default function ProjectImagePicker({
                   type="button"
                   onClick={() => removeGallery(url)}
                   title="削除"
-                  className="p-1.5 rounded-lg bg-white/95 text-red-500"
+                  className="p-1.5 rounded-md bg-white/95 text-red-600"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -252,7 +252,7 @@ export default function ProjectImagePicker({
               type="button"
               onClick={() => galleryInput.current?.click()}
               disabled={busy === "gallery"}
-              className="aspect-square rounded-xl border-2 border-dashed border-caramel-200 hover:border-candy-pink hover:bg-caramel-50/50 transition-colors flex flex-col items-center justify-center gap-1 text-gray-400 disabled:opacity-60"
+              className="aspect-square rounded-xl border border-dashed border-line-strong hover:border-ink-faint hover:bg-cream-50 transition-colors flex flex-col items-center justify-center gap-1 text-ink-muted disabled:opacity-60"
             >
               {busy === "gallery" ? (
                 <Loader2 size={20} className="animate-spin" />

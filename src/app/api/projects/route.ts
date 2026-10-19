@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     .from("projects")
     .select(`
       ${PUBLIC_PROJECT_COLUMNS},
-      profiles!projects_creator_id_fkey(id, display_name, avatar_url),
+      profiles!projects_creator_id_fkey(id, display_name, avatar_url, organization_name),
       categories(id, slug, name_ja, name_en, icon, color),
       project_milestones(id, amount, title, sort_order, is_stretch)
     `)

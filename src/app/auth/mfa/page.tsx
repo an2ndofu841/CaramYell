@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { KeyRound, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
 import { safeRedirectPath } from "@/lib/safe-redirect";
@@ -139,34 +138,31 @@ function Mfa() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center pt-20 pb-12 px-4"
-      style={{ background: "linear-gradient(135deg, #FFFBF5 0%, #FFF5E6 100%)" }}
-    >
+    <div className="min-h-screen flex items-center justify-center pt-24 pb-12 px-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div
-            className="w-16 h-16 rounded-3xl mx-auto mb-4 flex items-center justify-center text-white shadow-candy"
-            style={{ background: "linear-gradient(135deg, #F2807B, #F5A34B)" }}
+        <div className="mb-8">
+          <ShieldCheck size={22} className="text-ink-muted mb-4" />
+          <h1
+            className="text-2xl font-bold text-ink"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            <ShieldCheck size={30} />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">二段階認証</h1>
+            二段階認証
+          </h1>
         </div>
 
-        <Card>
+        <div className="rounded-xl border border-line bg-white p-6 sm:p-8">
           {stage.name === "loading" && (
             <div className="py-10 flex justify-center">
-              <Loader2 size={28} className="animate-spin text-candy-pink" />
+              <Loader2 size={28} className="animate-spin text-ink-muted" />
             </div>
           )}
 
           {stage.name === "unavailable" && (
-            <div className="py-4 text-center">
-              <p className="text-sm text-gray-600 leading-relaxed">
+            <div className="py-2">
+              <p className="text-sm text-ink-soft leading-relaxed">
                 二段階認証を利用できませんでした。
               </p>
-              <p className="text-xs text-gray-400 mt-2 break-all">
+              <p className="text-xs text-ink-muted mt-2 break-all">
                 {stage.message}
               </p>
             </div>
@@ -174,12 +170,12 @@ function Mfa() {
 
           {stage.name === "enroll" && (
             <div className="space-y-5">
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-ink-soft leading-relaxed">
                 認証アプリ（Google Authenticator や 1Password など）でこの
                 QRコードを読み取り、表示された6桁の数字を入力してください。
               </p>
               <div className="flex justify-center">
-                <div className="p-3 bg-white rounded-2xl border-2 border-caramel-100">
+                <div className="p-3 bg-white rounded-lg border border-line">
                   <Image
                     src={stage.qr}
                     alt="二段階認証のQRコード"
@@ -189,11 +185,11 @@ function Mfa() {
                   />
                 </div>
               </div>
-              <details className="text-xs text-gray-500">
+              <details className="text-xs text-ink-muted">
                 <summary className="cursor-pointer font-semibold">
                   QRコードを読み取れない場合
                 </summary>
-                <p className="mt-2 break-all font-mono bg-caramel-50 rounded-xl p-3">
+                <p className="mt-2 break-all font-mono bg-cream-100 text-ink rounded-lg p-3">
                   {stage.secret}
                 </p>
               </details>
@@ -211,7 +207,7 @@ function Mfa() {
 
           {stage.name === "verify" && (
             <div className="space-y-5">
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-ink-soft leading-relaxed">
                 認証アプリに表示されている6桁の数字を入力してください。
               </p>
               <CodeField value={code} onChange={setCode} />
@@ -228,7 +224,7 @@ function Mfa() {
 
           {stage.name === "active" && (
             <div className="space-y-5">
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-ink-soft leading-relaxed">
                 このアカウントでは二段階認証が有効です。
               </p>
               <Button fullWidth size="lg" onClick={() => router.replace(next)}>
@@ -244,7 +240,7 @@ function Mfa() {
               </Button>
             </div>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );

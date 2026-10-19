@@ -8,6 +8,11 @@ interface BadgeProps {
   className?: string;
 }
 
+/**
+ * 状態を示す小さなラベル。色は意味ごとに絞っている。
+ * 旧来の色名（pink / lavender など）は呼び出し側に残っているので受け付けるが、
+ * 見た目は近い意味の色にまとめる。
+ */
 export default function Badge({
   children,
   color = "caramel",
@@ -15,26 +20,26 @@ export default function Badge({
   className,
 }: BadgeProps) {
   const colors = {
-    pink: "bg-pink-100 text-pink-700",
-    caramel: "bg-caramel-100 text-caramel-700",
-    mint: "bg-teal-100 text-teal-700",
-    lavender: "bg-purple-100 text-purple-700",
-    lemon: "bg-yellow-100 text-yellow-700",
-    sky: "bg-blue-100 text-blue-700",
-    gray: "bg-gray-100 text-gray-600",
-    hot: "text-white bg-gradient-to-r from-[#F2807B] to-[#E8842C]",
-    new: "text-white bg-gradient-to-r from-[#F5A34B] to-[#F3A93C]",
+    pink: "bg-caramel-50 text-caramel-700 ring-caramel-200",
+    caramel: "bg-caramel-50 text-caramel-700 ring-caramel-200",
+    mint: "bg-emerald-50 text-emerald-800 ring-emerald-200",
+    lavender: "bg-cream-100 text-ink-soft ring-line",
+    lemon: "bg-amber-50 text-amber-800 ring-amber-200",
+    sky: "bg-sky-50 text-sky-800 ring-sky-200",
+    gray: "bg-cream-100 text-ink-muted ring-line",
+    hot: "bg-ink text-white ring-ink",
+    new: "bg-white text-ink ring-line-strong",
   };
 
   const sizes = {
-    sm: "px-2 py-0.5 text-xs",
-    md: "px-3 py-1 text-xs",
+    sm: "px-2 py-0.5 text-[11px]",
+    md: "px-2.5 py-1 text-xs",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 font-semibold rounded-full",
+        "inline-flex items-center gap-1 font-semibold rounded-md ring-1 ring-inset",
         colors[color],
         sizes[size],
         className

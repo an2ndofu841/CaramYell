@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Copy, Flower2, X } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -56,21 +56,20 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
   };
 
   return (
-    <Card className="border-2 border-caramel-200">
+    <Card className="rounded-xl">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <h4 className="font-bold text-gray-800 flex items-center gap-2">
-            <Flower2 size={18} className="text-caramel-500" />
+          <h4 className="font-bold text-ink">
             フラスタ用お名前リスト
           </h4>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-ink-muted mt-1">
             支払済みの支援を、お名前・メールアドレス・アカウントのどれかが同じなら同じ人として合算し、合計額の多い順に並べています（同額は先に支援した順）。
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="p-1.5 rounded-full text-gray-400 hover:bg-caramel-50"
+          className="p-1.5 rounded-md text-ink-muted hover:bg-cream-100 hover:text-ink"
           aria-label="閉じる"
         >
           <X size={16} />
@@ -89,7 +88,7 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
           fullWidth
         />
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-gray-700">区切り</span>
+          <span className="text-sm font-bold text-ink">区切り</span>
           <div className="flex gap-2">
             {(Object.keys(SEPARATORS) as Separator[]).map((key) => (
               <button
@@ -97,10 +96,10 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
                 type="button"
                 onClick={() => setSeparator(key)}
                 className={cn(
-                  "px-3 py-2.5 rounded-2xl text-xs font-bold border-2 transition-all",
+                  "h-11 px-3 rounded-lg text-xs font-bold border transition-colors",
                   separator === key
-                    ? "border-candy-pink text-caramel-700 bg-caramel-50"
-                    : "border-caramel-100 text-gray-500 hover:border-caramel-200"
+                    ? "border-ink bg-ink text-white"
+                    : "border-line-strong bg-white text-ink-soft hover:bg-cream-50"
                 )}
               >
                 {SEPARATORS[key].label}
@@ -117,45 +116,45 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
           onChange={(e) => setWithAmount(e.target.checked)}
           className="rounded"
         />
-        <span className="text-sm text-gray-600 font-medium">
+        <span className="text-sm text-ink-soft font-medium">
           お名前の後ろに合計額を付ける（確認用）
         </span>
       </label>
 
       {eligible.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-8">
+        <p className="text-sm text-ink-muted text-center py-8">
           {credits.length === 0
             ? "まだ名前を掲載できる支援がありません"
             : "条件に当てはまる支援者がいません"}
         </p>
       ) : (
-        <ol className="max-h-80 overflow-y-auto divide-y divide-caramel-50 rounded-2xl border-2 border-caramel-100 mb-4">
+        <ol className="max-h-80 overflow-y-auto divide-y divide-line rounded-lg border border-line mb-4">
           {eligible.map((c, i) => (
             <li key={c.key} className="flex items-center gap-3 px-4 py-2.5">
-              <span className="w-7 text-right text-xs font-bold text-gray-400">{i + 1}</span>
+              <span className="w-7 text-right text-xs font-bold text-ink-faint tabular-nums">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
                     "text-sm font-bold truncate",
-                    c.name ? "text-gray-800" : "text-gray-300"
+                    c.name ? "text-ink" : "text-ink-faint"
                   )}
                 >
                   {c.name || "名前未入力（コピー対象外）"}
                 </p>
                 {c.otherNames.length > 0 && (
-                  <p className="text-xs text-amber-600 truncate">
+                  <p className="text-xs text-amber-700 truncate">
                     「{c.otherNames.join("」「")}」名義の支援も合算
                   </p>
                 )}
                 {c.emailCount > 1 && (
-                  <p className="text-xs text-amber-600 truncate">
+                  <p className="text-xs text-amber-700 truncate">
                     {c.emailCount}つのメールアドレスからの支援を同じお名前で合算
                   </p>
                 )}
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold text-caramel-600">{formatCurrency(c.total)}</p>
-                {c.count > 1 && <p className="text-xs text-gray-400">{c.count}回の合計</p>}
+                <p className="text-sm font-bold text-ink tabular-nums">{formatCurrency(c.total)}</p>
+                {c.count > 1 && <p className="text-xs text-ink-muted">{c.count}回の合計</p>}
               </div>
             </li>
           ))}
@@ -163,7 +162,7 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
       )}
 
       {(unnamedCount > 0 || anonymousCount > 0) && (
-        <p className="text-xs text-gray-400 mb-3">
+        <p className="text-xs text-ink-muted mb-3">
           {[
             unnamedCount > 0 && `名前未入力の${unnamedCount}名`,
             anonymousCount > 0 && `匿名を選んだ支援${anonymousCount}件`,
@@ -180,7 +179,7 @@ export default function NameCreditPanel({ backers, onClose }: NameCreditPanelPro
           value={text}
           rows={Math.min(6, separator === "newline" ? named.length : 3)}
           onFocus={(e) => e.currentTarget.select()}
-          className="w-full py-3 px-4 rounded-2xl border-2 border-caramel-100 bg-caramel-50/40 text-sm text-gray-700 resize-none outline-none mb-4"
+          className="w-full py-3 px-4 rounded-lg border border-line bg-cream-50 text-sm text-ink resize-none outline-none mb-4"
           aria-label="コピーされる内容"
         />
       )}
