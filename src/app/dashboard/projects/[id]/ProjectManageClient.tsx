@@ -274,6 +274,7 @@ export default function ProjectManageClient() {
         {activeTab === "fulfillment" && (
           <FulfillmentTab
             projectId={projectId}
+            projectTitle={project.title}
             backers={backers}
             rewards={project.rewards || []}
             onUpdated={(updated) =>

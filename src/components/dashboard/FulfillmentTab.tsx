@@ -18,6 +18,7 @@ import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getCountryFormat } from "@/lib/data/countries";
+import DigitalDeliveryPanel from "@/components/dashboard/DigitalDeliveryPanel";
 import {
   expandBackerRewards,
   mergePackLines,
@@ -95,11 +96,13 @@ interface PrepRow {
 
 export default function FulfillmentTab({
   projectId,
+  projectTitle,
   backers,
   rewards,
   onUpdated,
 }: {
   projectId: string;
+  projectTitle: string;
   backers: Backer[];
   rewards: Reward[];
   onUpdated: (updated: Backer) => void;
@@ -302,6 +305,13 @@ export default function FulfillmentTab({
 
   return (
     <div className="space-y-5">
+      <DigitalDeliveryPanel
+        projectId={projectId}
+        projectTitle={projectTitle}
+        backers={backers}
+        rewards={rewards}
+      />
+
       {/* サマリー（荷物の数） */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {STATUS_ORDER.map((s) => (
