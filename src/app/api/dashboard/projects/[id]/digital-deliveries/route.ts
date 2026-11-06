@@ -3,6 +3,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { dbError } from "@/lib/api/errors";
 import { createClient } from "@/lib/supabase/server";
 import { managedBy } from "@/lib/project/access";
+import { loadPaidBackers } from "@/lib/project/paid-backers";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import {
   collectDigitalRecipients,
@@ -15,7 +16,7 @@ import {
   sendDigitalRewardTest,
   singleLine,
 } from "@/lib/email/digital-reward";
-import type { Backer, Reward } from "@/types";
+import type { Reward } from "@/types";
 
 /**
  * デジタルリターンを、受け取る支援者へメールで一括送付する（掲載者のみ）。
@@ -30,7 +31,6 @@ const MAX_SUBJECT = 120;
 const MAX_MESSAGE = 5000;
 const MAX_RECIPIENTS = 1000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const PAGE_SIZE = 1000;
 
 type Mode = "test" | "unsent" | "all";
 
@@ -65,30 +65,6 @@ async function loadDeliveries(supabase: Supabase, projectId: string) {
     .from("reward_deliveries")
     .select("reward_id, backer_id, sent_at")
     .eq("project_id", projectId);
-}
-
-/** 既定の上限（1000行）を超える支援があっても取りこぼさないよう、ページを送って集める */
-async function loadPaidBackers(supabase: Supabase, projectId: string) {
-  const all: Backer[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from("backers")
-      .select(
-        `
-        id, reward_id, guest_email, guest_nickname, amount, status, created_at,
-        rewards(id, title, reward_type),
-        backer_items(id, reward_id, reward_title, unit_amount, quantity, needs_address)
-      `
-      )
-      .eq("project_id", projectId)
-      .eq("status", "paid")
-      .order("created_at", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) return { backers: null, error };
-    all.push(...((data || []) as unknown as Backer[]));
-    if (!data || data.length < PAGE_SIZE) break;
-  }
-  return { backers: all, error: null };
 }
 
 export async function GET(

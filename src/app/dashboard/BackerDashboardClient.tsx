@@ -11,12 +11,14 @@ import {
   Clock,
   Loader2,
   ChevronRight,
+  CalendarClock,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
 import DashboardShell from "./DashboardShell";
 import { formatCurrency, formatNumber, timeAgo } from "@/lib/utils";
+import { formatDeadline } from "@/lib/schedule/time";
 import { useAuth } from "@/hooks/useAuth";
 import type { Backer, Project, Category, ShippingStatus } from "@/types";
 
@@ -38,10 +40,20 @@ const SHIPPING_META: Record<
   delivered: { label: "お届け済み", color: "mint", icon: <CheckCircle2 size={13} /> },
 };
 
+interface MySchedule {
+  participantId: string;
+  title: string;
+  projectTitle: string;
+  bookedLabel: string | null;
+  deadline: string | null;
+  canChange: boolean;
+}
+
 export default function BackerDashboardClient() {
   const router = useRouter();
   const { user, profile, isCreator, loading: authLoading } = useAuth();
   const [backings, setBackings] = useState<Backing[]>([]);
+  const [schedules, setSchedules] = useState<MySchedule[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchBackings = useCallback(async () => {
@@ -53,6 +65,9 @@ export default function BackerDashboardClient() {
       }
       const data = await res.json();
       setBackings(data.backings || []);
+      // 日程調整は無くても困らないので、失敗しても一覧は出す
+      const sres = await fetch("/api/dashboard/schedules").catch(() => null);
+      if (sres?.ok) setSchedules((await sres.json()).schedules || []);
     } catch {
       // 取得できなくても画面は開けるようにしておく
     } finally {
@@ -111,6 +126,39 @@ export default function BackerDashboardClient() {
           </div>
         ))}
       </dl>
+
+      {schedules.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-xs font-bold text-ink-muted mb-3">リターンの日程調整</h2>
+          <ul className="space-y-2">
+            {schedules.map((s) => (
+              <li key={s.participantId}>
+                <Link
+                  href={`/dashboard/schedules/${s.participantId}`}
+                  className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 sm:px-5 py-4 hover:bg-cream-50 transition-colors"
+                >
+                  <CalendarClock size={18} className="text-caramel-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-ink-muted truncate">{s.projectTitle}</p>
+                    <p className="text-sm font-bold text-ink truncate">{s.title}</p>
+                    <p className="text-xs text-ink-soft mt-0.5">
+                      {s.bookedLabel
+                        ? `予約済み: ${s.bookedLabel}`
+                        : s.canChange
+                          ? `日程を選んでください${s.deadline ? `（${formatDeadline(s.deadline)}）` : ""}`
+                          : "受付終了"}
+                    </p>
+                  </div>
+                  {!s.bookedLabel && s.canChange && (
+                    <Badge color="caramel" size="sm">未回答</Badge>
+                  )}
+                  <ChevronRight size={16} className="text-ink-faint flex-shrink-0" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {backings.length === 0 ? (
         <div className="rounded-xl border border-line bg-white px-6 py-14 text-center">

@@ -22,14 +22,14 @@ const BATCH_SIZE = 100;
 const MAX_ATTEMPTS = 3;
 
 // メールの配色。サイトと同じく白地・墨色の文字・アクセントはキャラメル1色に絞る
-const INK = "#1C1917";
-const INK_SOFT = "#44403C";
-const INK_MUTED = "#78716C";
-const LINE = "#E7E2DC";
-const SURFACE = "#FAF8F5";
-const ACCENT = "#9A5A2A";
+export const INK = "#1C1917";
+export const INK_SOFT = "#44403C";
+export const INK_MUTED = "#78716C";
+export const LINE = "#E7E2DC";
+export const SURFACE = "#FAF8F5";
+export const ACCENT = "#9A5A2A";
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -47,7 +47,7 @@ export function singleLine(value: string, max = 120): string {
  * 日本語では「…/dlからダウンロード」のように URL の直後に文字が続くので、
  * URL に使える半角文字だけを拾い、文末の句読点や閉じ括弧はリンクから外す。
  */
-function linkify(escaped: string): string {
+export function linkify(escaped: string): string {
   return escaped.replace(
     /https?:\/\/[A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+/g,
     (match) => {
@@ -122,7 +122,7 @@ function renderText(e: DigitalRewardEmail): string {
     .join("\n");
 }
 
-function getResend() {
+export function getResend() {
   const apiKey = process.env.RESEND_API_KEY;
   const domain = process.env.RESEND_EMAIL_DOMAIN;
   if (!apiKey || !domain) return null;
@@ -141,9 +141,9 @@ function toPayload(from: string, e: DigitalRewardEmail) {
   };
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const isRetryable = (name: string | undefined) =>
+export const isRetryable = (name: string | undefined) =>
   name === "rate_limit_exceeded" ||
   name === "application_error" ||
   name === "internal_server_error" ||

@@ -355,3 +355,78 @@ export interface OrganizationInvitation {
   expires_at: string;
   created_at: string;
 }
+
+// ============================================
+// 体験リターンの日程調整
+// ============================================
+export type RewardScheduleStatus = "open" | "closed";
+
+export interface RewardScheduleSlot {
+  id: string;
+  schedule_id: string;
+  starts_at: string;
+  capacity: number;
+  note: string;
+}
+
+export interface RewardSchedule {
+  id: string;
+  project_id: string;
+  reward_id: string;
+  title: string;
+  description: string;
+  /** 集合場所・通話URLなど。支援者には予約後にだけ見せる */
+  location: string;
+  duration_minutes: number | null;
+  deadline: string | null;
+  status: RewardScheduleStatus;
+  created_at: string;
+  updated_at: string;
+  slots: RewardScheduleSlot[];
+}
+
+/** 掲載者向け: 日程調整の対象者1人分（1メールアドレス = 1人） */
+export interface ScheduleRosterEntry {
+  email: string;
+  name: string;
+  backerCount: number;
+  participantId: string | null;
+  invitedAt: string | null;
+  slotId: string | null;
+  bookedAt: string | null;
+  message: string;
+  /** 返金などで、いまは対象でなくなった人 */
+  eligible: boolean;
+}
+
+export interface RewardScheduleWithRoster extends RewardSchedule {
+  roster: ScheduleRosterEntry[];
+  missingEmailCount: number;
+}
+
+/** 支援者向け: 日程を選ぶ画面に出す内容 */
+export interface ScheduleBookingView {
+  project: { title: string; path: string };
+  rewardTitle: string;
+  schedule: {
+    title: string;
+    description: string;
+    /** 予約済みのときだけ入る */
+    location: string | null;
+    durationMinutes: number | null;
+    deadline: string | null;
+    status: RewardScheduleStatus;
+  };
+  slots: {
+    id: string;
+    startsAt: string;
+    note: string;
+    remaining: number;
+    isPast: boolean;
+  }[];
+  name: string;
+  slotId: string | null;
+  message: string;
+  /** 締切・受付終了でなければ選び直せる */
+  canChange: boolean;
+}

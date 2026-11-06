@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import FulfillmentTab from "@/components/dashboard/FulfillmentTab";
 import DesignTab from "@/components/dashboard/DesignTab";
 import GoalsTab from "@/components/dashboard/GoalsTab";
+import ScheduleTab from "@/components/dashboard/ScheduleTab";
 import OfflineBackingForm from "@/components/dashboard/OfflineBackingForm";
 import NameCreditPanel from "@/components/dashboard/NameCreditPanel";
 import Button from "@/components/ui/Button";
@@ -67,6 +68,7 @@ type Tab =
   | "design"
   | "backers"
   | "fulfillment"
+  | "schedules"
   | "rewards"
   | "updates";
 
@@ -142,6 +144,7 @@ export default function ProjectManageClient() {
     { id: "design", label: "デザイン" },
     { id: "backers", label: "支援者" },
     { id: "fulfillment", label: "発送管理" },
+    { id: "schedules", label: "日程調整" },
     { id: "rewards", label: "リターン" },
     { id: "updates", label: "活動報告" },
   ];
@@ -264,6 +267,9 @@ export default function ProjectManageClient() {
               )
             }
           />
+        )}
+        {activeTab === "schedules" && (
+          <ScheduleTab projectId={projectId} rewards={project.rewards || []} />
         )}
         {activeTab === "rewards" && (
           <RewardsTab
