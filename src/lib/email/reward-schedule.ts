@@ -38,10 +38,11 @@ export type ScheduleConfirmationEmail = {
   nickname?: string | null;
   projectTitle: string;
   scheduleTitle: string;
-  /** null なら予約の取り消し */
-  startsAt: string | null;
+  /** 予約済みの枠すべて（開始が早い順）。空なら全部取り消した */
+  slots: { startsAt: string; note: string }[];
+  /** 予約できる枠数（支援の口数） */
+  tickets: number;
   durationMinutes: number | null;
-  slotNote: string;
   location: string;
   url: string;
 };
@@ -201,19 +202,28 @@ export async function sendScheduleConfirmation(e: ScheduleConfirmationEmail): Pr
   const client = getResend();
   if (!client) return;
 
-  const when = e.startsAt ? formatSlotTime(e.startsAt, e.durationMinutes) : null;
+  const lines = e.slots.map(
+    (s) => `${formatSlotTime(s.startsAt, e.durationMinutes)}${s.note ? `（${s.note}）` : ""}`
+  );
+  const booked = lines.length > 0;
+  const rest = Math.max(0, e.tickets - lines.length);
+
   const subject = singleLine(
-    when
+    booked
       ? `【${e.projectTitle}】${e.scheduleTitle}の日程を受け付けました`
       : `【${e.projectTitle}】${e.scheduleTitle}の予約を取り消しました`
   );
+  const lead = booked
+    ? `「${e.projectTitle}」の${e.scheduleTitle}について、以下の日程で受け付けました。`
+    : `「${e.projectTitle}」の${e.scheduleTitle}の予約を取り消しました。あらためて日程をお選びください。`;
+  const restNote = booked && rest > 0 ? `あと${rest}枠、日程を選べます。` : null;
 
-  const details = when
+  const details = booked
     ? box(
         `<div style="font-weight:bold;">${escapeHtml(e.scheduleTitle)}</div>
-         <div style="margin-top:8px;">日時: <strong>${escapeHtml(when)}</strong></div>${
-           e.slotNote ? `<div>補足: ${escapeHtml(e.slotNote)}</div>` : ""
-         }${
+         <div style="margin-top:8px;">${lines
+           .map((l) => `<div>・<strong>${escapeHtml(l)}</strong></div>`)
+           .join("")}</div>${
            e.location
              ? `<div style="margin-top:8px;">場所・参加方法:<br />${multiline(e.location)}</div>`
              : ""
@@ -224,23 +234,18 @@ export async function sendScheduleConfirmation(e: ScheduleConfirmationEmail): Pr
   const inner = `
     <p style="margin:0;color:${INK_SOFT};font-size:15px;line-height:1.8;">
       ${e.nickname ? `${escapeHtml(e.nickname)} さん<br />` : ""}
-      ${
-        when
-          ? `「${escapeHtml(e.projectTitle)}」の${escapeHtml(e.scheduleTitle)}について、以下の日程で受け付けました。`
-          : `「${escapeHtml(e.projectTitle)}」の${escapeHtml(e.scheduleTitle)}の予約を取り消しました。あらためて日程をお選びください。`
-      }
+      ${escapeHtml(lead)}
+      ${restNote ? `<br /><strong style="color:${ACCENT};">${escapeHtml(restNote)}</strong>` : ""}
     </p>
     ${details}
-    ${button(e.url, when ? "予約内容を確認・変更する" : "日程を選ぶ")}`;
+    ${button(e.url, booked ? "予約内容を確認・変更する" : "日程を選ぶ")}`;
 
   const text = [
     e.nickname ? `${e.nickname} さん` : null,
-    when
-      ? `「${e.projectTitle}」の${e.scheduleTitle}について、以下の日程で受け付けました。`
-      : `「${e.projectTitle}」の${e.scheduleTitle}の予約を取り消しました。あらためて日程をお選びください。`,
-    when ? `日時: ${when}` : null,
-    when && e.slotNote ? `補足: ${e.slotNote}` : null,
-    when && e.location ? `場所・参加方法:\n${e.location}` : null,
+    lead,
+    restNote,
+    ...lines.map((l) => `・${l}`),
+    booked && e.location ? `場所・参加方法:\n${e.location}` : null,
     "",
     `確認・変更: ${e.url}`,
     "",
@@ -253,7 +258,7 @@ export async function sendScheduleConfirmation(e: ScheduleConfirmationEmail): Pr
     from: client.from,
     to: [e.to],
     subject,
-    html: layout(when ? "日程を受け付けました" : "予約を取り消しました", inner),
+    html: layout(booked ? "日程を受け付けました" : "予約を取り消しました", inner),
     text,
   });
   if (error) console.error("Failed to send schedule confirmation:", error.message);

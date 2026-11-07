@@ -1,5 +1,5 @@
 import { createClient as createServiceClient, type SupabaseClient } from "@supabase/supabase-js";
-import { collectDigitalRecipients } from "@/lib/project/digital-delivery";
+import { collectDigitalRecipients, normalizeEmail } from "@/lib/project/digital-delivery";
 import { sendScheduleConfirmation } from "@/lib/email/reward-schedule";
 import type {
   Backer,
@@ -15,7 +15,8 @@ export const SCHEDULE_COLUMNS =
   "id, project_id, reward_id, title, description, location, duration_minutes, deadline, status, created_at, updated_at";
 export const SLOT_COLUMNS = "id, schedule_id, starts_at, capacity, note";
 export const PARTICIPANT_COLUMNS =
-  "id, schedule_id, email, name, backer_ids, invited_at, slot_id, booked_at, message";
+  "id, schedule_id, project_id, email, name, backer_ids, invited_at, message";
+export const BOOKING_COLUMNS = "participant_id, schedule_id, slot_id, booked_at";
 
 export interface ParticipantRow {
   id: string;
@@ -24,9 +25,30 @@ export interface ParticipantRow {
   name: string;
   backer_ids: string[];
   invited_at: string | null;
-  slot_id: string | null;
-  booked_at: string | null;
   message: string;
+}
+
+export interface BookingRow {
+  participant_id: string;
+  schedule_id: string;
+  slot_id: string;
+  booked_at: string;
+}
+
+/** 参加者ごとの予約済みの枠（開始が早い順） */
+function slotIdsByParticipant(
+  bookings: readonly BookingRow[],
+  slots: readonly RewardScheduleSlot[]
+): Map<string, string[]> {
+  const startOf = new Map(slots.map((s) => [s.id, s.starts_at]));
+  const map = new Map<string, string[]>();
+  for (const b of bookings) {
+    map.set(b.participant_id, [...(map.get(b.participant_id) ?? []), b.slot_id]);
+  }
+  for (const ids of map.values()) {
+    ids.sort((a, b) => (startOf.get(a) ?? "").localeCompare(startOf.get(b) ?? ""));
+  }
+  return map;
 }
 
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -46,10 +68,11 @@ export const sortSlots = (slots: RewardScheduleSlot[]) =>
  * 案内・予約の状況を重ねる。案内後に返金された人も、予約が残っていれば見えるように残す。
  */
 export function buildRoster(
-  schedule: Pick<RewardSchedule, "reward_id">,
+  schedule: Pick<RewardSchedule, "reward_id" | "slots">,
   backers: readonly Backer[],
   rewards: readonly Reward[],
-  participants: readonly ParticipantRow[]
+  participants: readonly ParticipantRow[],
+  bookings: readonly BookingRow[]
 ): { roster: ScheduleRosterEntry[]; missingEmailCount: number } {
   const { recipients, missingEmailCount } = collectDigitalRecipients(
     backers,
@@ -58,6 +81,7 @@ export function buildRoster(
     []
   );
   const byEmail = new Map(participants.map((p) => [p.email, p]));
+  const booked = slotIdsByParticipant(bookings, schedule.slots);
 
   const roster: ScheduleRosterEntry[] = recipients.map((r) => {
     const p = byEmail.get(r.email);
@@ -68,8 +92,8 @@ export function buildRoster(
       backerCount: r.backerIds.length,
       participantId: p?.id ?? null,
       invitedAt: p?.invited_at ?? null,
-      slotId: p?.slot_id ?? null,
-      bookedAt: p?.booked_at ?? null,
+      tickets: r.quantity,
+      slotIds: p ? booked.get(p.id) ?? [] : [],
       message: p?.message ?? "",
       eligible: true,
     };
@@ -82,8 +106,8 @@ export function buildRoster(
       backerCount: p.backer_ids.length,
       participantId: p.id,
       invitedAt: p.invited_at,
-      slotId: p.slot_id,
-      bookedAt: p.booked_at,
+      tickets: 0,
+      slotIds: booked.get(p.id) ?? [],
       message: p.message,
       eligible: false,
     });
@@ -99,7 +123,7 @@ export async function loadSchedulesWithRoster(
   backers: readonly Backer[],
   rewards: readonly Reward[]
 ): Promise<{ schedules: RewardScheduleWithRoster[] | null; error: unknown }> {
-  const [schedulesRes, slotsRes, participantsRes] = await Promise.all([
+  const [schedulesRes, slotsRes, participantsRes, bookingsRes] = await Promise.all([
     supabase
       .from("reward_schedules")
       .select(SCHEDULE_COLUMNS)
@@ -110,12 +134,15 @@ export async function loadSchedulesWithRoster(
       .from("reward_schedule_participants")
       .select(PARTICIPANT_COLUMNS)
       .eq("project_id", projectId),
+    supabase.from("reward_schedule_bookings").select(BOOKING_COLUMNS).eq("project_id", projectId),
   ]);
-  const error = schedulesRes.error || slotsRes.error || participantsRes.error;
+  const error =
+    schedulesRes.error || slotsRes.error || participantsRes.error || bookingsRes.error;
   if (error) return { schedules: null, error };
 
   const slots = (slotsRes.data || []) as RewardScheduleSlot[];
   const participants = (participantsRes.data || []) as ParticipantRow[];
+  const bookings = (bookingsRes.data || []) as BookingRow[];
 
   const schedules = (schedulesRes.data || []).map((s) => {
     const schedule = { ...(s as Omit<RewardSchedule, "slots">), slots: [] as RewardScheduleSlot[] };
@@ -124,7 +151,8 @@ export async function loadSchedulesWithRoster(
       schedule,
       backers,
       rewards,
-      participants.filter((p) => p.schedule_id === s.id)
+      participants.filter((p) => p.schedule_id === s.id),
+      bookings.filter((b) => b.schedule_id === s.id)
     );
     return { ...schedule, roster, missingEmailCount };
   });
@@ -137,9 +165,49 @@ type BookingContext = {
   schedule: Omit<RewardSchedule, "slots">;
   slots: RewardScheduleSlot[];
   takenBySlot: Map<string, number>;
+  /** この人が予約済みの枠（開始が早い順） */
+  mySlotIds: string[];
+  /** 予約できる枠数（いまの支援口数） */
+  tickets: number;
   project: { id: string; title: string; slug: string | null };
   rewardTitle: string;
 };
+
+/**
+ * ある人がこのリターンを何口受け取るか。案内の後に追加で支援したり返金されたりするので、
+ * 予約のたびに支援データから数え直す。
+ */
+export async function countTickets(
+  service: SupabaseClient,
+  projectId: string,
+  rewardId: string,
+  email: string
+): Promise<number> {
+  const [{ data: backers }, { data: rewards }] = await Promise.all([
+    service
+      .from("backers")
+      .select(
+        `
+        id, reward_id, guest_email, guest_nickname, amount, status, created_at,
+        rewards(id, title, reward_type),
+        backer_items(id, reward_id, reward_title, unit_amount, quantity, needs_address)
+      `
+      )
+      .eq("project_id", projectId)
+      .eq("status", "paid")
+      .ilike("guest_email", email),
+    service
+      .from("rewards")
+      .select("id, title, amount, reward_type, needs_address")
+      .eq("project_id", projectId),
+  ]);
+  // ilike は _ や % を任意の文字として扱うので、最後に完全一致で絞る
+  const own = ((backers || []) as unknown as Backer[]).filter(
+    (b) => normalizeEmail(b.guest_email || "") === email
+  );
+  const { recipients } = collectDigitalRecipients(own, (rewards || []) as Reward[], rewardId, []);
+  return recipients[0]?.quantity ?? 0;
+}
 
 /** 支援者1人分の予約画面に必要なものを service_role で読む */
 export async function loadBookingContext(
@@ -161,28 +229,31 @@ export async function loadBookingContext(
     .maybeSingle();
   if (!schedule) return null;
 
-  const [slotsRes, takenRes, projectRes, rewardRes] = await Promise.all([
+  const [slotsRes, bookingsRes, projectRes, rewardRes, tickets] = await Promise.all([
     service.from("reward_schedule_slots").select(SLOT_COLUMNS).eq("schedule_id", schedule.id),
-    service
-      .from("reward_schedule_participants")
-      .select("slot_id")
-      .eq("schedule_id", schedule.id)
-      .not("slot_id", "is", null),
+    service.from("reward_schedule_bookings").select(BOOKING_COLUMNS).eq("schedule_id", schedule.id),
     service.from("projects").select("id, title, slug").eq("id", schedule.project_id).maybeSingle(),
     service.from("rewards").select("title").eq("id", schedule.reward_id).maybeSingle(),
+    countTickets(service, schedule.project_id, schedule.reward_id, participant.email),
   ]);
   if (!projectRes.data) return null;
 
+  const slots = sortSlots((slotsRes.data || []) as RewardScheduleSlot[]);
+  const bookings = (bookingsRes.data || []) as BookingRow[];
   const takenBySlot = new Map<string, number>();
-  for (const row of takenRes.data || []) {
-    if (row.slot_id) takenBySlot.set(row.slot_id, (takenBySlot.get(row.slot_id) ?? 0) + 1);
-  }
+  for (const b of bookings) takenBySlot.set(b.slot_id, (takenBySlot.get(b.slot_id) ?? 0) + 1);
 
   return {
     participant: participant as ParticipantRow,
     schedule: schedule as Omit<RewardSchedule, "slots">,
-    slots: sortSlots((slotsRes.data || []) as RewardScheduleSlot[]),
+    slots,
     takenBySlot,
+    mySlotIds:
+      slotIdsByParticipant(
+        bookings.filter((b) => b.participant_id === participant.id),
+        slots
+      ).get(participant.id) ?? [],
+    tickets,
     project: projectRes.data,
     rewardTitle: rewardRes.data?.title ?? "",
   };
@@ -196,6 +267,7 @@ export function isScheduleChangeable(schedule: Pick<RewardSchedule, "status" | "
 export function toBookingView(ctx: BookingContext): ScheduleBookingView {
   const { participant, schedule } = ctx;
   const now = Date.now();
+  const mine = new Set(ctx.mySlotIds);
   return {
     project: {
       title: ctx.project.title,
@@ -205,7 +277,7 @@ export function toBookingView(ctx: BookingContext): ScheduleBookingView {
     schedule: {
       title: schedule.title,
       description: schedule.description,
-      location: participant.slot_id ? schedule.location : null,
+      location: mine.size > 0 ? schedule.location : null,
       durationMinutes: schedule.duration_minutes,
       deadline: schedule.deadline,
       status: schedule.status,
@@ -214,14 +286,16 @@ export function toBookingView(ctx: BookingContext): ScheduleBookingView {
       id: s.id,
       startsAt: s.starts_at,
       note: s.note,
+      // 自分の予約ぶんは「空き」に数える（選び直しても自分の席は残るため）
       remaining: Math.max(
         0,
-        s.capacity - (ctx.takenBySlot.get(s.id) ?? 0) + (participant.slot_id === s.id ? 1 : 0)
+        s.capacity - (ctx.takenBySlot.get(s.id) ?? 0) + (mine.has(s.id) ? 1 : 0)
       ),
       isPast: new Date(s.starts_at).getTime() < now,
     })),
     name: participant.name,
-    slotId: participant.slot_id,
+    tickets: ctx.tickets,
+    slotIds: ctx.mySlotIds,
     message: participant.message,
     canChange: isScheduleChangeable(schedule),
   };
@@ -231,23 +305,28 @@ export const BOOKING_ERRORS: Record<string, { status: number; error: string }> =
   not_found: { status: 404, error: "選んだ日程が見つかりません。画面を読み込み直してください" },
   closed: { status: 409, error: "この日程調整の受付は終了しました" },
   deadline: { status: 409, error: "回答期限を過ぎたため、日程を変更できません" },
-  full: { status: 409, error: "その日程は満席になりました。別の日程をお選びください" },
+  full: { status: 409, error: "選んだ日程の一部が満席になりました。別の日程をお選びください" },
   past: { status: 409, error: "その日程はすでに過ぎています" },
+  too_many: { status: 409, error: "ご支援の口数より多くの日程は選べません" },
 };
 
+const sameSet = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((x) => b.includes(x));
+
 /**
- * 枠を予約・変更・取り消しし、本人へ控えのメールを送る。
+ * 予約をまとめて置き換え（選ぶ・変える・取り消す）、変わったら本人へ控えのメールを送る。
  * message は掲載者への一言（予約と一緒に保存する）。
  */
-export async function bookSlot(
+export async function setBookings(
   service: SupabaseClient,
   ctx: BookingContext,
-  input: { slotId: string | null; message: string; force?: boolean; pageUrl: string }
+  input: { slotIds: string[]; message: string; pageUrl: string }
 ): Promise<{ result: string }> {
-  const { data: result, error } = await service.rpc("book_reward_schedule_slot", {
+  const { data: result, error } = await service.rpc("set_reward_schedule_bookings", {
     p_participant: ctx.participant.id,
-    p_slot: input.slotId,
-    p_force: input.force ?? false,
+    p_slots: input.slotIds,
+    p_max: ctx.tickets,
+    p_force: false,
   });
   if (error) throw error;
   if (result !== "ok") return { result: result as string };
@@ -259,16 +338,16 @@ export async function bookSlot(
       .eq("id", ctx.participant.id);
   }
 
-  if (input.slotId !== ctx.participant.slot_id) {
-    const slot = ctx.slots.find((s) => s.id === input.slotId) ?? null;
+  if (!sameSet(input.slotIds, ctx.mySlotIds)) {
+    const chosen = ctx.slots.filter((s) => input.slotIds.includes(s.id));
     await sendScheduleConfirmation({
       to: ctx.participant.email,
       nickname: ctx.participant.name || null,
       projectTitle: ctx.project.title,
       scheduleTitle: ctx.schedule.title,
-      startsAt: slot?.starts_at ?? null,
+      slots: chosen.map((s) => ({ startsAt: s.starts_at, note: s.note })),
+      tickets: ctx.tickets,
       durationMinutes: ctx.schedule.duration_minutes,
-      slotNote: slot?.note ?? "",
       location: ctx.schedule.location,
       url: input.pageUrl,
     });

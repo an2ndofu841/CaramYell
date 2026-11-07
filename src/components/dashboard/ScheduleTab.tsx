@@ -339,9 +339,11 @@ function ScheduleCard({
 
   const eligible = schedule.roster.filter((r) => r.eligible);
   const invited = eligible.filter((r) => r.invitedAt);
-  const booked = schedule.roster.filter((r) => r.slotId);
+  const booked = schedule.roster.filter((r) => r.slotIds.length > 0);
+  const bookingCount = schedule.roster.reduce((n, r) => n + r.slotIds.length, 0);
+  const ticketCount = eligible.reduce((n, r) => n + r.tickets, 0);
   const uninvited = eligible.filter((r) => !r.invitedAt);
-  const unanswered = invited.filter((r) => !r.slotId);
+  const unanswered = invited.filter((r) => r.slotIds.length < r.tickets);
   const deadlinePassed =
     !!schedule.deadline && new Date(schedule.deadline).getTime() < Date.now();
   const futureSlots = schedule.slots.filter((s) => new Date(s.starts_at).getTime() > Date.now());
@@ -351,7 +353,7 @@ function ScheduleCard({
   const bookedBySlot = useMemo(() => {
     const map = new Map<string, ScheduleRosterEntry[]>();
     for (const r of schedule.roster) {
-      if (r.slotId) map.set(r.slotId, [...(map.get(r.slotId) ?? []), r]);
+      for (const id of r.slotIds) map.set(id, [...(map.get(id) ?? []), r]);
     }
     return map;
   }, [schedule.roster]);
@@ -388,7 +390,7 @@ function ScheduleCard({
       const ok = window.confirm(
         mode === "uninvited"
           ? `まだ案内していない${count}人に案内メールを送ります。よろしいですか？`
-          : `日程を選んでいない${count}人に案内メールを再送します。前に送ったリンクは使えなくなります。よろしいですか？`
+          : `日程を選び切っていない${count}人に案内メールを再送します。前に送ったリンクは使えなくなります（予約済みの日程はそのまま）。よろしいですか？`
       );
       if (!ok) return;
     }
@@ -506,7 +508,7 @@ function ScheduleCard({
           {[
             { label: "対象（1人1件）", value: eligible.length },
             { label: "未案内", value: uninvited.length },
-            { label: "未回答", value: unanswered.length },
+            { label: "未回答あり", value: unanswered.length },
             { label: "予約済み", value: booked.length },
           ].map((s) => (
             <div key={s.label} className="px-3 py-2.5 min-w-0">
@@ -519,6 +521,11 @@ function ScheduleCard({
           ))}
         </dl>
 
+        {ticketCount > eligible.length && (
+          <p className="text-xs text-ink-muted mb-3">
+            複数口の支援を含め、予約できる枠は合計{ticketCount}枠です（予約済み{bookingCount}枠）。複数口の人は口数ぶんの日程を選べます
+          </p>
+        )}
         {schedule.missingEmailCount > 0 && (
           <p className="text-xs text-amber-700 mb-3">
             メールアドレスが無い支援（現地支援など）が{schedule.missingEmailCount}件あります。この方々とは別の方法で日程を調整してください
@@ -819,8 +826,12 @@ function Roster({
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-ink truncate">{r.name || "（お名前未入力）"}</p>
             <p className="text-xs text-ink-muted truncate">{r.email}</p>
-            {r.backerCount > 1 && (
-              <p className="text-xs text-ink-muted">{r.backerCount}件の支援を1件にまとめています</p>
+            {(r.tickets > 1 || r.backerCount > 1) && (
+              <p className="text-xs text-ink-muted">
+                {r.tickets > 1 && `${r.tickets}口（${r.tickets}枠まで予約可）`}
+                {r.tickets > 1 && r.backerCount > 1 && " ・ "}
+                {r.backerCount > 1 && `${r.backerCount}件の支援をまとめています`}
+              </p>
             )}
             {r.message && (
               <p className="text-xs text-ink-soft mt-1 whitespace-pre-wrap break-words">「{r.message}」</p>
@@ -830,12 +841,21 @@ function Roster({
             {!r.eligible && (
               <Badge color="pink" size="sm">対象外（返金等）</Badge>
             )}
-            {r.slotId ? (
-              <Badge color="mint" size="sm">{slotLabel(r.slotId)}</Badge>
-            ) : r.invitedAt ? (
-              <Badge color="lemon" size="sm">未回答</Badge>
-            ) : (
-              <Badge color="gray" size="sm">未案内</Badge>
+            {r.slotIds.map((id) => (
+              <div key={id}>
+                <Badge color="mint" size="sm">{slotLabel(id)}</Badge>
+              </div>
+            ))}
+            {r.eligible && r.slotIds.length < r.tickets && (
+              <div>
+                {r.invitedAt ? (
+                  <Badge color="lemon" size="sm">
+                    {r.slotIds.length > 0 ? `あと${r.tickets - r.slotIds.length}枠 未回答` : "未回答"}
+                  </Badge>
+                ) : (
+                  <Badge color="gray" size="sm">未案内</Badge>
+                )}
+              </div>
             )}
             {r.invitedAt && (
               <p className="text-[11px] text-ink-muted mt-0.5">案内 {formatDateTime(r.invitedAt)}</p>

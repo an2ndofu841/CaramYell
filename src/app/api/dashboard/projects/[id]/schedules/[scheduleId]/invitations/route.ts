@@ -16,9 +16,12 @@ import {
   PARTICIPANT_COLUMNS,
   SCHEDULE_COLUMNS,
   UUID_RE,
+  BOOKING_COLUMNS,
+  SLOT_COLUMNS,
+  type BookingRow,
   type ParticipantRow,
 } from "@/lib/schedule/server";
-import type { Reward, RewardSchedule } from "@/types";
+import type { Reward, RewardSchedule, RewardScheduleSlot } from "@/types";
 
 /**
  * 日程調整の案内メールを、対象の支援者へ送る（掲載者のみ）。
@@ -30,7 +33,7 @@ import type { Reward, RewardSchedule } from "@/types";
  * mode:
  * - test: 自分にテスト送信（リンクはプレビューで予約できない）
  * - uninvited: まだ案内していない人へ
- * - unanswered: 案内済みで、まだ日程を選んでいない人へ再送
+ * - unanswered: 案内済みで、口数ぶんの日程をまだ選び切っていない人へ再送
  */
 
 export const maxDuration = 60;
@@ -129,29 +132,37 @@ export async function POST(
     return NextResponse.json({ error: "サーバーの設定が不足しています" }, { status: 503 });
   }
 
-  const [{ backers, error: backersError }, { data: participants, error: participantsError }] =
-    await Promise.all([
-      loadPaidBackers(supabase, id),
-      supabase
-        .from("reward_schedule_participants")
-        .select(PARTICIPANT_COLUMNS)
-        .eq("schedule_id", scheduleId),
-    ]);
+  const [
+    { backers, error: backersError },
+    { data: participants, error: participantsError },
+    { data: bookings, error: bookingsError },
+    { data: slots, error: slotsError },
+  ] = await Promise.all([
+    loadPaidBackers(supabase, id),
+    supabase
+      .from("reward_schedule_participants")
+      .select(PARTICIPANT_COLUMNS)
+      .eq("schedule_id", scheduleId),
+    supabase.from("reward_schedule_bookings").select(BOOKING_COLUMNS).eq("schedule_id", scheduleId),
+    supabase.from("reward_schedule_slots").select(SLOT_COLUMNS).eq("schedule_id", scheduleId),
+  ]);
   if (backersError || !backers) return dbError(backersError);
-  if (participantsError) return dbError(participantsError);
+  const loadError = participantsError || bookingsError || slotsError;
+  if (loadError) return dbError(loadError);
 
   const { roster } = buildRoster(
-    schedule,
+    { ...schedule, slots: (slots || []) as RewardScheduleSlot[] },
     backers,
     (rewards || []) as Reward[],
-    (participants || []) as ParticipantRow[]
+    (participants || []) as ParticipantRow[],
+    (bookings || []) as BookingRow[]
   );
   const targets = roster.filter((r) =>
     !r.eligible
       ? false
       : mode === "uninvited"
         ? !r.invitedAt
-        : Boolean(r.invitedAt) && !r.slotId
+        : Boolean(r.invitedAt) && r.slotIds.length < r.tickets
   );
 
   if (targets.length === 0) {

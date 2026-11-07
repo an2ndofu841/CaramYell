@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 /**
  * 枠を削除する。予約が入っている枠は ?force=1 のときだけ消せる
- * （予約していた人は「未回答」に戻る）。
+ * （予約していた人はその分「未回答」に戻る）。
  */
 export async function DELETE(req: NextRequest, { params }: Params) {
   const { id, scheduleId, slotId } = await params;
@@ -42,7 +42,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   const force = req.nextUrl.searchParams.get("force") === "1";
   if (!force) {
     const { count } = await supabase
-      .from("reward_schedule_participants")
+      .from("reward_schedule_bookings")
       .select("id", { count: "exact", head: true })
       .eq("slot_id", slotId);
     if ((count ?? 0) > 0) {

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { formatSlotTime } from "@/lib/schedule/time";
-import { getServiceSupabase, isScheduleChangeable } from "@/lib/schedule/server";
+import {
+  countTickets,
+  getServiceSupabase,
+  isScheduleChangeable,
+} from "@/lib/schedule/server";
 
 /**
  * ログイン中の支援者あての日程調整の一覧（マイページ用）。
@@ -20,7 +24,7 @@ export async function GET() {
 
   const { data: participants } = await service
     .from("reward_schedule_participants")
-    .select("id, schedule_id, slot_id")
+    .select("id, schedule_id")
     .eq("email", email)
     .not("invited_at", "is", null);
   if (!participants || participants.length === 0) {
@@ -28,34 +32,48 @@ export async function GET() {
   }
 
   const scheduleIds = [...new Set(participants.map((p) => p.schedule_id))];
-  const slotIds = participants.map((p) => p.slot_id).filter(Boolean) as string[];
-  const [{ data: schedules }, { data: slots }] = await Promise.all([
+  const [{ data: schedules }, { data: bookings }] = await Promise.all([
     service
       .from("reward_schedules")
-      .select("id, title, deadline, status, duration_minutes, projects(id, title, slug)")
+      .select(
+        "id, project_id, reward_id, title, deadline, status, duration_minutes, projects(id, title, slug)"
+      )
       .in("id", scheduleIds),
-    slotIds.length
-      ? service.from("reward_schedule_slots").select("id, starts_at").in("id", slotIds)
-      : Promise.resolve({ data: [] as { id: string; starts_at: string }[] }),
+    service
+      .from("reward_schedule_bookings")
+      .select("participant_id, reward_schedule_slots(starts_at)")
+      .in(
+        "participant_id",
+        participants.map((p) => p.id)
+      ),
   ]);
 
-  const result = participants.flatMap((p) => {
-    const s = schedules?.find((x) => x.id === p.schedule_id);
-    if (!s) return [];
-    const project = Array.isArray(s.projects) ? s.projects[0] : s.projects;
-    const slot = slots?.find((x) => x.id === p.slot_id);
-    return [
-      {
+  const result = await Promise.all(
+    participants.map(async (p) => {
+      const s = schedules?.find((x) => x.id === p.schedule_id);
+      if (!s) return null;
+      const project = Array.isArray(s.projects) ? s.projects[0] : s.projects;
+      const starts = (bookings || [])
+        .filter((b) => b.participant_id === p.id)
+        .map((b) => {
+          const slot = Array.isArray(b.reward_schedule_slots)
+            ? b.reward_schedule_slots[0]
+            : b.reward_schedule_slots;
+          return slot?.starts_at as string | undefined;
+        })
+        .filter((v): v is string => Boolean(v))
+        .sort();
+      return {
         participantId: p.id,
         title: s.title,
         projectTitle: project?.title ?? "",
-        bookedLabel: slot ? formatSlotTime(slot.starts_at, s.duration_minutes) : null,
-        bookedAt: slot?.starts_at ?? null,
+        bookedLabels: starts.map((t) => formatSlotTime(t, s.duration_minutes)),
+        tickets: await countTickets(service, s.project_id, s.reward_id, email),
         deadline: s.deadline,
         canChange: isScheduleChangeable(s),
-      },
-    ];
-  });
+      };
+    })
+  );
 
-  return NextResponse.json({ schedules: result });
+  return NextResponse.json({ schedules: result.filter(Boolean) });
 }

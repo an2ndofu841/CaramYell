@@ -16,6 +16,8 @@ export interface DigitalRecipient {
   backerIds: string[];
   /** まとめた支援すべてに送付済みなら、最後に送った日時 */
   sentAt: string | null;
+  /** このリターンを受け取る口数の合計（同じリターンを2口支援なら2） */
+  quantity: number;
 }
 
 export interface DigitalRecipientSummary {
@@ -44,7 +46,7 @@ export function collectDigitalRecipients(
     deliveries.filter((d) => d.reward_id === rewardId).map((d) => [d.backer_id, d.sent_at])
   );
 
-  const groups = new Map<string, { backers: Backer[] }>();
+  const groups = new Map<string, { backers: Backer[]; quantity: number }>();
   let missingEmailCount = 0;
 
   for (const b of backers) {
@@ -57,8 +59,9 @@ export function collectDigitalRecipients(
       continue;
     }
     const key = normalizeEmail(email);
-    const group = groups.get(key) ?? { backers: [] };
+    const group = groups.get(key) ?? { backers: [], quantity: 0 };
     group.backers.push(b);
+    group.quantity += line.quantity;
     groups.set(key, group);
   }
 
@@ -82,6 +85,7 @@ export function collectDigitalRecipients(
       email,
       name,
       backerIds: group.backers.map((b) => b.id),
+      quantity: group.quantity,
       sentAt: allSent
         ? (sentTimes as string[]).reduce((max, t) => (t > max ? t : max))
         : null,

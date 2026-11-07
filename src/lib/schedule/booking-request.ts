@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   BOOKING_ERRORS,
-  bookSlot,
+  setBookings,
   loadBookingContext,
   toBookingView,
   UUID_RE,
@@ -12,7 +12,7 @@ type Ctx = NonNullable<Awaited<ReturnType<typeof loadBookingContext>>>;
 
 /**
  * 支援者が枠を選ぶ・変える・取り消す POST の共通処理。
- * body: { slotId: string | null, message?: string }
+ * body: { slotIds: string[], message?: string }（空の配列なら全部取り消し）
  */
 export async function handleBookingPost(
   req: Request,
@@ -22,10 +22,11 @@ export async function handleBookingPost(
   reload: () => Promise<Ctx | null>
 ) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const slotId = body.slotId === null ? null : typeof body.slotId === "string" ? body.slotId : "";
-  if (slotId !== null && !UUID_RE.test(slotId)) {
+  const raw = Array.isArray(body.slotIds) ? body.slotIds : null;
+  if (!raw || raw.length > 100 || !raw.every((v) => typeof v === "string" && UUID_RE.test(v))) {
     return NextResponse.json({ error: "日程を選んでください" }, { status: 400 });
   }
+  const slotIds = [...new Set(raw as string[])];
   const message =
     typeof body.message === "string" ? body.message.trim() : ctx.participant.message;
   if (message.length > 500) {
@@ -36,7 +37,7 @@ export async function handleBookingPost(
   }
 
   try {
-    const { result } = await bookSlot(service, ctx, { slotId, message, pageUrl });
+    const { result } = await setBookings(service, ctx, { slotIds, message, pageUrl });
     if (result !== "ok") {
       const e = BOOKING_ERRORS[result] ?? BOOKING_ERRORS.not_found;
       const latest = await reload();

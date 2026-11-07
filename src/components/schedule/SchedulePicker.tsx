@@ -33,7 +33,7 @@ export default function SchedulePicker({
   const [view, setView] = useState<ScheduleBookingView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState<"book" | "cancel" | null>(null);
   const [editing, setEditing] = useState(false);
@@ -45,7 +45,7 @@ export default function SchedulePicker({
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "日程調整が見つかりません");
         setView(data.view);
-        setSelected(data.view.slotId);
+        setSelected(data.view.slotIds);
         setMessage(data.view.message || "");
       } catch (err) {
         setError(err instanceof Error ? err.message : "日程調整が見つかりません");
@@ -64,23 +64,39 @@ export default function SchedulePicker({
     return [...map.values()];
   }, [view]);
 
-  const submit = async (slotId: string | null) => {
-    if (slotId === null && !window.confirm("予約を取り消します。よろしいですか？")) return;
-    setSaving(slotId ? "book" : "cancel");
+  /** 口数が1なら選び直し、2以上なら口数まで複数選べる */
+  const toggle = (slotId: string) => {
+    if (!view) return;
+    setSelected((cur) => {
+      if (cur.includes(slotId)) return cur.filter((id) => id !== slotId);
+      if (view.tickets <= 1) return [slotId];
+      if (cur.length >= view.tickets) {
+        toast.error(`選べるのは${view.tickets}枠までです。ほかの枠を外してから選んでください`);
+        return cur;
+      }
+      return [...cur, slotId];
+    });
+  };
+
+  const submit = async (slotIds: string[]) => {
+    if (slotIds.length === 0 && !window.confirm("予約をすべて取り消します。よろしいですか？")) return;
+    setSaving(slotIds.length > 0 ? "book" : "cancel");
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slotId, message }),
+        body: JSON.stringify({ slotIds, message }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.view) {
         setView(data.view);
-        setSelected(data.view.slotId);
+        setSelected(data.view.slotIds);
       }
       if (!res.ok) throw new Error(data.error || "保存できませんでした");
       setEditing(false);
-      toast.success(slotId ? "日程を受け付けました。確認メールをお送りしました" : "予約を取り消しました");
+      toast.success(
+        slotIds.length > 0 ? "日程を受け付けました。確認メールをお送りしました" : "予約を取り消しました"
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "保存できませんでした");
     } finally {
@@ -110,9 +126,12 @@ export default function SchedulePicker({
     );
   }
 
-  const booked = view.slots.find((s) => s.id === view.slotId) ?? null;
-  const showPicker = view.canChange && (!booked || editing);
-  const dirty = selected !== view.slotId || message.trim() !== view.message;
+  const booked = view.slots.filter((s) => view.slotIds.includes(s.id));
+  const rest = Math.max(0, view.tickets - booked.length);
+  const showPicker = view.canChange && view.tickets > 0 && (rest > 0 || editing);
+  const sameSelection =
+    selected.length === view.slotIds.length && selected.every((id) => view.slotIds.includes(id));
+  const dirty = !sameSelection || message.trim() !== view.message;
 
   return (
     <Shell>
@@ -155,16 +174,22 @@ export default function SchedulePicker({
         </p>
       )}
 
-      {booked && (
+      {booked.length > 0 && (
         <div className="mt-6 rounded-xl border border-caramel-300 bg-caramel-50 p-4">
           <p className="flex items-center gap-1.5 text-xs font-bold text-caramel-700">
             <CalendarCheck size={14} />
-            予約済み
+            予約済み{view.tickets > 1 && `（${booked.length}/${view.tickets}枠）`}
           </p>
-          <p className="mt-1 text-lg font-bold text-ink tabular-nums">
-            {formatSlotTime(booked.startsAt, view.schedule.durationMinutes)}
-          </p>
-          {booked.note && <p className="text-sm text-ink-soft">{booked.note}</p>}
+          <ul className="mt-1 space-y-1">
+            {booked.map((b) => (
+              <li key={b.id}>
+                <p className="text-lg font-bold text-ink tabular-nums">
+                  {formatSlotTime(b.startsAt, view.schedule.durationMinutes)}
+                </p>
+                {b.note && <p className="text-sm text-ink-soft">{b.note}</p>}
+              </li>
+            ))}
+          </ul>
           {view.schedule.location && (
             <div className="mt-3 text-sm text-ink-soft">
               <p className="flex items-center gap-1 text-xs font-bold text-ink-muted">
@@ -183,13 +208,19 @@ export default function SchedulePicker({
                 size="sm"
                 variant="ghost"
                 loading={saving === "cancel"}
-                onClick={() => submit(null)}
+                onClick={() => submit([])}
               >
-                予約を取り消す
+                {booked.length > 1 ? "すべて取り消す" : "予約を取り消す"}
               </Button>
             </div>
           )}
         </div>
+      )}
+
+      {view.tickets === 0 && booked.length === 0 && (
+        <p className="mt-6 rounded-lg bg-cream-100 px-4 py-3 text-sm text-ink-soft">
+          このリターンの対象となるご支援が見つかりませんでした。お心当たりがない場合は、プロジェクトページから掲載者へお問い合わせください。
+        </p>
       )}
 
       {!view.canChange && (
@@ -197,15 +228,24 @@ export default function SchedulePicker({
           {view.schedule.status === "closed"
             ? "この日程調整の受付は終了しました。"
             : "回答期限を過ぎたため、日程の選択・変更はできません。"}
-          {!booked && "ご都合がつかない場合は、プロジェクトページから掲載者へお問い合わせください。"}
+          {rest > 0 && "ご都合がつかない場合は、プロジェクトページから掲載者へお問い合わせください。"}
         </p>
       )}
 
       {showPicker && (
         <div className="mt-6">
           <h2 className="text-sm font-bold text-ink">
-            {booked ? "変更後の日程を選んでください" : "ご都合のよい日程を1つ選んでください"}
+            {view.tickets > 1
+              ? `ご都合のよい日程を${view.tickets}つまで選んでください`
+              : booked.length > 0
+                ? "変更後の日程を選んでください"
+                : "ご都合のよい日程を1つ選んでください"}
           </h2>
+          {view.tickets > 1 && (
+            <p className="mt-1 text-xs text-ink-muted">
+              {view.tickets}口ご支援いただいているので、{view.tickets}回分の日程を選べます（同じ枠は1回まで）。いま{selected.length}枠を選択中です
+            </p>
+          )}
           {days.length === 0 ? (
             <p className="mt-3 text-sm text-ink-muted">
               選べる日程がまだありません。掲載者が候補を追加するまでお待ちください。
@@ -219,18 +259,19 @@ export default function SchedulePicker({
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {slots.map((s) => {
+                      const chosen = selected.includes(s.id);
                       const disabled =
-                        s.id !== view.slotId && (s.isPast || s.remaining <= 0);
+                        !view.slotIds.includes(s.id) && (s.isPast || s.remaining <= 0);
                       return (
                         <button
                           key={s.id}
                           type="button"
                           disabled={disabled}
-                          onClick={() => setSelected(s.id)}
-                          aria-pressed={selected === s.id}
+                          onClick={() => toggle(s.id)}
+                          aria-pressed={chosen}
                           className={cn(
                             "rounded-lg border px-3 py-2.5 text-left transition-colors",
-                            selected === s.id
+                            chosen
                               ? "border-ink bg-ink text-white"
                               : "border-line-strong bg-white text-ink hover:bg-cream-50",
                             disabled && "opacity-40 cursor-not-allowed hover:bg-white"
@@ -242,7 +283,7 @@ export default function SchedulePicker({
                           <span
                             className={cn(
                               "block text-[11px]",
-                              selected === s.id ? "text-white/80" : "text-ink-muted"
+                              chosen ? "text-white/80" : "text-ink-muted"
                             )}
                           >
                             {s.isPast
@@ -279,7 +320,7 @@ export default function SchedulePicker({
                 variant="ghost"
                 onClick={() => {
                   setEditing(false);
-                  setSelected(view.slotId);
+                  setSelected(view.slotIds);
                   setMessage(view.message);
                 }}
               >
@@ -288,10 +329,14 @@ export default function SchedulePicker({
             )}
             <Button
               loading={saving === "book"}
-              disabled={!selected || !dirty || saving !== null}
-              onClick={() => selected && submit(selected)}
+              disabled={selected.length === 0 || !dirty || saving !== null}
+              onClick={() => submit(selected)}
             >
-              {booked ? "この日程に変更する" : "この日程で申し込む"}
+              {booked.length > 0
+                ? "この内容で更新する"
+                : selected.length > 1
+                  ? `この${selected.length}枠で申し込む`
+                  : "この日程で申し込む"}
             </Button>
           </div>
         </div>

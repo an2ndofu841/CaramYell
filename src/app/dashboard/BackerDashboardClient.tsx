@@ -44,7 +44,8 @@ interface MySchedule {
   participantId: string;
   title: string;
   projectTitle: string;
-  bookedLabel: string | null;
+  bookedLabels: string[];
+  tickets: number;
   deadline: string | null;
   canChange: boolean;
 }
@@ -142,14 +143,21 @@ export default function BackerDashboardClient() {
                     <p className="text-xs text-ink-muted truncate">{s.projectTitle}</p>
                     <p className="text-sm font-bold text-ink truncate">{s.title}</p>
                     <p className="text-xs text-ink-soft mt-0.5">
-                      {s.bookedLabel
-                        ? `予約済み: ${s.bookedLabel}`
-                        : s.canChange
-                          ? `日程を選んでください${s.deadline ? `（${formatDeadline(s.deadline)}）` : ""}`
-                          : "受付終了"}
+                      {s.bookedLabels.length > 0 && `予約済み: ${s.bookedLabels.join(" / ")}`}
                     </p>
+                    {s.canChange && s.bookedLabels.length < s.tickets && (
+                      <p className="text-xs text-ink-soft mt-0.5">
+                        {s.bookedLabels.length > 0
+                          ? `あと${s.tickets - s.bookedLabels.length}枠選べます`
+                          : "日程を選んでください"}
+                        {s.deadline && `（${formatDeadline(s.deadline)}）`}
+                      </p>
+                    )}
+                    {!s.canChange && s.bookedLabels.length === 0 && (
+                      <p className="text-xs text-ink-soft mt-0.5">受付終了</p>
+                    )}
                   </div>
-                  {!s.bookedLabel && s.canChange && (
+                  {s.canChange && s.bookedLabels.length < s.tickets && (
                     <Badge color="caramel" size="sm">未回答</Badge>
                   )}
                   <ChevronRight size={16} className="text-ink-faint flex-shrink-0" />

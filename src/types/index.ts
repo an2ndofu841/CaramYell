@@ -392,8 +392,10 @@ export interface ScheduleRosterEntry {
   backerCount: number;
   participantId: string | null;
   invitedAt: string | null;
-  slotId: string | null;
-  bookedAt: string | null;
+  /** 予約できる枠数（このリターンの支援口数） */
+  tickets: number;
+  /** 予約済みの枠 */
+  slotIds: string[];
   message: string;
   /** 返金などで、いまは対象でなくなった人 */
   eligible: boolean;
@@ -425,7 +427,10 @@ export interface ScheduleBookingView {
     isPast: boolean;
   }[];
   name: string;
-  slotId: string | null;
+  /** 予約できる枠数（このリターンの支援口数） */
+  tickets: number;
+  /** 予約済みの枠 */
+  slotIds: string[];
   message: string;
   /** 締切・受付終了でなければ選び直せる */
   canChange: boolean;
