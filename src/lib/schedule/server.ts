@@ -1,6 +1,6 @@
 import { createClient as createServiceClient, type SupabaseClient } from "@supabase/supabase-js";
 import { collectDigitalRecipients, normalizeEmail } from "@/lib/project/digital-delivery";
-import { sendScheduleConfirmation } from "@/lib/email/reward-schedule";
+import { sendScheduleReceipt } from "@/lib/email/reward-schedule";
 import type {
   Backer,
   Reward,
@@ -12,11 +12,14 @@ import type {
 } from "@/types";
 
 export const SCHEDULE_COLUMNS =
-  "id, project_id, reward_id, title, description, location, duration_minutes, deadline, status, created_at, updated_at";
+  "id, project_id, reward_id, title, description, location, duration_minutes, deadline, status, allow_other, questions, created_at, updated_at";
 export const SLOT_COLUMNS = "id, schedule_id, starts_at, capacity, note";
 export const PARTICIPANT_COLUMNS =
-  "id, schedule_id, project_id, email, name, backer_ids, invited_at, message";
+  "id, schedule_id, project_id, email, name, backer_ids, invited_at, message, preferred_slot_ids, other_text, answers, submitted_at, notified_slot_ids, notified_at";
 export const BOOKING_COLUMNS = "participant_id, schedule_id, slot_id, booked_at";
+
+/** 支援者が選べる希望の数（第1〜第3希望） */
+export const MAX_PREFERENCES = 3;
 
 export interface ParticipantRow {
   id: string;
@@ -26,6 +29,12 @@ export interface ParticipantRow {
   backer_ids: string[];
   invited_at: string | null;
   message: string;
+  preferred_slot_ids: string[];
+  other_text: string;
+  answers: Record<string, string>;
+  submitted_at: string | null;
+  notified_slot_ids: string[];
+  notified_at: string | null;
 }
 
 export interface BookingRow {
@@ -35,7 +44,7 @@ export interface BookingRow {
   booked_at: string;
 }
 
-/** 参加者ごとの予約済みの枠（開始が早い順） */
+/** 参加者ごとの確定済みの枠（開始が早い順） */
 function slotIdsByParticipant(
   bookings: readonly BookingRow[],
   slots: readonly RewardScheduleSlot[]
@@ -51,6 +60,13 @@ function slotIdsByParticipant(
   return map;
 }
 
+/** 消えた枠を希望から外す（並び順はそのまま） */
+const livePreferences = (ids: readonly string[] | null, slots: readonly RewardScheduleSlot[]) =>
+  (ids ?? []).filter((id) => slots.some((s) => s.id === id));
+
+export const sameSet = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((x) => b.includes(x));
+
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function getServiceSupabase(): SupabaseClient | null {
@@ -65,7 +81,7 @@ export const sortSlots = (slots: RewardScheduleSlot[]) =>
 
 /**
  * 日程調整の対象者一覧。リターンを受け取る支援者（上位プラン含む）をメールアドレス単位で集め、
- * 案内・予約の状況を重ねる。案内後に返金された人も、予約が残っていれば見えるように残す。
+ * 案内・回答・確定の状況を重ねる。案内後に返金された人も、回答が残っていれば見えるように残す。
  */
 export function buildRoster(
   schedule: Pick<RewardSchedule, "reward_id" | "slots">,
@@ -83,6 +99,22 @@ export function buildRoster(
   const byEmail = new Map(participants.map((p) => [p.email, p]));
   const booked = slotIdsByParticipant(bookings, schedule.slots);
 
+  const fromParticipant = (p: ParticipantRow | undefined) => {
+    const slotIds = p ? booked.get(p.id) ?? [] : [];
+    return {
+      participantId: p?.id ?? null,
+      invitedAt: p?.invited_at ?? null,
+      submittedAt: p?.submitted_at ?? null,
+      preferredSlotIds: p ? livePreferences(p.preferred_slot_ids, schedule.slots) : [],
+      otherText: p?.other_text ?? "",
+      answers: p?.answers ?? {},
+      slotIds,
+      // 知らせた枠が消された場合も「取り消しのお知らせ」が要るので、消えた枠も含めて比べる
+      needsNotice: p ? !sameSet(slotIds, p.notified_slot_ids ?? []) : false,
+      message: p?.message ?? "",
+    };
+  };
+
   const roster: ScheduleRosterEntry[] = recipients.map((r) => {
     const p = byEmail.get(r.email);
     byEmail.delete(r.email);
@@ -90,12 +122,9 @@ export function buildRoster(
       email: r.email,
       name: r.name || p?.name || "",
       backerCount: r.backerIds.length,
-      participantId: p?.id ?? null,
-      invitedAt: p?.invited_at ?? null,
       tickets: r.quantity,
-      slotIds: p ? booked.get(p.id) ?? [] : [],
-      message: p?.message ?? "",
       eligible: true,
+      ...fromParticipant(p),
     };
   });
 
@@ -104,12 +133,9 @@ export function buildRoster(
       email: p.email,
       name: p.name,
       backerCount: p.backer_ids.length,
-      participantId: p.id,
-      invitedAt: p.invited_at,
       tickets: 0,
-      slotIds: booked.get(p.id) ?? [],
-      message: p.message,
       eligible: false,
+      ...fromParticipant(p),
     });
   }
 
@@ -165,9 +191,9 @@ type BookingContext = {
   schedule: Omit<RewardSchedule, "slots">;
   slots: RewardScheduleSlot[];
   takenBySlot: Map<string, number>;
-  /** この人が予約済みの枠（開始が早い順） */
+  /** この人の確定済みの枠（開始が早い順） */
   mySlotIds: string[];
-  /** 予約できる枠数（いまの支援口数） */
+  /** 確定する枠数（いまの支援口数） */
   tickets: number;
   project: { id: string; title: string; slug: string | null };
   rewardTitle: string;
@@ -175,7 +201,7 @@ type BookingContext = {
 
 /**
  * ある人がこのリターンを何口受け取るか。案内の後に追加で支援したり返金されたりするので、
- * 予約のたびに支援データから数え直す。
+ * 回答・確定のたびに支援データから数え直す。
  */
 export async function countTickets(
   service: SupabaseClient,
@@ -209,7 +235,7 @@ export async function countTickets(
   return recipients[0]?.quantity ?? 0;
 }
 
-/** 支援者1人分の予約画面に必要なものを service_role で読む */
+/** 支援者1人分の回答画面に必要なものを service_role で読む */
 export async function loadBookingContext(
   service: SupabaseClient,
   where: { tokenHash: string } | { participantId: string }
@@ -264,10 +290,15 @@ export function isScheduleChangeable(schedule: Pick<RewardSchedule, "status" | "
   return !schedule.deadline || new Date(schedule.deadline).getTime() > Date.now();
 }
 
+/** 枠ごとの残り（確定した人数で数える。自分の確定ぶんは空きに戻す） */
+function remainingOf(ctx: BookingContext, slot: RewardScheduleSlot) {
+  const mine = ctx.mySlotIds.includes(slot.id) ? 1 : 0;
+  return Math.max(0, slot.capacity - (ctx.takenBySlot.get(slot.id) ?? 0) + mine);
+}
+
 export function toBookingView(ctx: BookingContext): ScheduleBookingView {
   const { participant, schedule } = ctx;
   const now = Date.now();
-  const mine = new Set(ctx.mySlotIds);
   return {
     project: {
       title: ctx.project.title,
@@ -277,81 +308,134 @@ export function toBookingView(ctx: BookingContext): ScheduleBookingView {
     schedule: {
       title: schedule.title,
       description: schedule.description,
-      location: mine.size > 0 ? schedule.location : null,
+      location: ctx.mySlotIds.length > 0 ? schedule.location : null,
       durationMinutes: schedule.duration_minutes,
       deadline: schedule.deadline,
       status: schedule.status,
+      allowOther: schedule.allow_other,
+      questions: schedule.questions ?? [],
     },
     slots: ctx.slots.map((s) => ({
       id: s.id,
       startsAt: s.starts_at,
       note: s.note,
-      // 自分の予約ぶんは「空き」に数える（選び直しても自分の席は残るため）
-      remaining: Math.max(
-        0,
-        s.capacity - (ctx.takenBySlot.get(s.id) ?? 0) + (mine.has(s.id) ? 1 : 0)
-      ),
+      remaining: remainingOf(ctx, s),
       isPast: new Date(s.starts_at).getTime() < now,
     })),
     name: participant.name,
     tickets: ctx.tickets,
+    submittedAt: participant.submitted_at,
+    preferredSlotIds: livePreferences(participant.preferred_slot_ids, ctx.slots),
+    otherText: participant.other_text,
+    answers: participant.answers ?? {},
     slotIds: ctx.mySlotIds,
     message: participant.message,
     canChange: isScheduleChangeable(schedule),
+    cancelled:
+      Boolean(participant.notified_at) &&
+      (participant.notified_slot_ids ?? []).length === 0 &&
+      ctx.mySlotIds.length === 0 &&
+      !participant.submitted_at,
   };
 }
 
 export const BOOKING_ERRORS: Record<string, { status: number; error: string }> = {
   not_found: { status: 404, error: "選んだ日程が見つかりません。画面を読み込み直してください" },
   closed: { status: 409, error: "この日程調整の受付は終了しました" },
-  deadline: { status: 409, error: "回答期限を過ぎたため、日程を変更できません" },
+  deadline: { status: 409, error: "回答期限を過ぎたため、回答を変更できません" },
   full: { status: 409, error: "選んだ日程の一部が満席になりました。別の日程をお選びください" },
   past: { status: 409, error: "その日程はすでに過ぎています" },
-  too_many: { status: 409, error: "ご支援の口数より多くの日程は選べません" },
+  too_many: { status: 409, error: "ご支援の口数より多くの日程は確定できません" },
+  not_eligible: { status: 409, error: "このリターンの対象となるご支援が見つかりませんでした" },
+  confirmed: {
+    status: 409,
+    error: "日程はすでに確定しています。変更が必要な場合は掲載者へご連絡ください",
+  },
 };
 
-const sameSet = (a: readonly string[], b: readonly string[]) =>
-  a.length === b.length && a.every((x) => b.includes(x));
+export type PreferenceInput = {
+  preferredSlotIds: string[];
+  otherText: string;
+  answers: Record<string, string>;
+  message: string;
+};
 
 /**
- * 予約をまとめて置き換え（選ぶ・変える・取り消す）、変わったら本人へ控えのメールを送る。
- * message は掲載者への一言（予約と一緒に保存する）。
+ * 支援者の回答（希望の日程・その他・質問への回答・メッセージ）を保存し、本人へ控えを送る。
+ * 希望は枠を押さえないので、定員は「すでに確定で埋まった枠を新たに選べない」ことだけを見る。
  */
-export async function setBookings(
+export async function submitPreferences(
   service: SupabaseClient,
   ctx: BookingContext,
-  input: { slotIds: string[]; message: string; pageUrl: string }
+  input: PreferenceInput & { pageUrl: string }
 ): Promise<{ result: string }> {
-  const { data: result, error } = await service.rpc("set_reward_schedule_bookings", {
-    p_participant: ctx.participant.id,
-    p_slots: input.slotIds,
-    p_max: ctx.tickets,
-    p_force: false,
-  });
+  const { schedule } = ctx;
+  if (schedule.status !== "open") return { result: "closed" };
+  if (schedule.deadline && new Date(schedule.deadline).getTime() < Date.now()) {
+    return { result: "deadline" };
+  }
+  if (ctx.tickets <= 0) return { result: "not_eligible" };
+  if (ctx.mySlotIds.length >= ctx.tickets) return { result: "confirmed" };
+
+  const previous = ctx.participant.preferred_slot_ids ?? [];
+  const now = Date.now();
+  for (const id of input.preferredSlotIds) {
+    const slot = ctx.slots.find((s) => s.id === id);
+    if (!slot) return { result: "not_found" };
+    if (previous.includes(id)) continue;
+    if (new Date(slot.starts_at).getTime() < now) return { result: "past" };
+    if (remainingOf(ctx, slot) <= 0) return { result: "full" };
+  }
+
+  const { error } = await service
+    .from("reward_schedule_participants")
+    .update({
+      preferred_slot_ids: input.preferredSlotIds,
+      other_text: schedule.allow_other ? input.otherText : "",
+      answers: input.answers,
+      message: input.message,
+      submitted_at: ctx.participant.submitted_at ?? new Date().toISOString(),
+    })
+    .eq("id", ctx.participant.id);
   if (error) throw error;
-  if (result !== "ok") return { result: result as string };
 
-  if (input.message !== ctx.participant.message) {
-    await service
-      .from("reward_schedule_participants")
-      .update({ message: input.message })
-      .eq("id", ctx.participant.id);
-  }
-
-  if (!sameSet(input.slotIds, ctx.mySlotIds)) {
-    const chosen = ctx.slots.filter((s) => input.slotIds.includes(s.id));
-    await sendScheduleConfirmation({
-      to: ctx.participant.email,
-      nickname: ctx.participant.name || null,
-      projectTitle: ctx.project.title,
-      scheduleTitle: ctx.schedule.title,
-      slots: chosen.map((s) => ({ startsAt: s.starts_at, note: s.note })),
-      tickets: ctx.tickets,
-      durationMinutes: ctx.schedule.duration_minutes,
-      location: ctx.schedule.location,
-      url: input.pageUrl,
-    });
-  }
+  const labelOf = new Map((schedule.questions ?? []).map((q) => [q.id, q.label]));
+  await sendScheduleReceipt({
+    to: ctx.participant.email,
+    nickname: ctx.participant.name || null,
+    projectTitle: ctx.project.title,
+    scheduleTitle: schedule.title,
+    preferences: input.preferredSlotIds.map((id) => {
+      const s = ctx.slots.find((x) => x.id === id)!;
+      return { startsAt: s.starts_at, note: s.note };
+    }),
+    otherText: schedule.allow_other ? input.otherText : "",
+    answers: Object.entries(input.answers)
+      .filter(([id, v]) => labelOf.has(id) && v)
+      .map(([id, v]) => ({ label: labelOf.get(id)!, value: v })),
+    durationMinutes: schedule.duration_minutes,
+    url: input.pageUrl,
+  });
 
   return { result: "ok" };
+}
+
+/**
+ * 掲載者が日程を確定する（確定済みの枠をまとめて置き換える）。
+ * 受付終了・締切後や過ぎた枠でも確定できるが、定員と口数は超えられない。
+ */
+export async function confirmBookings(
+  service: SupabaseClient,
+  participantId: string,
+  slotIds: string[],
+  tickets: number
+): Promise<string> {
+  const { data, error } = await service.rpc("set_reward_schedule_bookings", {
+    p_participant: participantId,
+    p_slots: slotIds,
+    p_max: tickets,
+    p_force: true,
+  });
+  if (error) throw error;
+  return data as string;
 }

@@ -44,7 +44,9 @@ interface MySchedule {
   participantId: string;
   title: string;
   projectTitle: string;
+  /** 掲載者が確定した日程 */
   bookedLabels: string[];
+  answered: boolean;
   tickets: number;
   deadline: string | null;
   canChange: boolean;
@@ -142,24 +144,27 @@ export default function BackerDashboardClient() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs text-ink-muted truncate">{s.projectTitle}</p>
                     <p className="text-sm font-bold text-ink truncate">{s.title}</p>
-                    <p className="text-xs text-ink-soft mt-0.5">
-                      {s.bookedLabels.length > 0 && `予約済み: ${s.bookedLabels.join(" / ")}`}
-                    </p>
-                    {s.canChange && s.bookedLabels.length < s.tickets && (
+                    {s.bookedLabels.length > 0 && (
                       <p className="text-xs text-ink-soft mt-0.5">
-                        {s.bookedLabels.length > 0
-                          ? `あと${s.tickets - s.bookedLabels.length}枠選べます`
-                          : "日程を選んでください"}
-                        {s.deadline && `（${formatDeadline(s.deadline)}）`}
+                        確定: {s.bookedLabels.join(" / ")}
                       </p>
                     )}
-                    {!s.canChange && s.bookedLabels.length === 0 && (
-                      <p className="text-xs text-ink-soft mt-0.5">受付終了</p>
+                    {s.bookedLabels.length < s.tickets && (
+                      <p className="text-xs text-ink-soft mt-0.5">
+                        {s.answered
+                          ? "ご希望をお預かりしています。日程が決まるまでお待ちください"
+                          : s.canChange
+                            ? `ご希望の日程を回答してください${s.deadline ? `（${formatDeadline(s.deadline)}）` : ""}`
+                            : "受付終了"}
+                      </p>
                     )}
                   </div>
-                  {s.canChange && s.bookedLabels.length < s.tickets && (
-                    <Badge color="caramel" size="sm">未回答</Badge>
-                  )}
+                  {s.bookedLabels.length < s.tickets &&
+                    (s.answered ? (
+                      <Badge color="gray" size="sm">回答済み</Badge>
+                    ) : (
+                      s.canChange && <Badge color="caramel" size="sm">未回答</Badge>
+                    ))}
                   <ChevronRight size={16} className="text-ink-faint flex-shrink-0" />
                 </Link>
               </li>

@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   return NextResponse.json({ schedule: data });
 }
 
-/** 日程調整を削除する（枠・予約もまとめて消える） */
+/** 日程調整を削除する（枠・回答・確定もまとめて消える） */
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id, scheduleId } = await params;
   const { supabase, denied } = await loadManagedProject(id);

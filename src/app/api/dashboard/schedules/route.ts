@@ -24,7 +24,7 @@ export async function GET() {
 
   const { data: participants } = await service
     .from("reward_schedule_participants")
-    .select("id, schedule_id")
+    .select("id, schedule_id, submitted_at")
     .eq("email", email)
     .not("invited_at", "is", null);
   if (!participants || participants.length === 0) {
@@ -68,6 +68,7 @@ export async function GET() {
         title: s.title,
         projectTitle: project?.title ?? "",
         bookedLabels: starts.map((t) => formatSlotTime(t, s.duration_minutes)),
+        answered: Boolean(p.submitted_at),
         tickets: await countTickets(service, s.project_id, s.reward_id, email),
         deadline: s.deadline,
         canChange: isScheduleChangeable(s),

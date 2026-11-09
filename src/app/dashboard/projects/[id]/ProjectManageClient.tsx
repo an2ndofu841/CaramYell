@@ -269,7 +269,11 @@ export default function ProjectManageClient() {
           />
         )}
         {activeTab === "schedules" && (
-          <ScheduleTab projectId={projectId} rewards={project.rewards || []} />
+          <ScheduleTab
+            projectId={projectId}
+            projectTitle={project.title || ""}
+            rewards={project.rewards || []}
+          />
         )}
         {activeTab === "rewards" && (
           <RewardsTab

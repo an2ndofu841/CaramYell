@@ -5,7 +5,7 @@ import { SLOT_COLUMNS } from "@/lib/schedule/server";
 
 type Params = { params: Promise<{ id: string; scheduleId: string; slotId: string }> };
 
-/** 枠の日時・定員・補足を変える。定員を予約数未満にはできない（DB のトリガーで拒否） */
+/** 枠の日時・定員・補足を変える。定員を確定した人数未満にはできない（DB のトリガーで拒否） */
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id, scheduleId, slotId } = await params;
   const { supabase, denied } = await loadManagedProject(id);
@@ -31,8 +31,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 /**
- * 枠を削除する。予約が入っている枠は ?force=1 のときだけ消せる
- * （予約していた人はその分「未回答」に戻る）。
+ * 枠を削除する。確定した人がいる枠は ?force=1 のときだけ消せる
+ * （その人はその分「未確定」に戻る。希望からも外れる）。
  */
 export async function DELETE(req: NextRequest, { params }: Params) {
   const { id, scheduleId, slotId } = await params;
@@ -47,7 +47,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       .eq("slot_id", slotId);
     if ((count ?? 0) > 0) {
       return NextResponse.json(
-        { error: `この枠には${count}人の予約があります`, bookedCount: count },
+        { error: `この枠で${count}人の日程を確定しています`, bookedCount: count },
         { status: 409 }
       );
     }

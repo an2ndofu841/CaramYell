@@ -17,8 +17,9 @@ import {
 
 /**
  * 体験リターンの日程調整のメール。
- * - 案内: 対象の支援者へ「日程を選ぶ」リンクを送る（1人ずつ別のリンク）
- * - 確定: 支援者が枠を選んだ・変えたときに本人へ送る控え
+ * - 案内: 対象の支援者へ「希望を回答する」リンクを送る（1人ずつ別のリンク）
+ * - 受付: 支援者が希望を回答・変更したときに本人へ送る控え
+ * - 確定: 掲載者が日程を確定（変更・取り消し）したことを知らせる
  */
 
 export type ScheduleInvitationEmail = {
@@ -29,7 +30,20 @@ export type ScheduleInvitationEmail = {
   scheduleTitle: string;
   description: string;
   deadline: string | null;
-  /** 本人用の日程選択ページ */
+  /** 本人用の回答ページ */
+  url: string;
+};
+
+export type ScheduleReceiptEmail = {
+  to: string;
+  nickname?: string | null;
+  projectTitle: string;
+  scheduleTitle: string;
+  /** 第1希望から順に */
+  preferences: { startsAt: string; note: string }[];
+  otherText: string;
+  answers: { label: string; value: string }[];
+  durationMinutes: number | null;
   url: string;
 };
 
@@ -38,12 +52,13 @@ export type ScheduleConfirmationEmail = {
   nickname?: string | null;
   projectTitle: string;
   scheduleTitle: string;
-  /** 予約済みの枠すべて（開始が早い順）。空なら全部取り消した */
+  /** 確定した枠すべて（開始が早い順）。空なら確定を取り消した */
   slots: { startsAt: string; note: string }[];
-  /** 予約できる枠数（支援の口数） */
-  tickets: number;
   durationMinutes: number | null;
   location: string;
+  /** 取り消しのとき、希望を選び直してもらえるか（受付中で締切前） */
+  canReanswer: boolean;
+  deadline: string | null;
   url: string;
 };
 
@@ -92,14 +107,14 @@ const box = (html: string) =>
 const multiline = (text: string) => linkify(escapeHtml(text)).replace(/\r?\n/g, "<br />");
 
 export const invitationSubject = (projectTitle: string, scheduleTitle: string) =>
-  singleLine(`【${projectTitle}】${scheduleTitle}の日程をお選びください`);
+  singleLine(`【${projectTitle}】${scheduleTitle}のご希望の日程をお知らせください`);
 
 function invitationHtml(e: ScheduleInvitationEmail): string {
   const inner = `
     <p style="margin:0;color:${INK_SOFT};font-size:15px;line-height:1.8;">
       ${e.nickname ? `${escapeHtml(e.nickname)} さん<br />` : ""}
       「${escapeHtml(e.projectTitle)}」へのご支援ありがとうございました。<br />
-      リターン「${escapeHtml(e.rewardTitle)}」の日程調整のご案内です。下のボタンから、ご都合のよい日時をお選びください。
+      リターン「${escapeHtml(e.rewardTitle)}」の日程調整のご案内です。下のボタンから、ご希望の日程（第3希望まで）をお知らせください。ご希望をもとに掲載者が日程を決め、あらためてご連絡します。
     </p>
     ${box(
       `<div style="font-weight:bold;">${escapeHtml(e.scheduleTitle)}</div>${
@@ -110,7 +125,7 @@ function invitationHtml(e: ScheduleInvitationEmail): string {
           : ""
       }`
     )}
-    ${button(e.url, "日程を選ぶ")}
+    ${button(e.url, "希望の日程を回答する")}
     <p style="margin:12px 0 0;color:${INK_MUTED};font-size:12px;line-height:1.8;word-break:break-all;">ボタンが開けない場合: ${escapeHtml(e.url)}</p>`;
   return layout("日程調整のお願い", inner);
 }
@@ -119,13 +134,13 @@ function invitationText(e: ScheduleInvitationEmail): string {
   return [
     e.nickname ? `${e.nickname} さん` : null,
     `「${e.projectTitle}」へのご支援ありがとうございました。`,
-    `リターン「${e.rewardTitle}」の日程調整のご案内です。下のリンクから、ご都合のよい日時をお選びください。`,
+    `リターン「${e.rewardTitle}」の日程調整のご案内です。下のリンクから、ご希望の日程（第3希望まで）をお知らせください。ご希望をもとに掲載者が日程を決め、あらためてご連絡します。`,
     "",
     `■ ${e.scheduleTitle}`,
     e.description || null,
     e.deadline ? `回答期限: ${formatDeadline(e.deadline)}` : null,
     "",
-    `日程を選ぶ: ${e.url}`,
+    `希望の日程を回答する: ${e.url}`,
     "",
     "リンクはあなた専用です。ほかの方と共有しないでください。",
     SITE_NAME,
@@ -144,13 +159,16 @@ function invitationPayload(from: string, e: ScheduleInvitationEmail) {
   };
 }
 
+type Payload = { from: string; to: string[]; subject: string; html: string; text: string };
+
 /**
- * 日程調整の案内を一括送信する。100通ずつ、塊ごとに冪等キーを付ける。
+ * 100通ずつ一括送信し、塊ごとに冪等キーを付ける。
  * 送れなかった塊の宛先は failed に入れて返す。
  */
-export async function sendScheduleInvitations(
-  emails: ScheduleInvitationEmail[],
-  requestId: string
+async function sendInBatches<E extends { to: string }>(
+  emails: E[],
+  idempotencyPrefix: string,
+  toPayload: (from: string, e: E) => Payload
 ): Promise<{ sent: string[]; failed: string[] }> {
   const client = getResend();
   if (!client) return { sent: [], failed: emails.map((e) => e.to) };
@@ -158,8 +176,8 @@ export async function sendScheduleInvitations(
   const result = { sent: [] as string[], failed: [] as string[] };
   for (let i = 0; i < emails.length; i += BATCH_SIZE) {
     const chunk = emails.slice(i, i + BATCH_SIZE);
-    const payload = chunk.map((e) => invitationPayload(client.from, e));
-    const idempotencyKey = `batch-reward-schedule/${requestId}/chunk-${i / BATCH_SIZE}`;
+    const payload = chunk.map((e) => toPayload(client.from, e));
+    const idempotencyKey = `${idempotencyPrefix}/chunk-${i / BATCH_SIZE}`;
 
     let ok = false;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -169,7 +187,7 @@ export async function sendScheduleInvitations(
         break;
       }
       console.error(
-        `Failed to send schedule invitation batch (attempt ${attempt + 1}):`,
+        `Failed to send ${idempotencyPrefix} batch (attempt ${attempt + 1}):`,
         error.name,
         error.message
       );
@@ -181,7 +199,12 @@ export async function sendScheduleInvitations(
   return result;
 }
 
-/** 掲載者が見た目を確かめるための1通（リンクはプレビュー用で予約はできない） */
+/** 日程調整の案内を一括送信する */
+export function sendScheduleInvitations(emails: ScheduleInvitationEmail[], requestId: string) {
+  return sendInBatches(emails, `batch-reward-schedule/${requestId}`, invitationPayload);
+}
+
+/** 掲載者が見た目を確かめるための1通（リンクはプレビュー用で回答はできない） */
 export async function sendScheduleInvitationTest(e: ScheduleInvitationEmail): Promise<boolean> {
   const client = getResend();
   if (!client) return false;
@@ -197,55 +220,54 @@ export async function sendScheduleInvitationTest(e: ScheduleInvitationEmail): Pr
   return true;
 }
 
-/** 支援者が日程を選んだ・変えた・取り消したときの控え。失敗しても予約は有効なので握りつぶす */
-export async function sendScheduleConfirmation(e: ScheduleConfirmationEmail): Promise<void> {
+const RANKS = ["第1希望", "第2希望", "第3希望"];
+
+const slotLine = (s: { startsAt: string; note: string }, durationMinutes: number | null) =>
+  `${formatSlotTime(s.startsAt, durationMinutes)}${s.note ? `（${s.note}）` : ""}`;
+
+/** 支援者が希望を回答・変更したときの控え。失敗しても回答は保存済みなので握りつぶす */
+export async function sendScheduleReceipt(e: ScheduleReceiptEmail): Promise<void> {
   const client = getResend();
   if (!client) return;
 
-  const lines = e.slots.map(
-    (s) => `${formatSlotTime(s.startsAt, e.durationMinutes)}${s.note ? `（${s.note}）` : ""}`
+  const prefs = e.preferences.map(
+    (s, i) => `${RANKS[i] ?? `第${i + 1}希望`}: ${slotLine(s, e.durationMinutes)}`
   );
-  const booked = lines.length > 0;
-  const rest = Math.max(0, e.tickets - lines.length);
+  const lead = `「${e.projectTitle}」の${e.scheduleTitle}について、以下の内容でご希望を受け付けました。掲載者が日程を決めたら、あらためてメールでお知らせします。`;
 
-  const subject = singleLine(
-    booked
-      ? `【${e.projectTitle}】${e.scheduleTitle}の日程を受け付けました`
-      : `【${e.projectTitle}】${e.scheduleTitle}の予約を取り消しました`
+  const details = box(
+    `<div style="font-weight:bold;">${escapeHtml(e.scheduleTitle)}</div>
+     ${
+       prefs.length > 0
+         ? `<div style="margin-top:8px;">${prefs.map((l) => `<div>・${escapeHtml(l)}</div>`).join("")}</div>`
+         : ""
+     }${
+       e.otherText
+         ? `<div style="margin-top:8px;">その他のご希望:<br />${multiline(e.otherText)}</div>`
+         : ""
+     }${e.answers
+       .map(
+         (a) =>
+           `<div style="margin-top:8px;">${escapeHtml(a.label)}:<br />${multiline(a.value)}</div>`
+       )
+       .join("")}`
   );
-  const lead = booked
-    ? `「${e.projectTitle}」の${e.scheduleTitle}について、以下の日程で受け付けました。`
-    : `「${e.projectTitle}」の${e.scheduleTitle}の予約を取り消しました。あらためて日程をお選びください。`;
-  const restNote = booked && rest > 0 ? `あと${rest}枠、日程を選べます。` : null;
-
-  const details = booked
-    ? box(
-        `<div style="font-weight:bold;">${escapeHtml(e.scheduleTitle)}</div>
-         <div style="margin-top:8px;">${lines
-           .map((l) => `<div>・<strong>${escapeHtml(l)}</strong></div>`)
-           .join("")}</div>${
-           e.location
-             ? `<div style="margin-top:8px;">場所・参加方法:<br />${multiline(e.location)}</div>`
-             : ""
-         }`
-      )
-    : "";
 
   const inner = `
     <p style="margin:0;color:${INK_SOFT};font-size:15px;line-height:1.8;">
       ${e.nickname ? `${escapeHtml(e.nickname)} さん<br />` : ""}
       ${escapeHtml(lead)}
-      ${restNote ? `<br /><strong style="color:${ACCENT};">${escapeHtml(restNote)}</strong>` : ""}
     </p>
     ${details}
-    ${button(e.url, booked ? "予約内容を確認・変更する" : "日程を選ぶ")}`;
+    ${button(e.url, "回答を確認・変更する")}`;
 
   const text = [
     e.nickname ? `${e.nickname} さん` : null,
     lead,
-    restNote,
-    ...lines.map((l) => `・${l}`),
-    booked && e.location ? `場所・参加方法:\n${e.location}` : null,
+    "",
+    ...prefs.map((l) => `・${l}`),
+    e.otherText ? `その他のご希望:\n${e.otherText}` : null,
+    ...e.answers.map((a) => `${a.label}:\n${a.value}`),
     "",
     `確認・変更: ${e.url}`,
     "",
@@ -257,11 +279,82 @@ export async function sendScheduleConfirmation(e: ScheduleConfirmationEmail): Pr
   const { error } = await client.resend.emails.send({
     from: client.from,
     to: [e.to],
-    subject,
-    html: layout(booked ? "日程を受け付けました" : "予約を取り消しました", inner),
+    subject: singleLine(`【${e.projectTitle}】${e.scheduleTitle}のご希望を受け付けました`),
+    html: layout("ご希望を受け付けました", inner),
     text,
   });
-  if (error) console.error("Failed to send schedule confirmation:", error.message);
+  if (error) console.error("Failed to send schedule receipt:", error.message);
+}
+
+function confirmationPayload(from: string, e: ScheduleConfirmationEmail): Payload {
+  const lines = e.slots.map((s) => slotLine(s, e.durationMinutes));
+  const confirmed = lines.length > 0;
+  const reanswer = !confirmed && e.canReanswer;
+
+  const subject = singleLine(
+    confirmed
+      ? `【${e.projectTitle}】${e.scheduleTitle}の日程が決まりました`
+      : reanswer
+        ? `【${e.projectTitle}】${e.scheduleTitle}の日程を取り消しました。ご希望をあらためてお知らせください`
+        : `【${e.projectTitle}】${e.scheduleTitle}の日程を取り消しました`
+  );
+  const lead = confirmed
+    ? `「${e.projectTitle}」の${e.scheduleTitle}について、日程が以下のとおり決まりました。`
+    : reanswer
+      ? `「${e.projectTitle}」の${e.scheduleTitle}について、お知らせしていた日程を取り消しました。お手数ですが、下のボタンからあらためてご希望の日程（第3希望まで）をお知らせください。`
+      : `「${e.projectTitle}」の${e.scheduleTitle}について、お知らせしていた日程を取り消しました。あらためて掲載者からご連絡します。`;
+  const deadline = reanswer && e.deadline ? `回答期限: ${formatDeadline(e.deadline)}` : null;
+  const buttonLabel = reanswer ? "希望の日程を選び直す" : "内容を確認する";
+
+  const details = confirmed
+    ? box(
+        `<div style="font-weight:bold;">${escapeHtml(e.scheduleTitle)}</div>
+         <div style="margin-top:8px;">${lines
+           .map((l) => `<div>・<strong>${escapeHtml(l)}</strong></div>`)
+           .join("")}</div>${
+           e.location
+             ? `<div style="margin-top:8px;">場所・参加方法:<br />${multiline(e.location)}</div>`
+             : ""
+         }`
+      )
+    : deadline
+      ? box(`<div style="color:${ACCENT};font-weight:bold;">${escapeHtml(deadline)}</div>`)
+      : "";
+
+  const inner = `
+    <p style="margin:0;color:${INK_SOFT};font-size:15px;line-height:1.8;">
+      ${e.nickname ? `${escapeHtml(e.nickname)} さん<br />` : ""}
+      ${escapeHtml(lead)}
+    </p>
+    ${details}
+    ${button(e.url, buttonLabel)}`;
+
+  const text = [
+    e.nickname ? `${e.nickname} さん` : null,
+    lead.replace("下のボタンから", "下のリンクから"),
+    ...lines.map((l) => `・${l}`),
+    confirmed && e.location ? `場所・参加方法:\n${e.location}` : null,
+    deadline,
+    "",
+    `${buttonLabel}: ${e.url}`,
+    "",
+    SITE_NAME,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+
+  return {
+    from,
+    to: [e.to],
+    subject,
+    html: layout(confirmed ? "日程が決まりました" : "日程を取り消しました", inner),
+    text,
+  };
+}
+
+/** 掲載者が確定（変更・取り消し）した日程のお知らせを一括送信する */
+export function sendScheduleConfirmations(emails: ScheduleConfirmationEmail[], requestId: string) {
+  return sendInBatches(emails, `batch-reward-schedule-confirm/${requestId}`, confirmationPayload);
 }
 
 export const schedulePageUrl = (token: string) => `${SITE_URL}/schedule/${token}`;

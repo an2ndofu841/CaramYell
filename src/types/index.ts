@@ -369,17 +369,28 @@ export interface RewardScheduleSlot {
   note: string;
 }
 
+/** 掲載者が支援者に書いてもらう自由記入の質問 */
+export interface ScheduleQuestion {
+  id: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+}
+
 export interface RewardSchedule {
   id: string;
   project_id: string;
   reward_id: string;
   title: string;
   description: string;
-  /** 集合場所・通話URLなど。支援者には予約後にだけ見せる */
+  /** 集合場所・通話URLなど。支援者には日程の確定後にだけ見せる */
   location: string;
   duration_minutes: number | null;
   deadline: string | null;
   status: RewardScheduleStatus;
+  /** 候補の枠のほかに「その他（自由記入）」を選べる */
+  allow_other: boolean;
+  questions: ScheduleQuestion[];
   created_at: string;
   updated_at: string;
   slots: RewardScheduleSlot[];
@@ -392,10 +403,18 @@ export interface ScheduleRosterEntry {
   backerCount: number;
   participantId: string | null;
   invitedAt: string | null;
-  /** 予約できる枠数（このリターンの支援口数） */
+  /** 確定できる枠数（このリターンの支援口数） */
   tickets: number;
-  /** 予約済みの枠 */
+  /** 回答した日時。未回答なら null */
+  submittedAt: string | null;
+  /** 第1希望から順に */
+  preferredSlotIds: string[];
+  otherText: string;
+  answers: Record<string, string>;
+  /** 確定した枠 */
   slotIds: string[];
+  /** 確定の内容が、最後に送ったお知らせから変わっている */
+  needsNotice: boolean;
   message: string;
   /** 返金などで、いまは対象でなくなった人 */
   eligible: boolean;
@@ -406,18 +425,27 @@ export interface RewardScheduleWithRoster extends RewardSchedule {
   missingEmailCount: number;
 }
 
-/** 支援者向け: 日程を選ぶ画面に出す内容 */
+/** 掲載者向け: リターンごとの日程調整の対象者（作成前の確認用） */
+export interface ScheduleTargetPreview {
+  name: string;
+  email: string;
+  tickets: number;
+}
+
+/** 支援者向け: 日程の希望を回答する画面に出す内容 */
 export interface ScheduleBookingView {
   project: { title: string; path: string };
   rewardTitle: string;
   schedule: {
     title: string;
     description: string;
-    /** 予約済みのときだけ入る */
+    /** 日程が確定しているときだけ入る */
     location: string | null;
     durationMinutes: number | null;
     deadline: string | null;
     status: RewardScheduleStatus;
+    allowOther: boolean;
+    questions: ScheduleQuestion[];
   };
   slots: {
     id: string;
@@ -427,11 +455,18 @@ export interface ScheduleBookingView {
     isPast: boolean;
   }[];
   name: string;
-  /** 予約できる枠数（このリターンの支援口数） */
+  /** 確定する枠数（このリターンの支援口数） */
   tickets: number;
-  /** 予約済みの枠 */
+  submittedAt: string | null;
+  /** 第1希望から順に */
+  preferredSlotIds: string[];
+  otherText: string;
+  answers: Record<string, string>;
+  /** 掲載者が確定した枠 */
   slotIds: string[];
   message: string;
-  /** 締切・受付終了でなければ選び直せる */
+  /** 締切・受付終了でなければ回答を変えられる */
   canChange: boolean;
+  /** 確定の取り消しを知らせた後で、まだ選び直していない */
+  cancelled: boolean;
 }

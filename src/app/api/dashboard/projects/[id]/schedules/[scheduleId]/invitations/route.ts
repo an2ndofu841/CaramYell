@@ -7,33 +7,21 @@ import {
   sendScheduleInvitationTest,
 } from "@/lib/email/reward-schedule";
 import { createInviteToken } from "@/lib/organization/invite-token";
-import { loadPaidBackers } from "@/lib/project/paid-backers";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
-import { badRequest, loadManagedProject } from "@/lib/schedule/manage";
-import {
-  buildRoster,
-  getServiceSupabase,
-  PARTICIPANT_COLUMNS,
-  SCHEDULE_COLUMNS,
-  UUID_RE,
-  BOOKING_COLUMNS,
-  SLOT_COLUMNS,
-  type BookingRow,
-  type ParticipantRow,
-} from "@/lib/schedule/server";
-import type { Reward, RewardSchedule, RewardScheduleSlot } from "@/types";
+import { badRequest, loadManagedProject, loadScheduleRoster } from "@/lib/schedule/manage";
+import { getServiceSupabase, UUID_RE } from "@/lib/schedule/server";
 
 /**
  * 日程調整の案内メールを、対象の支援者へ送る（掲載者のみ）。
  *
  * 宛先はクライアントから受け取らず、支援データから組み立てる。
  * 1人ずつ専用リンク（トークン）を発行し、DB にはハッシュだけを残す。
- * 再送すると新しいリンクになり、前のリンクは使えなくなる（予約内容はそのまま）。
+ * 再送すると新しいリンクになり、前のリンクは使えなくなる（回答内容はそのまま）。
  *
  * mode:
- * - test: 自分にテスト送信（リンクはプレビューで予約できない）
+ * - test: 自分にテスト送信（リンクはプレビューで回答できない）
  * - uninvited: まだ案内していない人へ
- * - unanswered: 案内済みで、口数ぶんの日程をまだ選び切っていない人へ再送
+ * - unanswered: 案内済みで、まだ回答していない（日程も確定していない）人へ再送
  */
 
 export const maxDuration = 60;
@@ -68,16 +56,15 @@ export async function POST(
     return badRequest("送信IDが正しくありません");
   }
 
-  const { data: scheduleRow } = await supabase
-    .from("reward_schedules")
-    .select(SCHEDULE_COLUMNS)
-    .eq("id", scheduleId)
-    .eq("project_id", id)
-    .maybeSingle();
-  if (!scheduleRow) {
+  const { schedule, roster, backers, rewards, error: loadError } = await loadScheduleRoster(
+    supabase,
+    id,
+    scheduleId
+  );
+  if (loadError) return dbError(loadError);
+  if (!schedule) {
     return NextResponse.json({ error: "日程調整が見つかりません" }, { status: 404 });
   }
-  const schedule = scheduleRow as Omit<RewardSchedule, "slots">;
 
   if (schedule.status !== "open") {
     return badRequest("受付を終了している日程調整は案内できません。受付を再開してください");
@@ -85,23 +72,14 @@ export async function POST(
   if (schedule.deadline && new Date(schedule.deadline).getTime() < Date.now()) {
     return badRequest("回答期限を過ぎています。期限を延ばしてから案内してください");
   }
-
-  const { count: futureSlots } = await supabase
-    .from("reward_schedule_slots")
-    .select("id", { count: "exact", head: true })
-    .eq("schedule_id", scheduleId)
-    .gt("starts_at", new Date().toISOString());
-  if (!futureSlots) {
-    return badRequest("選べる日時の枠がありません。先に候補の日時を追加してください");
+  const hasFutureSlot = schedule.slots.some((s) => new Date(s.starts_at).getTime() > Date.now());
+  if (!hasFutureSlot && !schedule.allow_other && schedule.questions.length === 0) {
+    return badRequest(
+      "回答してもらう項目がありません。候補の日時を追加するか、「その他」や質問を設定してください"
+    );
   }
 
-  const { data: rewards, error: rewardsError } = await supabase
-    .from("rewards")
-    .select("id, title, amount, reward_type, needs_address")
-    .eq("project_id", id);
-  if (rewardsError) return dbError(rewardsError);
-  const reward = (rewards || []).find((r) => r.id === schedule.reward_id);
-
+  const reward = rewards.find((r) => r.id === schedule.reward_id);
   const base = {
     projectTitle: project.title || "プロジェクト",
     rewardTitle: reward?.title ?? "",
@@ -132,37 +110,12 @@ export async function POST(
     return NextResponse.json({ error: "サーバーの設定が不足しています" }, { status: 503 });
   }
 
-  const [
-    { backers, error: backersError },
-    { data: participants, error: participantsError },
-    { data: bookings, error: bookingsError },
-    { data: slots, error: slotsError },
-  ] = await Promise.all([
-    loadPaidBackers(supabase, id),
-    supabase
-      .from("reward_schedule_participants")
-      .select(PARTICIPANT_COLUMNS)
-      .eq("schedule_id", scheduleId),
-    supabase.from("reward_schedule_bookings").select(BOOKING_COLUMNS).eq("schedule_id", scheduleId),
-    supabase.from("reward_schedule_slots").select(SLOT_COLUMNS).eq("schedule_id", scheduleId),
-  ]);
-  if (backersError || !backers) return dbError(backersError);
-  const loadError = participantsError || bookingsError || slotsError;
-  if (loadError) return dbError(loadError);
-
-  const { roster } = buildRoster(
-    { ...schedule, slots: (slots || []) as RewardScheduleSlot[] },
-    backers,
-    (rewards || []) as Reward[],
-    (participants || []) as ParticipantRow[],
-    (bookings || []) as BookingRow[]
-  );
   const targets = roster.filter((r) =>
     !r.eligible
       ? false
       : mode === "uninvited"
         ? !r.invitedAt
-        : Boolean(r.invitedAt) && r.slotIds.length < r.tickets
+        : Boolean(r.invitedAt) && !r.submittedAt && r.slotIds.length < r.tickets
   );
 
   if (targets.length === 0) {
