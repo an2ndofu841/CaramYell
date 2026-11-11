@@ -43,6 +43,7 @@ export function buildPreviewView(p: PreviewInput): ScheduleBookingView {
     message: "",
     canChange: true,
     cancelled: false,
+    excluded: false,
   };
 }
 

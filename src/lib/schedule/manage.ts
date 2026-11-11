@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { managedBy } from "@/lib/project/access";
+import { normalizeEmail } from "@/lib/project/digital-delivery";
 import { loadPaidBackers } from "@/lib/project/paid-backers";
 import type { Reward, RewardSchedule, RewardScheduleSlot, ScheduleQuestion } from "@/types";
 import {
@@ -118,7 +119,25 @@ type ScheduleFields = {
   status?: "open" | "closed";
   allow_other?: boolean;
   questions?: ScheduleQuestion[];
+  excluded_emails?: string[];
 };
+
+const MAX_EXCLUDED = 2000;
+
+/** 対象から外す人のメールアドレスを、保存できる形（小文字・重複なし）にそろえる */
+function parseExcludedEmails(raw: unknown): { emails: string[]; error: string | null } {
+  if (!Array.isArray(raw) || !raw.every((v) => typeof v === "string")) {
+    return { emails: [], error: "対象から外す支援者の指定が正しくありません" };
+  }
+  const emails = [...new Set((raw as string[]).map(normalizeEmail).filter(Boolean))];
+  if (emails.length > MAX_EXCLUDED) {
+    return { emails: [], error: `対象から外せるのは${MAX_EXCLUDED}人までです` };
+  }
+  if (emails.some((e) => e.length > 320 || !e.includes("@"))) {
+    return { emails: [], error: "対象から外す支援者の指定が正しくありません" };
+  }
+  return { emails, error: null };
+}
 
 /** 支援者に書いてもらう質問を検証して、保存できる形にそろえる */
 function parseQuestions(raw: unknown): { questions: ScheduleQuestion[]; error: string | null } {
@@ -204,6 +223,11 @@ export function parseScheduleFields(
     const { questions, error } = parseQuestions(body.questions ?? []);
     if (error) return { fields, error };
     fields.questions = questions;
+  }
+  if (has("excludedEmails")) {
+    const { emails, error } = parseExcludedEmails(body.excludedEmails);
+    if (error) return { fields, error };
+    fields.excluded_emails = emails;
   }
   return { fields, error: null };
 }

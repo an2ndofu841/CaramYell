@@ -244,7 +244,9 @@ export default function SchedulePicker({
 
       {view.tickets === 0 && confirmed.length === 0 && (
         <p className="mt-6 rounded-lg bg-cream-100 px-4 py-3 text-sm text-ink-soft">
-          このリターンの対象となるご支援が見つかりませんでした。お心当たりがない場合は、プロジェクトページから掲載者へお問い合わせください。
+          {view.excluded
+            ? "この日程調整へのご回答は不要になりました。ご不明な点は、プロジェクトページから掲載者へお問い合わせください。"
+            : "このリターンの対象となるご支援が見つかりませんでした。お心当たりがない場合は、プロジェクトページから掲載者へお問い合わせください。"}
         </p>
       )}
 

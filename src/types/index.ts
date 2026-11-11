@@ -391,6 +391,8 @@ export interface RewardSchedule {
   /** 候補の枠のほかに「その他（自由記入）」を選べる */
   allow_other: boolean;
   questions: ScheduleQuestion[];
+  /** 実施済みなどで対象から外した人のメールアドレス */
+  excluded_emails: string[];
   created_at: string;
   updated_at: string;
   slots: RewardScheduleSlot[];
@@ -416,8 +418,10 @@ export interface ScheduleRosterEntry {
   /** 確定の内容が、最後に送ったお知らせから変わっている */
   needsNotice: boolean;
   message: string;
-  /** 返金などで、いまは対象でなくなった人 */
+  /** 返金や、掲載者が対象から外したことで、いまは対象でなくなった人 */
   eligible: boolean;
+  /** 掲載者が対象から外した人 */
+  excluded: boolean;
 }
 
 export interface RewardScheduleWithRoster extends RewardSchedule {
@@ -469,4 +473,6 @@ export interface ScheduleBookingView {
   canChange: boolean;
   /** 確定の取り消しを知らせた後で、まだ選び直していない */
   cancelled: boolean;
+  /** 掲載者がこの日程調整の対象から外した */
+  excluded: boolean;
 }

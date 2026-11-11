@@ -73,9 +73,10 @@ async function api<T = Record<string, unknown>>(
 }
 
 /** 対象者の状態（一覧の絞り込みとバッジに使う） */
-type RosterStatus = "ineligible" | "confirmed" | "waiting" | "unanswered" | "uninvited";
+type RosterStatus = "excluded" | "ineligible" | "confirmed" | "waiting" | "unanswered" | "uninvited";
 
 function statusOf(r: ScheduleRosterEntry): RosterStatus {
+  if (r.excluded) return "excluded";
   if (!r.eligible) return "ineligible";
   if (r.tickets > 0 && r.slotIds.length >= r.tickets) return "confirmed";
   if (r.submittedAt) return "waiting";
@@ -248,6 +249,7 @@ function ScheduleCard({
   const eligible = schedule.roster.filter((r) => r.eligible);
   const counts = useMemo(() => {
     const c: Record<RosterStatus, number> = {
+      excluded: 0,
       ineligible: 0,
       confirmed: 0,
       waiting: 0,
@@ -610,7 +612,7 @@ function ScheduleCard({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
           <h4 className="flex items-center gap-1.5 text-sm font-bold text-ink">
             <Users size={15} />
-            対象者と回答（{schedule.roster.length}人）
+            対象者と回答（{schedule.roster.length - counts.excluded}人）
           </h4>
           <div className="flex flex-wrap gap-2">
             {assignable.length > 0 && futureSlots.length > 0 && (
@@ -835,7 +837,9 @@ function Roster({
   const [filter, setFilter] = useState<"all" | RosterStatus>("all");
   const [busy, setBusy] = useState<string | null>(null);
 
-  const shown = schedule.roster.filter((r) => filter === "all" || statusOf(r) === filter);
+  const active = schedule.roster.filter((r) => !r.excluded);
+  const excluded = schedule.roster.filter((r) => r.excluded);
+  const shown = active.filter((r) => filter === "all" || statusOf(r) === filter);
   const slotOf = new Map(schedule.slots.map((s) => [s.id, s]));
   const remainingOf = (slotId: string) =>
     (slotOf.get(slotId)?.capacity ?? 0) - (bookedBySlot.get(slotId)?.length ?? 0);
@@ -867,14 +871,44 @@ function Roster({
     return save(r, [...r.slotIds, slotId]);
   };
 
+  const setExcluded = async (r: ScheduleRosterEntry, exclude: boolean) => {
+    const label = r.name || r.email;
+    if (exclude) {
+      const notes = [
+        r.invitedAt && "送った案内のリンクからは回答できなくなります。",
+        r.submittedAt && "回答の内容は残り、対象に戻すとまた表示されます。",
+      ]
+        .filter(Boolean)
+        .join("");
+      if (!window.confirm(`${label} さんを対象から外します。今後、案内メールは送られません。${notes}よろしいですか？`)) {
+        return;
+      }
+    }
+    const current = schedule.excluded_emails ?? [];
+    setBusy(r.email);
+    try {
+      const { ok, data } = await api(base, {
+        method: "PATCH",
+        body: JSON.stringify({
+          excludedEmails: exclude ? [...current, r.email] : current.filter((e) => e !== r.email),
+        }),
+      });
+      if (!ok) throw new Error(data.error || "変更できませんでした");
+      toast.success(exclude ? `${label} さんを対象から外しました` : `${label} さんを対象に戻しました`);
+      await onChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "変更できませんでした");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {FILTERS.map((f) => {
           const n =
-            f.id === "all"
-              ? schedule.roster.length
-              : schedule.roster.filter((r) => statusOf(r) === f.id).length;
+            f.id === "all" ? active.length : active.filter((r) => statusOf(r) === f.id).length;
           return (
             <button
               key={f.id}
@@ -930,6 +964,18 @@ function Roster({
                       )
                     )}
                   </div>
+                  {r.eligible && r.slotIds.length === 0 && (
+                    <button
+                      type="button"
+                      className="-mr-1 p-1 text-ink-faint hover:text-red-600 disabled:opacity-40 flex-shrink-0"
+                      aria-label={`${r.name || r.email}を対象から外す`}
+                      title="対象から外す（実施済みなど）"
+                      disabled={busy !== null}
+                      onClick={() => setExcluded(r, true)}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
 
                 {r.slotIds.length > 0 && (
@@ -1039,12 +1085,43 @@ function Roster({
           })}
         </ul>
       )}
+
+      {excluded.length > 0 && (
+        <details className="mt-3 rounded-lg border border-line px-4 py-2.5">
+          <summary className="cursor-pointer text-xs font-bold text-ink-muted">
+            対象から外した人（{excluded.length}人）
+          </summary>
+          <p className="mt-1.5 text-xs text-ink-muted">
+            案内メールは送られず、案内済みのリンクからも回答できません。戻すと、また対象になります
+          </p>
+          <ul className="mt-1 divide-y divide-line">
+            {excluded.map((r) => (
+              <li key={r.email} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm text-ink-muted">{r.name || "（お名前未入力）"}</span>
+                  <span className="block truncate text-xs text-ink-muted">{r.email}</span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy !== null}
+                  onClick={() => setExcluded(r, false)}
+                >
+                  対象に戻す
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
 
 function StatusBadge({ r, status }: { r: ScheduleRosterEntry; status: RosterStatus }) {
   switch (status) {
+    case "excluded":
+      return <Badge color="gray" size="sm">対象から外した人</Badge>;
     case "ineligible":
       return <Badge color="pink" size="sm">対象外（返金等）</Badge>;
     case "confirmed":

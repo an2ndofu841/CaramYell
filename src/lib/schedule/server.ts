@@ -12,7 +12,7 @@ import type {
 } from "@/types";
 
 export const SCHEDULE_COLUMNS =
-  "id, project_id, reward_id, title, description, location, duration_minutes, deadline, status, allow_other, questions, created_at, updated_at";
+  "id, project_id, reward_id, title, description, location, duration_minutes, deadline, status, allow_other, questions, excluded_emails, created_at, updated_at";
 export const SLOT_COLUMNS = "id, schedule_id, starts_at, capacity, note";
 export const PARTICIPANT_COLUMNS =
   "id, schedule_id, project_id, email, name, backer_ids, invited_at, message, preferred_slot_ids, other_text, answers, submitted_at, notified_slot_ids, notified_at";
@@ -82,9 +82,10 @@ export const sortSlots = (slots: RewardScheduleSlot[]) =>
 /**
  * 日程調整の対象者一覧。リターンを受け取る支援者（上位プラン含む）をメールアドレス単位で集め、
  * 案内・回答・確定の状況を重ねる。案内後に返金された人も、回答が残っていれば見えるように残す。
+ * 掲載者が外した人は、戻せるように excluded として残す（対象には数えない）。
  */
 export function buildRoster(
-  schedule: Pick<RewardSchedule, "reward_id" | "slots">,
+  schedule: Pick<RewardSchedule, "reward_id" | "slots" | "excluded_emails">,
   backers: readonly Backer[],
   rewards: readonly Reward[],
   participants: readonly ParticipantRow[],
@@ -98,6 +99,7 @@ export function buildRoster(
   );
   const byEmail = new Map(participants.map((p) => [p.email, p]));
   const booked = slotIdsByParticipant(bookings, schedule.slots);
+  const excluded = new Set(schedule.excluded_emails ?? []);
 
   const fromParticipant = (p: ParticipantRow | undefined) => {
     const slotIds = p ? booked.get(p.id) ?? [] : [];
@@ -123,7 +125,8 @@ export function buildRoster(
       name: r.name || p?.name || "",
       backerCount: r.backerIds.length,
       tickets: r.quantity,
-      eligible: true,
+      eligible: !excluded.has(r.email),
+      excluded: excluded.has(r.email),
       ...fromParticipant(p),
     };
   });
@@ -135,6 +138,7 @@ export function buildRoster(
       backerCount: p.backer_ids.length,
       tickets: 0,
       eligible: false,
+      excluded: excluded.has(p.email),
       ...fromParticipant(p),
     });
   }
@@ -195,6 +199,8 @@ type BookingContext = {
   mySlotIds: string[];
   /** 確定する枠数（いまの支援口数） */
   tickets: number;
+  /** 掲載者がこの日程調整の対象から外した */
+  excluded: boolean;
   project: { id: string; title: string; slug: string | null };
   rewardTitle: string;
 };
@@ -266,6 +272,7 @@ export async function loadBookingContext(
 
   const slots = sortSlots((slotsRes.data || []) as RewardScheduleSlot[]);
   const bookings = (bookingsRes.data || []) as BookingRow[];
+  const excluded = ((schedule.excluded_emails ?? []) as string[]).includes(participant.email);
   const takenBySlot = new Map<string, number>();
   for (const b of bookings) takenBySlot.set(b.slot_id, (takenBySlot.get(b.slot_id) ?? 0) + 1);
 
@@ -279,7 +286,9 @@ export async function loadBookingContext(
         bookings.filter((b) => b.participant_id === participant.id),
         slots
       ).get(participant.id) ?? [],
-    tickets,
+    // 外された人は回答できないよう、対象のご支援が無い扱いにする
+    tickets: excluded ? 0 : tickets,
+    excluded,
     project: projectRes.data,
     rewardTitle: rewardRes.data?.title ?? "",
   };
@@ -336,6 +345,7 @@ export function toBookingView(ctx: BookingContext): ScheduleBookingView {
       (participant.notified_slot_ids ?? []).length === 0 &&
       ctx.mySlotIds.length === 0 &&
       !participant.submitted_at,
+    excluded: ctx.excluded,
   };
 }
 

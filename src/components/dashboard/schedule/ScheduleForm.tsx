@@ -25,6 +25,8 @@ export type ScheduleValues = {
   deadline: string;
   allowOther: boolean;
   questions: ScheduleQuestion[];
+  /** 実施済みなどで対象から外す人（作成時だけ。作成後はカードの対象者一覧で外す） */
+  excludedEmails: string[];
 };
 
 export type ScheduleSubmitValues = Omit<ScheduleValues, "durationMinutes"> & {
@@ -140,6 +142,7 @@ export default function ScheduleForm({
     deadline: initial?.deadline ?? "",
     allowOther: initial?.allowOther ?? true,
     questions: initial?.questions ?? [],
+    excludedEmails: initial?.excludedEmails ?? [],
   });
   const [mode, setMode] = useState<SlotMode>("slots");
   const [drafts, setDrafts] = useState<DraftSlot[]>([]);
@@ -264,7 +267,7 @@ export default function ScheduleForm({
             <select
               className={selectClass}
               value={values.rewardId}
-              onChange={(e) => setValues((v) => ({ ...v, rewardId: e.target.value }))}
+              onChange={(e) => setValues((v) => ({ ...v, rewardId: e.target.value, excludedEmails: [] }))}
             >
               {rewards.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -275,7 +278,11 @@ export default function ScheduleForm({
             <p className="text-xs text-ink-muted">
               このリターンを含むプランの支援者（上位プランも含む）が対象になります
             </p>
-            <TargetPreview targets={rewardTargets} />
+            <TargetPreview
+              targets={rewardTargets}
+              excluded={values.excludedEmails}
+              onChange={(excludedEmails) => setValues((v) => ({ ...v, excludedEmails }))}
+            />
           </div>
         )}
         <Input
@@ -586,8 +593,16 @@ function DraftSlotList({
   );
 }
 
-/** 作成前に、選んだリターンの対象者を見せる */
-function TargetPreview({ targets }: { targets: ScheduleTargetPreview[] }) {
+/** 作成前に、選んだリターンの対象者を見せる。実施済みの人などは ✗ で対象から外せる */
+function TargetPreview({
+  targets,
+  excluded,
+  onChange,
+}: {
+  targets: ScheduleTargetPreview[];
+  excluded: string[];
+  onChange: (excluded: string[]) => void;
+}) {
   if (targets.length === 0) {
     return (
       <p className="text-xs text-amber-700">
@@ -595,24 +610,69 @@ function TargetPreview({ targets }: { targets: ScheduleTargetPreview[] }) {
       </p>
     );
   }
-  const tickets = targets.reduce((n, t) => n + t.tickets, 0);
+  const included = targets.filter((t) => !excluded.includes(t.email));
+  const removed = targets.filter((t) => excluded.includes(t.email));
+  const tickets = included.reduce((n, t) => n + t.tickets, 0);
   return (
     <details className="rounded-lg border border-line bg-cream-50 px-3 py-2 text-sm">
       <summary className="cursor-pointer text-xs font-bold text-ink">
         <Users size={13} className="inline -mt-0.5 mr-1" />
-        対象の支援者 {targets.length}人{tickets > targets.length && `（合計${tickets}口）`}
+        対象の支援者 {included.length}人{tickets > included.length && `（合計${tickets}口）`}
+        {removed.length > 0 && (
+          <span className="font-semibold text-ink-muted"> ・ 対象から外す {removed.length}人</span>
+        )}
       </summary>
-      <ul className="mt-2 max-h-48 overflow-y-auto divide-y divide-line">
-        {targets.map((t) => (
-          <li key={t.email} className="flex items-center justify-between gap-3 py-1.5">
-            <span className="min-w-0">
-              <span className="block truncate text-ink">{t.name || "（お名前未入力）"}</span>
-              <span className="block truncate text-xs text-ink-muted">{t.email}</span>
-            </span>
-            {t.tickets > 1 && <span className="text-xs text-ink-muted flex-shrink-0">{t.tickets}口</span>}
-          </li>
-        ))}
-      </ul>
+      <p className="mt-1.5 text-xs text-ink-muted">
+        すでに実施済みの人などは ✗ で対象から外せます。外した人には案内メールを送りません
+      </p>
+      {included.length > 0 ? (
+        <ul className="mt-2 max-h-48 overflow-y-auto divide-y divide-line">
+          {included.map((t) => (
+            <li key={t.email} className="flex items-center justify-between gap-3 py-1.5">
+              <span className="min-w-0">
+                <span className="block truncate text-ink">{t.name || "（お名前未入力）"}</span>
+                <span className="block truncate text-xs text-ink-muted">{t.email}</span>
+              </span>
+              <span className="flex items-center gap-2 flex-shrink-0">
+                {t.tickets > 1 && <span className="text-xs text-ink-muted">{t.tickets}口</span>}
+                <button
+                  type="button"
+                  className="p-1 text-ink-faint hover:text-red-600"
+                  aria-label={`${t.name || t.email}を対象から外す`}
+                  title="対象から外す"
+                  onClick={() => onChange([...excluded, t.email])}
+                >
+                  <X size={14} />
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs text-amber-700">対象の支援者がいません</p>
+      )}
+      {removed.length > 0 && (
+        <div className="mt-2 border-t border-line pt-2">
+          <p className="text-xs font-bold text-ink-muted">対象から外す人（{removed.length}人）</p>
+          <ul className="mt-1 divide-y divide-line">
+            {removed.map((t) => (
+              <li key={t.email} className="flex items-center justify-between gap-3 py-1.5 text-ink-muted">
+                <span className="min-w-0">
+                  <span className="block truncate line-through">{t.name || "（お名前未入力）"}</span>
+                  <span className="block truncate text-xs">{t.email}</span>
+                </span>
+                <button
+                  type="button"
+                  className="text-xs underline underline-offset-4 hover:text-ink flex-shrink-0"
+                  onClick={() => onChange(excluded.filter((e) => e !== t.email))}
+                >
+                  戻す
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </details>
   );
 }

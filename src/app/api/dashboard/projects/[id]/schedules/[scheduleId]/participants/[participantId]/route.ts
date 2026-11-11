@@ -37,6 +37,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!schedule || !entry) {
     return NextResponse.json({ error: "対象者が見つかりません" }, { status: 404 });
   }
+  if (entry.excluded && raw.length > 0) {
+    return badRequest("対象から外した人の日程は確定できません。対象に戻してから確定してください");
+  }
 
   try {
     const result = await confirmBookings(

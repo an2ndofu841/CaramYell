@@ -36,7 +36,7 @@ export async function GET() {
     service
       .from("reward_schedules")
       .select(
-        "id, project_id, reward_id, title, deadline, status, duration_minutes, projects(id, title, slug)"
+        "id, project_id, reward_id, title, deadline, status, duration_minutes, excluded_emails, projects(id, title, slug)"
       )
       .in("id", scheduleIds),
     service
@@ -51,7 +51,7 @@ export async function GET() {
   const result = await Promise.all(
     participants.map(async (p) => {
       const s = schedules?.find((x) => x.id === p.schedule_id);
-      if (!s) return null;
+      if (!s || ((s.excluded_emails ?? []) as string[]).includes(email)) return null;
       const project = Array.isArray(s.projects) ? s.projects[0] : s.projects;
       const starts = (bookings || [])
         .filter((b) => b.participant_id === p.id)

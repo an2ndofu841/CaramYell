@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbError } from "@/lib/api/errors";
-import { badRequest, loadManagedProject, parseScheduleFields } from "@/lib/schedule/manage";
+import {
+  badRequest,
+  loadManagedProject,
+  loadScheduleRoster,
+  parseScheduleFields,
+} from "@/lib/schedule/manage";
 import { SCHEDULE_COLUMNS } from "@/lib/schedule/server";
 
 type Params = { params: Promise<{ id: string; scheduleId: string }> };
@@ -15,6 +20,21 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { fields, error: inputError } = parseScheduleFields(body, true);
   if (inputError) return badRequest(inputError);
   if (Object.keys(fields).length === 0) return badRequest("変更する項目がありません");
+
+  if (fields.excluded_emails) {
+    const { schedule, roster, error: loadError } = await loadScheduleRoster(supabase, id, scheduleId);
+    if (loadError) return dbError(loadError);
+    if (!schedule) return NextResponse.json({ error: "日程調整が見つかりません" }, { status: 404 });
+    const excluding = new Set(fields.excluded_emails);
+    const booked = roster.find(
+      (r) => excluding.has(r.email) && !r.excluded && r.slotIds.length > 0
+    );
+    if (booked) {
+      return badRequest(
+        `${booked.name || booked.email} さんは日程を確定しています。確定を外してから対象から外してください`
+      );
+    }
+  }
 
   const { data, error } = await supabase
     .from("reward_schedules")
