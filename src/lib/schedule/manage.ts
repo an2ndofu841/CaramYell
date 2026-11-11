@@ -16,7 +16,7 @@ import {
   type BookingRow,
   type ParticipantRow,
 } from "./server";
-import { jstInputToIso } from "./time";
+import { jstInputToIso, UNDECIDED_TIME } from "./time";
 
 /** 掲載者が管理できるプロジェクトか確かめて読む */
 export async function loadManagedProject(projectId: string) {
@@ -232,7 +232,7 @@ export function parseScheduleFields(
   return { fields, error: null };
 }
 
-export type SlotInput = { starts_at: string; capacity: number; note: string };
+export type SlotInput = { starts_at: string; capacity: number; note: string; time_label: string };
 
 export function parseSlot(
   raw: unknown,
@@ -240,8 +240,18 @@ export function parseSlot(
 ): { slot: Partial<SlotInput>; error: string | null } {
   const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const slot: Partial<SlotInput> = {};
+  if (!partial || "timeLabel" in body) {
+    const label = typeof body.timeLabel === "string" ? body.timeLabel.trim() : "";
+    if (label.length > 30) return { slot, error: "時間の表記は30文字以内で入力してください" };
+    slot.time_label = label;
+  }
   if (!partial || "startsAt" in body) {
-    const iso = jstInputToIso(body.startsAt);
+    // 時間未定の枠は、日付だけ見てその日の終わりにそろえる
+    const value =
+      slot.time_label && typeof body.startsAt === "string"
+        ? `${body.startsAt.slice(0, 10)}T${UNDECIDED_TIME}`
+        : body.startsAt;
+    const iso = jstInputToIso(value);
     if (!iso) return { slot, error: "日時が正しくありません" };
     slot.starts_at = iso;
   }

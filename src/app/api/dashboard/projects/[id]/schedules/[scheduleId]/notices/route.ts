@@ -80,7 +80,7 @@ export async function POST(
       slots: t.slotIds
         .map((sid) => slotOf.get(sid))
         .filter((s) => s !== undefined)
-        .map((s) => ({ startsAt: s.starts_at, note: s.note })),
+        .map((s) => ({ startsAt: s.starts_at, note: s.note, timeLabel: s.time_label ?? "" })),
       durationMinutes: schedule.duration_minutes,
       location: schedule.location,
       canReanswer,

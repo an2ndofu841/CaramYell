@@ -367,6 +367,8 @@ export interface RewardScheduleSlot {
   starts_at: string;
   capacity: number;
   note: string;
+  /** 時間未定の枠の表記（「ライブ前後」など）。空なら starts_at の時刻で表示する */
+  time_label: string;
 }
 
 /** 掲載者が支援者に書いてもらう自由記入の質問 */
@@ -455,6 +457,7 @@ export interface ScheduleBookingView {
     id: string;
     startsAt: string;
     note: string;
+    timeLabel: string;
     remaining: number;
     isPast: boolean;
   }[];

@@ -40,7 +40,7 @@ export type ScheduleReceiptEmail = {
   projectTitle: string;
   scheduleTitle: string;
   /** 第1希望から順に */
-  preferences: { startsAt: string; note: string }[];
+  preferences: { startsAt: string; note: string; timeLabel: string }[];
   otherText: string;
   answers: { label: string; value: string }[];
   durationMinutes: number | null;
@@ -53,7 +53,7 @@ export type ScheduleConfirmationEmail = {
   projectTitle: string;
   scheduleTitle: string;
   /** 確定した枠すべて（開始が早い順）。空なら確定を取り消した */
-  slots: { startsAt: string; note: string }[];
+  slots: { startsAt: string; note: string; timeLabel: string }[];
   durationMinutes: number | null;
   location: string;
   /** 取り消しのとき、希望を選び直してもらえるか（受付中で締切前） */
@@ -222,8 +222,8 @@ export async function sendScheduleInvitationTest(e: ScheduleInvitationEmail): Pr
 
 const RANKS = ["第1希望", "第2希望", "第3希望"];
 
-const slotLine = (s: { startsAt: string; note: string }, durationMinutes: number | null) =>
-  `${formatSlotTime(s.startsAt, durationMinutes)}${s.note ? `（${s.note}）` : ""}`;
+const slotLine = (s: { startsAt: string; note: string; timeLabel: string }, durationMinutes: number | null) =>
+  `${formatSlotTime(s.startsAt, durationMinutes, s.timeLabel)}${s.note ? `（${s.note}）` : ""}`;
 
 /** 支援者が希望を回答・変更したときの控え。失敗しても回答は保存済みなので握りつぶす */
 export async function sendScheduleReceipt(e: ScheduleReceiptEmail): Promise<void> {

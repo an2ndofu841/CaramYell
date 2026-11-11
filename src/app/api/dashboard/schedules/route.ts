@@ -41,7 +41,7 @@ export async function GET() {
       .in("id", scheduleIds),
     service
       .from("reward_schedule_bookings")
-      .select("participant_id, reward_schedule_slots(starts_at)")
+      .select("participant_id, reward_schedule_slots(starts_at, time_label)")
       .in(
         "participant_id",
         participants.map((p) => p.id)
@@ -53,21 +53,21 @@ export async function GET() {
       const s = schedules?.find((x) => x.id === p.schedule_id);
       if (!s || ((s.excluded_emails ?? []) as string[]).includes(email)) return null;
       const project = Array.isArray(s.projects) ? s.projects[0] : s.projects;
-      const starts = (bookings || [])
+      const booked = (bookings || [])
         .filter((b) => b.participant_id === p.id)
         .map((b) => {
           const slot = Array.isArray(b.reward_schedule_slots)
             ? b.reward_schedule_slots[0]
             : b.reward_schedule_slots;
-          return slot?.starts_at as string | undefined;
+          return slot as { starts_at: string; time_label: string } | undefined;
         })
-        .filter((v): v is string => Boolean(v))
-        .sort();
+        .filter((v) => v !== undefined)
+        .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
       return {
         participantId: p.id,
         title: s.title,
         projectTitle: project?.title ?? "",
-        bookedLabels: starts.map((t) => formatSlotTime(t, s.duration_minutes)),
+        bookedLabels: booked.map((b) => formatSlotTime(b.starts_at, s.duration_minutes, b.time_label)),
         answered: Boolean(p.submitted_at),
         tickets: await countTickets(service, s.project_id, s.reward_id, email),
         deadline: s.deadline,

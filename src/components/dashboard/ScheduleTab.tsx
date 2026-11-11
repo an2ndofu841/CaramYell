@@ -23,11 +23,11 @@ import ScheduleForm from "@/components/dashboard/schedule/ScheduleForm";
 import SchedulePreviewModal, {
   buildPreviewView,
 } from "@/components/dashboard/schedule/SchedulePreviewModal";
-import SlotBuilder from "@/components/dashboard/schedule/SlotBuilder";
+import SlotBuilder, { slotKey } from "@/components/dashboard/schedule/SlotBuilder";
 import {
   formatDeadline,
   formatJstDate,
-  formatJstTime,
+  formatSlotClock,
   isoToJstInput,
   jstDateKey,
 } from "@/lib/schedule/time";
@@ -58,7 +58,8 @@ const formatDateTime = (iso: string) =>
     minute: "2-digit",
   });
 
-const shortSlot = (iso: string) => `${formatJstDate(iso).replace(/^\d+年/, "")} ${formatJstTime(iso)}`;
+const shortSlot = (s: { starts_at: string; time_label: string }) =>
+  `${formatJstDate(s.starts_at).replace(/^\d+年/, "")} ${formatSlotClock(s.starts_at, s.time_label)}`;
 
 async function api<T = Record<string, unknown>>(
   url: string,
@@ -283,6 +284,7 @@ function ScheduleCard({
     id: s.id,
     startsAt: s.starts_at,
     note: s.note,
+    timeLabel: s.time_label ?? "",
     remaining: Math.max(0, s.capacity - (bookedBySlot.get(s.id)?.length ?? 0)),
     isPast: new Date(s.starts_at).getTime() < Date.now(),
   }));
@@ -511,7 +513,9 @@ function ScheduleCard({
         />
         <SlotBuilder
           durationMinutes={schedule.duration_minutes}
-          existing={schedule.slots.map((s) => isoToJstInput(s.starts_at))}
+          existing={schedule.slots.map((s) =>
+            slotKey({ startsAt: isoToJstInput(s.starts_at), timeLabel: s.time_label ?? "" })
+          )}
           title="枠を追加（日本時間）"
           addLabel="枠を追加する"
           onAdd={async (slots) => {
@@ -761,11 +765,16 @@ function SlotList({
               const people = bookedBySlot.get(slot.id) ?? [];
               const wishes = wishesBySlot.get(slot.id);
               const past = new Date(slot.starts_at).getTime() < Date.now();
-              const label = `${formatJstDate(slot.starts_at)} ${formatJstTime(slot.starts_at)}`;
+              const label = `${formatJstDate(slot.starts_at)} ${formatSlotClock(slot.starts_at, slot.time_label)}`;
               return (
                 <li key={slot.id} className={cn("flex items-start gap-3 px-3 sm:px-4 py-2.5", past && "bg-cream-50")}>
-                  <div className="w-14 flex-shrink-0 font-bold text-ink tabular-nums">
-                    {formatJstTime(slot.starts_at)}
+                  <div
+                    className={cn(
+                      "flex-shrink-0 font-bold text-ink tabular-nums",
+                      slot.time_label ? "min-w-14 max-w-[40%] break-words" : "w-14"
+                    )}
+                  >
+                    {formatSlotClock(slot.starts_at, slot.time_label)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <button
@@ -987,7 +996,7 @@ function Roster({
                           key={id}
                           className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800 ring-1 ring-emerald-200 tabular-nums"
                         >
-                          確定 {s ? shortSlot(s.starts_at) : ""}
+                          確定 {s ? shortSlot(s) : ""}
                           <button
                             type="button"
                             className="text-emerald-700 hover:text-red-600 disabled:opacity-40"
@@ -1016,7 +1025,7 @@ function Roster({
                             {rankLabel(i)}
                           </dt>
                           <dd className="flex-1 min-w-0 text-ink tabular-nums">
-                            {shortSlot(s.starts_at)}
+                            {shortSlot(s)}
                             {full && <span className="ml-1 text-xs text-ink-muted">（満席）</span>}
                           </dd>
                           {canConfirm && !done && (
@@ -1067,7 +1076,7 @@ function Roster({
                         .filter((s) => !r.slotIds.includes(s.id))
                         .map((s) => (
                           <option key={s.id} value={s.id} disabled={remainingOf(s.id) <= 0}>
-                            {shortSlot(s.starts_at)}
+                            {shortSlot(s)}
                             {remainingOf(s.id) <= 0 ? "（満席）" : `（残り${remainingOf(s.id)}）`}
                             {s.note && ` ${s.note}`}
                           </option>

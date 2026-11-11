@@ -8,7 +8,7 @@ import {
 } from "@/lib/schedule/manage";
 import { SLOT_COLUMNS } from "@/lib/schedule/server";
 
-/** 候補の枠をまとめて追加する。body: { slots: [{ startsAt, capacity, note }] } */
+/** 候補の枠をまとめて追加する。body: { slots: [{ startsAt, capacity, note, timeLabel }] } */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; scheduleId: string }> }

@@ -47,8 +47,24 @@ export function formatJstTime(iso: string): string {
   return timeFmt.format(new Date(iso));
 }
 
-/** 「2026年11月20日(金) 14:00〜15:00」。所要時間が無ければ開始時刻だけ */
-export function formatSlotTime(startsAt: string, durationMinutes?: number | null): string {
+/** 時間未定の枠は、その日の終わりを開始として保存する（当日いっぱい選べるように） */
+export const UNDECIDED_TIME = "23:59";
+
+/** 「14:00」。時間未定の枠は「ライブ前後」などの表記 */
+export function formatSlotClock(startsAt: string, timeLabel?: string): string {
+  return timeLabel || formatJstTime(startsAt);
+}
+
+/**
+ * 「2026年11月20日(金) 14:00〜15:00」。所要時間が無ければ開始時刻だけ。
+ * 時間未定の枠は「2026年11月20日(金) ライブ前後」
+ */
+export function formatSlotTime(
+  startsAt: string,
+  durationMinutes?: number | null,
+  timeLabel?: string
+): string {
+  if (timeLabel) return `${formatJstDate(startsAt)} ${timeLabel}`;
   const start = `${formatJstDate(startsAt)} ${formatJstTime(startsAt)}`;
   if (!durationMinutes) return `${start}〜`;
   const end = new Date(new Date(startsAt).getTime() + durationMinutes * 60_000).toISOString();

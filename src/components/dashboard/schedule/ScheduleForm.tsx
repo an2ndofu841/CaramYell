@@ -10,7 +10,7 @@ import { jstInputToIso } from "@/lib/schedule/time";
 import { cn } from "@/lib/utils";
 import type { Reward, ScheduleBookingView, ScheduleQuestion, ScheduleTargetPreview } from "@/types";
 import SchedulePreviewModal, { buildPreviewView } from "./SchedulePreviewModal";
-import SlotBuilder, { shortDate, type DraftSlot } from "./SlotBuilder";
+import SlotBuilder, { shortDate, slotKey, type DraftSlot } from "./SlotBuilder";
 
 const fieldLabel = "text-sm font-bold text-ink";
 const selectClass =
@@ -183,7 +183,7 @@ export default function ScheduleForm({
   };
 
   const addDrafts = (slots: DraftSlot[]) => {
-    const fresh = slots.filter((s) => !drafts.some((d) => d.startsAt === s.startsAt));
+    const fresh = slots.filter((s) => !drafts.some((d) => slotKey(d) === slotKey(s)));
     if (fresh.length === 0) {
       toast.error("同じ日時の候補がすでにあります");
       return false;
@@ -208,6 +208,7 @@ export default function ScheduleForm({
               id: `draft-${i}`,
               startsAt: jstInputToIso(d.startsAt) ?? d.startsAt,
               note: d.note,
+              timeLabel: d.timeLabel,
               remaining: d.capacity,
               isPast: false,
             }))
@@ -387,14 +388,14 @@ export default function ScheduleForm({
             <>
               <SlotBuilder
                 durationMinutes={duration}
-                existing={drafts.map((d) => d.startsAt)}
+                existing={drafts.map(slotKey)}
                 title="候補の日時を追加（日本時間）"
                 addLabel="候補に追加"
                 onAdd={addDrafts}
               />
               <DraftSlotList
                 slots={drafts}
-                onRemove={(ids) => setDrafts((cur) => cur.filter((d) => !ids.includes(d.startsAt)))}
+                onRemove={(keys) => setDrafts((cur) => cur.filter((d) => !keys.includes(slotKey(d))))}
               />
             </>
           )}
@@ -533,7 +534,8 @@ function DraftSlotList({
   onRemove,
 }: {
   slots: DraftSlot[];
-  onRemove: (startsAt: string[]) => void;
+  /** 外す枠の slotKey */
+  onRemove: (keys: string[]) => void;
 }) {
   const days = useMemo(() => {
     const map = new Map<string, DraftSlot[]>();
@@ -562,17 +564,17 @@ function DraftSlotList({
             <div className="flex-1 flex flex-wrap gap-1.5">
               {list.map((s) => (
                 <span
-                  key={s.startsAt}
+                  key={slotKey(s)}
                   className="inline-flex items-center gap-1 rounded-md border border-line bg-white pl-2 pr-1 py-0.5 text-xs text-ink tabular-nums"
                 >
-                  {s.startsAt.slice(11)}
+                  {s.timeLabel || s.startsAt.slice(11)}
                   {s.capacity > 1 && <span className="text-ink-muted">定員{s.capacity}</span>}
                   {s.note && <span className="text-ink-muted">{s.note}</span>}
                   <button
                     type="button"
                     className="p-0.5 text-ink-faint hover:text-red-600"
-                    aria-label={`${shortDate(date)} ${s.startsAt.slice(11)}を外す`}
-                    onClick={() => onRemove([s.startsAt])}
+                    aria-label={`${shortDate(date)} ${s.timeLabel || s.startsAt.slice(11)}を外す`}
+                    onClick={() => onRemove([slotKey(s)])}
                   >
                     <X size={11} />
                   </button>
@@ -582,7 +584,7 @@ function DraftSlotList({
             <button
               type="button"
               className="text-xs text-ink-muted underline underline-offset-4 hover:text-red-600 flex-shrink-0"
-              onClick={() => onRemove(list.map((s) => s.startsAt))}
+              onClick={() => onRemove(list.map(slotKey))}
             >
               この日を外す
             </button>

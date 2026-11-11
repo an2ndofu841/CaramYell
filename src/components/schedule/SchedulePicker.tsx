@@ -210,7 +210,7 @@ export default function SchedulePicker({
             {confirmed.map((b) => (
               <li key={b.id}>
                 <p className="text-lg font-bold text-ink tabular-nums">
-                  {formatSlotTime(b.startsAt, schedule.durationMinutes)}
+                  {formatSlotTime(b.startsAt, schedule.durationMinutes, b.timeLabel)}
                 </p>
                 {b.note && <p className="text-sm text-ink-soft">{b.note}</p>}
               </li>
@@ -336,7 +336,7 @@ export default function SchedulePicker({
                               </span>
                             )}
                             <span className="block font-bold tabular-nums">
-                              {formatJstTime(s.startsAt)}〜
+                              {s.timeLabel || `${formatJstTime(s.startsAt)}〜`}
                             </span>
                             <span
                               className={cn(
@@ -386,7 +386,7 @@ export default function SchedulePicker({
                       s && (
                         <li key={id} className="tabular-nums">
                           <span className="font-bold text-caramel-700">{rankLabel(i)}</span>{" "}
-                          {formatSlotTime(s.startsAt, schedule.durationMinutes)}
+                          {formatSlotTime(s.startsAt, schedule.durationMinutes, s.timeLabel)}
                         </li>
                       )
                     );
@@ -496,7 +496,7 @@ function AnswerSummary({
                 {rankLabel(i)}
               </dt>
               <dd className="text-ink tabular-nums">
-                {formatSlotTime(s.startsAt, view.schedule.durationMinutes)}
+                {formatSlotTime(s.startsAt, view.schedule.durationMinutes, s.timeLabel)}
               </dd>
             </div>
           )

@@ -13,7 +13,7 @@ import type {
 
 export const SCHEDULE_COLUMNS =
   "id, project_id, reward_id, title, description, location, duration_minutes, deadline, status, allow_other, questions, excluded_emails, created_at, updated_at";
-export const SLOT_COLUMNS = "id, schedule_id, starts_at, capacity, note";
+export const SLOT_COLUMNS = "id, schedule_id, starts_at, capacity, note, time_label";
 export const PARTICIPANT_COLUMNS =
   "id, schedule_id, project_id, email, name, backer_ids, invited_at, message, preferred_slot_ids, other_text, answers, submitted_at, notified_slot_ids, notified_at";
 export const BOOKING_COLUMNS = "participant_id, schedule_id, slot_id, booked_at";
@@ -328,6 +328,7 @@ export function toBookingView(ctx: BookingContext): ScheduleBookingView {
       id: s.id,
       startsAt: s.starts_at,
       note: s.note,
+      timeLabel: s.time_label ?? "",
       remaining: remainingOf(ctx, s),
       isPast: new Date(s.starts_at).getTime() < now,
     })),
@@ -417,7 +418,7 @@ export async function submitPreferences(
     scheduleTitle: schedule.title,
     preferences: input.preferredSlotIds.map((id) => {
       const s = ctx.slots.find((x) => x.id === id)!;
-      return { startsAt: s.starts_at, note: s.note };
+      return { startsAt: s.starts_at, note: s.note, timeLabel: s.time_label ?? "" };
     }),
     otherText: schedule.allow_other ? input.otherText : "",
     answers: Object.entries(input.answers)
